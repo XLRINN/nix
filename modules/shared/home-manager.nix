@@ -24,6 +24,17 @@ in
     ];
   };
 
+
+programs.neovim = {
+    extraPackages = with pkgs; [
+      # LazyVim
+      lua-language-server
+      stylua
+      # Telescope
+      ripgrep
+    ];
+
+
   git = {
     enable = true;
     ignores = [ "*.swp" ];
