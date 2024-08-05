@@ -13,6 +13,7 @@ _:
   "wave"
   "termius"
   "zoom"
+  "raycast"
 
   # Browsers
   "firefox"

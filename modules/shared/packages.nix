@@ -27,7 +27,6 @@ with pkgs; [
   zoxide
   docker
   docker-compose
-  # Text and terminal utilities
   htop
   hunspell
   iftop
@@ -39,5 +38,6 @@ with pkgs; [
   unrar
   unzip
   zsh-powerlevel10k
+  yazi
 
 ]

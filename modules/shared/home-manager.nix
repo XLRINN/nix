@@ -24,7 +24,7 @@ in
     ];
   };
 
-
+}
 programs.neovim = {
     extraPackages = with pkgs; [
       # LazyVim
