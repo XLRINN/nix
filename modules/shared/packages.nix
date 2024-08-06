@@ -2,7 +2,6 @@
 
 with pkgs; [
   # General packages for development and system management
-  alacritty
   aspell
   aspellDicts.en
   bash-completion
@@ -32,6 +31,8 @@ with pkgs; [
   iftop
   jetbrains-mono
   jq
+  nnn
+  superfile
   ripgrep
   tree
   tmux

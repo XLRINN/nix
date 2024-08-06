@@ -10,7 +10,6 @@ _:
   "kitty"
   "bitwarden"
   "warp"
-  "wave"
   "termius"
   "zoom"
   "raycast"
