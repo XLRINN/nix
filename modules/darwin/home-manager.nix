@@ -51,6 +51,6 @@ in
   };
 
   # Fully declarative dock using the latest from Nix Store
-  local.dock.enable = true;
+  local.dock.enable = false;
   local.dock.entries = [];
 }

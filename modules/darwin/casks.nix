@@ -10,9 +10,9 @@ _:
   "kitty"
   "bitwarden"
   "warp"
+  "raycast"
   "termius"
   "zoom"
-  "raycast"
 
   # Browsers
   "firefox"

@@ -2,6 +2,7 @@
 
 with pkgs; [
   # General packages for development and system management
+  alacritty
   aspell
   aspellDicts.en
   bash-completion
@@ -11,6 +12,9 @@ with pkgs; [
   killall
   pfetch
   neofetch
+  yazi
+  lf
+  nnn
   openssh
   sqlite
   wget
@@ -26,19 +30,17 @@ with pkgs; [
   zoxide
   docker
   docker-compose
+  # Text and terminal utilities
   htop
   hunspell
   iftop
   jetbrains-mono
   jq
-  nnn
-  superfile
   ripgrep
   tree
   tmux
   unrar
   unzip
   zsh-powerlevel10k
-  yazi
 
 ]
