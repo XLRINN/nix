@@ -65,28 +65,18 @@ in
             cfg.entries;
         in
         {
-          
-  system.activationScripts.postUserActivation.text = ''
-    echo >&2 "Setting up the dock with the following configuration:"
-    echo >&2 "AutoHide: ${toString cfg.autoHide}"
-    echo >&2 "Position: ${cfg.position}"
-
-    # Set the auto-hide and position settings using defaults command
-    defaults write com.apple.dock autohide -bool ${toString cfg.autoHide}
-    defaults write com.apple.dock orientation -string ${cfg.position}
-
-    haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
-    if ! diff -wu <(echo -n "$haveURIs") <(echo -n '${wantURIs}') >&2 ; then
-      echo >&2 "Resetting Dock."
-      ${dockutil}/bin/dockutil --no-restart --remove all
-      ${createEntries}
-      killall Dock
-    else
-      echo >&2 "Dock setup complete."
-    fi
-    killall Dock # Ensure the Dock restarts with the new settings
-  '';
-
-}
+          system.activationScripts.postUserActivation.text = ''
+            echo >&2 "Setting up the Dock..."
+            haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
+            if ! diff -wu <(echo -n "$haveURIs") <(echo -n '${wantURIs}') >&2 ; then
+              echo >&2 "Resetting Dock."
+              ${dockutil}/bin/dockutil --no-restart --remove all
+              ${createEntries}
+              killall Dock
+            else
+              echo >&2 "Dock setup complete."
+            fi
+          '';
+        }
       );
 }

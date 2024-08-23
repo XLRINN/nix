@@ -13,9 +13,12 @@ _:
   "raycast"
   "termius"
   "zoom"
-
+  "microsoft-remote-desktop"
+  "chatgpt"
   # Browsers
   "firefox"
   "arc"
   "google-chrome"
+  "microsoft-edge"
+  "duckduckgo"
 ]

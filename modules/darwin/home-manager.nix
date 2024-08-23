@@ -51,6 +51,8 @@ in
   };
 
   # Fully declarative dock using the latest from Nix Store
-  local.dock.enable = false;
+  local.dock.enable = true;
   local.dock.entries = [];
+  local.dock.autoHide = true;
+  local.dock.position = "right";
 }
