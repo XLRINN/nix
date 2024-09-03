@@ -30,7 +30,6 @@ with pkgs; [
   zoxide
   docker
   docker-compose
-  # Text and terminal utilities
   htop
   hunspell
   iftop

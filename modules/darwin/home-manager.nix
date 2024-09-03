@@ -54,5 +54,5 @@ in
   local.dock.enable = true;
   local.dock.entries = [];
   local.dock.autoHide = true;
-  local.dock.position = "right";
+  local.dock.position = "bottom";
 }

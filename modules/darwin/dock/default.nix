@@ -41,7 +41,7 @@ in
 
     local.dock.position = mkOption {
       type = types.str;
-      default = "right";
+      default = "bottom";
       description = "Position of the dock (left, bottom, right).";
     };
   };
