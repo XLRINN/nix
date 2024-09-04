@@ -22,6 +22,11 @@ in
         file = "p10k.zsh";
       }
     ];
+      aliases = {
+        takeoff
+
+      }
+
   };
 
   git = {
@@ -41,57 +46,6 @@ in
       pull.rebase = true;
       rebase.autoStash = true;
     };
-  };
-
-  vim = {
-    enable = true;
-    plugins = with pkgs.vimPlugins; [ vim-airline vim-airline-themes vim-startify vim-tmux-navigator ];
-    settings = { ignorecase = true; };
-    extraConfig = ''
-      "" General
-      set number
-      set history=1000
-      set nocompatible
-      set modelines=0
-      set encoding=utf-8
-      set scrolloff=3
-      set showmode
-      set showcmd
-      set hidden
-      set wildmenu
-      set wildmode=list:longest
-      set cursorline
-      set ttyfast
-      set nowrap
-      set ruler
-      set backspace=indent,eol,start
-      set laststatus=2
-      set clipboard=autoselect
-
-      " Dir stuff
-      set nobackup
-      set nowritebackup
-      set noswapfile
-      set backupdir=~/.config/vim/backups
-      set directory=~/.config/vim/swap
-
-      " Relative line numbers for easy movement
-      set relativenumber
-      set rnu
-
-      "" Whitespace rules
-      set tabstop=8
-      set shiftwidth=2
-      set softtabstop=2
-      set expandtab
-
-      "" Searching
-      set incsearch
-      set gdefault
-
-      "" Statusbar
-      set nocompatible " Disable vi-compatibility
-    '';
   };
 }
 

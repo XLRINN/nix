@@ -1,58 +1,81 @@
-{ config, pkgs, lib, home-manager, ... }:
+{ config, pkgs, lib, ... }:
 
+# Original source: https://gist.github.com/antifuchs/10138c4d838a63c0a05e725ccd7bccdd
+
+with lib;
 let
-  user = "david";
-  # Define the content of your file as a derivation
-  # myEmacsLauncher = pkgs.writeScript "emacs-launcher.command" ''
-  #  #!/bin/sh
-  #  emacsclient -c -n &
-  #'';
-  sharedFiles = import ../shared/files.nix { inherit config pkgs; };
-  additionalFiles = import ./files.nix { inherit user config pkgs; };
+  cfg = config.local.dock;
+  inherit (pkgs) stdenv dockutil;
 in
 {
-  imports = [
-    ./dock
-  ];
+  options = {
+    local.dock.enable = mkOption {
+      description = "Enable dock";
+      default = stdenv.isDarwin;
+    };
 
-  # User configuration
-  users.users.${user} = {
-    name = "${user}";
-    home = "/Users/${user}";
-    isHidden = false;
-    shell = pkgs.zsh;
-  };
+    local.dock.autohide = mkOption {
+      description = "Autohide dock";
+      type = types.bool;
+      default = true;
+    };
 
-  homebrew = {
-    enable = true;
-    casks = pkgs.callPackage ./casks.nix {};
-  };
+    local.dock.position = mkOption {
+      description = "Dock position";
+      type = types.str;
+      default = "bottom";
+    };
 
-  # Enable home-manager
-  home-manager = {
-    useGlobalPkgs = true;
-    users.${user} = { pkgs, config, lib, ... }: {
-      home = {
-        enableNixpkgsReleaseCheck = false;
-        packages = pkgs.callPackage ./packages.nix {};
-        file = lib.mkMerge [
-          sharedFiles
-          additionalFiles
-          # { "emacs-launcher.command".source = myEmacsLauncher; }
-        ];
-        stateVersion = "23.11";
-      };
-      programs = {} // import ../shared/home-manager.nix { inherit config pkgs lib; };
+        local.dock.size = mkOption {
+      description = "Dock size (1 to 128)";
+      type = types.int;
+      default = 1; 
+    };
 
-      # Marked broken Oct 20, 2022, check later to remove this
-      # https://github.com/nix-community/home-manager/issues/3344
-      manual.manpages.enable = false;
+    local.dock.magnification = mkOption {
+      description = "Enable magnification";
+      type = types.bool;
+      default = true;
+    };
+
+    local.dock.magnificationSize = mkOption {
+      description = "Magnification size (1 to 128)";
+      type = types.int;
+      default = 128; 
     };
   };
 
-  # Fully declarative dock using the latest from Nix Store
-  local.dock.enable = true;
-  local.dock.entries = [];
-  local.dock.autoHide = true;
-  local.dock.position = "bottom";
+  config =
+    mkIf cfg.enable
+      (
+        let
+          normalize = path: if hasSuffix ".app" path then path + "/" else path;
+        in
+        {
+          system.activationScripts.postUserActivation.text = ''
+            echo >&2 "Setting up the Dock..."
+            haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
+             # Apply autohide setting
+      defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"}
+
+      # Apply Dock position setting
+      defaults write com.apple.dock orientation -string "${cfg.position}"
+
+      # Apply Dock size setting
+      defaults write com.apple.dock tilesize -int ${toString cfg.size}
+
+      # Apply Dock magnification settings
+      defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"}
+      defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize}
+
+            if [ -n "$haveURIs" ]; then
+              echo >&2 "Resetting Dock."
+              ${dockutil}/bin/dockutil --no-restart --remove all
+              killall Dock
+            else
+              echo >&2 "Dock might be complete."
+            fi
+          '';
+        }
+      );
 }
