@@ -15,6 +15,8 @@ _:
   "zoom"
   "microsoft-remote-desktop"
   "chatgpt"
+  "discord"
+  
   # Browsers
   "firefox"
   "arc"

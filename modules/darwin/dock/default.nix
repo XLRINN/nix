@@ -6,97 +6,66 @@ with lib;
 let
   cfg = config.local.dock;
   inherit (pkgs) stdenv dockutil;
-in
-{
+in {
   options = {
     local.dock.enable = mkOption {
       description = "Enable dock";
       default = stdenv.isDarwin;
-      example = false;
     };
 
-    local.dock.entries = mkOption
-      {
-        description = "Entries on the Dock";
-        type = with types; listOf (submodule {
-          options = {
-            path = lib.mkOption { type = str; };
-            section = lib.mkOption {
-              type = str;
-              default = "apps";
-            };
-            options = lib.mkOption {
-              type = str;
-              default = "";
-            };
-          };
-        });
-        readOnly = true;
-      };
-    local.dock.autoHide = mkOption {
+    local.dock.autohide = mkOption {
+      description = "Autohide dock";
       type = types.bool;
       default = true;
-      description = "Enable or disable auto-hide for the dock.";
     };
 
     local.dock.position = mkOption {
+      description = "Dock position";
       type = types.str;
       default = "bottom";
-      description = "Position of the dock (left, bottom, right).";
     };
 
     local.dock.size = mkOption {
       description = "Dock size (1 to 128)";
       type = types.int;
-      default = 32;
-      example = 32;
+      default = 1;
     };
 
     local.dock.magnification = mkOption {
       description = "Enable magnification";
       type = types.bool;
       default = true;
-      example = true;
     };
 
     local.dock.magnificationSize = mkOption {
       description = "Magnification size (1 to 128)";
       type = types.int;
-      default = 70;
-      example = 70;
+      default = 128;
+    };
   };
 
-  config =
-    mkIf cfg.enable
-      (
-        let
+  config = mkIf cfg.enable (
+    let
+      normalize = path: if hasSuffix ".app" path then path + "/" else path;
+    in
+    {
+      system.activationScripts.postUserActivation.text = ''
+        echo >&2 "Setting up the Dock..."
+        haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
+        
+        # Apply autohide setting
+        defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"}
 
-          normalize = path: if hasSuffix ".app" path then path + "/" else path;
-          entryURI = path: "file://" + (builtins.replaceStrings
-            [" "   "!"   "\""  "#"   "$"   "%"   "&"   "'"   "("   ")"]
-            ["%20" "%21" "%22" "%23" "%24" "%25" "%26" "%27" "%28" "%29"]
-            (normalize path)
-          );
-          wantURIs = concatMapStrings
-            (entry: "${entryURI entry.path}\n")
-            cfg.entries;
-          createEntries = concatMapStrings
-            (entry: "${dockutil}/bin/dockutil --no-restart --add '${entry.path}' --section ${entry.section} ${entry.options}\n")
-            cfg.entries;
-        in
-        {
-          system.activationScripts.postUserActivation.text = ''
-            echo >&2 "Setting up the Dock..."
-            haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
-            if ! diff -wu <(echo -n "$haveURIs") <(echo -n '${wantURIs}') >&2 ; then
-              echo >&2 "Resetting Dock."
-              ${dockutil}/bin/dockutil --no-restart --remove all
-              ${createEntries}
-              killall Dock
-            else
-              echo >&2 "Dock setup complete."
-            fi
-          '';
-        }
-      );
+        # Apply Dock position setting
+        defaults write com.apple.dock orientation -string "${cfg.position}"
+
+        # Apply Dock size setting
+        defaults write com.apple.dock tilesize -int ${toString cfg.size}
+
+        # Apply Dock magnification settings
+        defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"}
+        defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize}
+      '';
+    }
+  );
 }
