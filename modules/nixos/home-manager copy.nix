@@ -45,18 +45,7 @@ in
   };
 
   # Add GNOME Display Manager (GDM)
-  services.gnome.gdm = {
+  services.gnome3.gdm = {
     enable = true;
-    wayland = true; # Enable Wayland
-  };
-
-  # Add full GNOME Desktop Environment
-  services.xserver = {
-    enable = true;
-    displayManager.gdm.enable = true;
-    desktopManager.gnome3.enable = true;
-    windowManager = {
-      wayland.enable = true; # Enable Wayland
-    };
   };
 }
