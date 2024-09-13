@@ -1,48 +1,51 @@
-{ user, ... }:
+{ config, pkgs, lib, ... }:
 
 let
-  home           = builtins.getEnv "HOME";
-  xdg_configHome = "${home}/.config";
-  xdg_dataHome   = "${home}/.local/share";
-  xdg_stateHome  = "${home}/.local/state"; in
+  user = "david";
+  xdg_configHome  = "/home/${user}/.config";
+  shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
+  shared-files = import ../shared/files.nix { inherit config pkgs; };
+
+  polybar-user_modules = builtins.readFile (pkgs.substituteAll {
+    src = ./config/polybar/user_modules.ini;
+    packages = "${xdg_configHome}/polybar/bin/check-nixos-updates.sh";
+    searchpkgs = "${xdg_configHome}/polybar/bin/search-nixos-updates.sh";
+    launcher = "${xdg_configHome}/polybar/bin/launcher.sh";
+    powermenu = "${xdg_configHome}/rofi/bin/powermenu.sh";
+    calendar = "${xdg_configHome}/polybar/bin/popup-calendar.sh";
+  });
+
+  polybar-config = pkgs.substituteAll {
+    src = ./config/polybar/config.ini;
+    font0 = "DejaVu Sans:size=12;3";
+    font1 = "feather:size=12;3"; # from overlay
+  };
+
+  polybar-modules = builtins.readFile ./config/polybar/modules.ini;
+  polybar-bars = builtins.readFile ./config/polybar/bars.ini;
+  polybar-colors = builtins.readFile ./config/polybar/colors.ini;
+
+in
 {
+  home = {
+    enableNixpkgsReleaseCheck = false;
+    username = "${user}";
+    homeDirectory = "/home/${user}";
+    packages = pkgs.callPackage ./packages.nix {};
+    file = shared-files // import ./files.nix { inherit user; };
+    stateVersion = "21.05";
+  };
 
-  # Enable GNOME desktop environment with Wayland
-  services.xserver = {
+  # Use a dark theme
+  gtk = {
     enable = true;
-    displayManager.gdm = {
-      enable = true;
-      wayland = true;
-    };
-    desktopManager.gnome3 = {
-      enable = true;
-      wayland = true;
+    iconTheme = {
+      name = "Adwaita-dark";
     };
   };
 
-  # Enable COSMIC desktop environment with Wayland
-  services.xserver.desktopManager.cosmic = {
+  # Add GNOME Display Manager (GDM)
+  services.gnome3.gdm = {
     enable = true;
-    wayland = true;
   };
-
-  # Additional GNOME and COSMIC packages
-  environment.systemPackages = with pkgs; [
-    gnome3.gnome-tweaks
-    gnome3.dconf-editor
-    gnome3.gnome-terminal
-    gnome3.nautilus
-    cosmic
-  ];
-
-  "${xdg_configHome}/gnome/gnomerc" = {
-    executable = true;
-    text = ''
-      #! /bin/sh
-      #
-      # Start GNOME session
-      exec gnome-session
-    '';
-  };
-
 }
