@@ -15,7 +15,7 @@ _:
   "zoom"
   "microsoft-remote-desktop"
   "chatgpt"
-  "discord"
+  "zed"
   
   # Browsers
   "firefox"
@@ -23,4 +23,5 @@ _:
   "google-chrome"
   "microsoft-edge"
   "duckduckgo"
+ # "zen"
 ]

@@ -54,17 +54,20 @@ in {
         haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
         
         # Apply autohide setting
-        defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"}
+        defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"};
 
         # Apply Dock position setting
-        defaults write com.apple.dock orientation -string "${cfg.position}"
+        defaults write com.apple.dock orientation -string "${cfg.position}";
 
         # Apply Dock size setting
-        defaults write com.apple.dock tilesize -int ${toString cfg.size}
+        defaults write com.apple.dock tilesize -int ${toString cfg.size};
 
         # Apply Dock magnification settings
-        defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"}
-        defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize}
+        defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"};
+        defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize};
+
+        # Restart Dock to apply changes
+        killall Dock
       '';
     }
   );

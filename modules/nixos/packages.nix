@@ -5,8 +5,7 @@ let shared-packages = import ../shared/packages.nix { inherit pkgs; }; in
 shared-packages ++ [
 
   # Security and authentication
-  yubikey-agent
-  keepassxc
+  bitwarden
 
   # App and package management
   appimage-run
@@ -26,6 +25,7 @@ shared-packages ++ [
   # Audio tools
   cava # Terminal audio visualizer
   pavucontrol # Pulse audio controls
+  pulseaudio # Sound server
 
   # Testing and development tools
   direnv
@@ -59,6 +59,8 @@ shared-packages ++ [
   yad # yad-calendar is used with polybar
   xdotool
   google-chrome
+  firefox
+  
 
   # PDF viewer
   zathura

@@ -4,29 +4,32 @@ let
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-in
+    
+    in
 {
-  # Shared shell configuration
+
+  direnv = {
+      enable = true;
+      enableZshIntegration = true;
+      nix-direnv.enable = true;
+    };
+
   zsh = {
     enable = true;
     autocd = false;
+    cdpath = [ "~/.local/share/src" ];
     plugins = [
       {
-        name = "powerlevel10k";
-        src = pkgs.zsh-powerlevel10k;
-        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+          name = "powerlevel10k";
+          src = pkgs.zsh-powerlevel10k;
+          file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
       }
       {
-        name = "powerlevel10k-config";
-        src = lib.cleanSource ./config;
-        file = "p10k.zsh";
+          name = "powerlevel10k-config";
+          src = lib.cleanSource ./config;
+          file = "p10k.zsh";
       }
     ];
-      aliases = {
-        takeoff
-
-      }
-
   };
 
   git = {
@@ -38,14 +41,15 @@ in
       enable = true;
     };
     extraConfig = {
-      init.defaultBranch = "main";
+      init.defaultBranch = "master";
       core = {
-        editor = "vim";
+	    editor = "vim";
         autocrlf = "input";
       };
+      commit.gpgsign = false;
       pull.rebase = true;
       rebase.autoStash = true;
     };
   };
-}
 
+}
