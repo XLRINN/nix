@@ -52,4 +52,19 @@ let
     };
   };
 
-}
+/*
+   neovim = {
+        enable = true;
+        defaultEditor = true;
+        extraConfig = ''
+          let g:config_home = "${lib.cleanSource ./config/nvim}"
+          source $g:config_home/init.vim
+        '';
+        plugins = with pkgs.vimPlugins; [
+          lazy-nvim
+        ];
+      };
+
+*/
+
+  }

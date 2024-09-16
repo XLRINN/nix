@@ -19,10 +19,9 @@ with pkgs; [
   sqlite
   wget
   zip
-  neovim
-  ranger
+
   oh-my-zsh
-  zellij
+
   zsh
   lazygit
   fzf

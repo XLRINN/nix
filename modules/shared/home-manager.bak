@@ -43,9 +43,8 @@ in
     };
   };
 
-  programs.neovim = {
+ neovim = {
     enable = true;
-    package = pkgs.neovim;
-    config = ./config/nvim/init.lua;
+    #plugins = with pkgs.vimPlugins; [ vim-airline vim-airline-themes copilot-vim vim-startify vim-tmux-navigator ];
   };
 }

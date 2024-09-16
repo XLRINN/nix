@@ -33,7 +33,7 @@ let user = "david"; in
 
   # Turn off NIX_PATH warnings now that we're using flakes
   system.checks.verifyNixPath = false;
-
+/*
   # Load configuration that is shared across systems
   environment.systemPackages = with pkgs; [
     emacs-unstable
@@ -50,7 +50,7 @@ let user = "david"; in
     StandardErrorPath = "/tmp/emacs.err.log";
     StandardOutPath = "/tmp/emacs.out.log";
   };
-
+*/
   system = {
     stateVersion = 4;
 
@@ -69,7 +69,7 @@ let user = "david"; in
         "com.apple.sound.beep.volume" = 0.0;
         "com.apple.sound.beep.feedback" = 0;
       };
-
+/*
       dock = {
         autohide = false;
         show-recents = false;
@@ -77,7 +77,7 @@ let user = "david"; in
         orientation = "bottom";
         tilesize = 48;
       };
-
+*/
       finder = {
         _FXShowPosixPathInTitle = false;
       };
