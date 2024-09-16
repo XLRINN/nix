@@ -1,12 +1,16 @@
 { config, pkgs, lib, ... }:
 
+
 let 
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-    
+  
+
     in
 {
+
+
 
   direnv = {
       enable = true;
@@ -17,8 +21,13 @@ let
   zsh = {
     enable = true;
     autocd = false;
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
     cdpath = [ "~/.local/share/src" ];
     plugins = [
+      
+      
       {
           name = "powerlevel10k";
           src = pkgs.zsh-powerlevel10k;
@@ -27,9 +36,19 @@ let
       {
           name = "powerlevel10k-config";
           src = lib.cleanSource ./config;
-          file = "p10k.zsh";
+          file = ".p10k.zsh";
       }
     ];
+
+    shellAliases = {
+      pf = "pfetch";
+      bs = "nix run .#build-switch";
+      bss = "nix run .#build-switch && source ~/.zshrc";
+      fmu = "clear && nix run .#build-switch && source ~/.zshrc";
+      sauce = "source ~/.zshrc";
+      };
+
+
   };
 
   git = {
@@ -52,19 +71,29 @@ let
     };
   };
 
-/*
-   neovim = {
-        enable = true;
-        defaultEditor = true;
-        extraConfig = ''
-          let g:config_home = "${lib.cleanSource ./config/nvim}"
-          source $g:config_home/init.vim
-        '';
-        plugins = with pkgs.vimPlugins; [
-          lazy-nvim
-        ];
+zellij = {
+  enable = true;
+  settings = {
+    pane_frames = false;
+    #default_layout = "compact";
+    theme = "gruvbox-dark";
+    themes = {
+      gruvbox-dark = {
+        fg = [213 196 161];
+        bg = [40 40 40];
+        black = [60 56 54];
+        red = [204 36 29];
+        green = [152 151 26];
+        yellow = [215 153 33];
+        blue = [69 133 136];
+        magenta = [177 98 134];
+        cyan = [104 157 106];
+        white = [251 241 199];
+        orange = [214 93 14];
       };
+    };
+  };
+};
 
-*/
 
   }

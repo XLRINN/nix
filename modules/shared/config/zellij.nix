@@ -1,85 +1,28 @@
-{ config, lib, pkgs, ... }:
 
-with lib;
+{
+  enable = true;
 
-let
+  settings = {
+    # Make zellij UI more compact
+    pane_frames = false;
+    default_layout = "compact";
 
-  cfg = config.programs.zellij;
-  yamlFormat = pkgs.formats.yaml { };
-  zellijCmd = getExe cfg.package;
+    theme = "gruvbox-dark";
 
-in {
-  meta.maintainers = [ hm.maintainers.mainrs ];
-
-  options.programs.zellij = {
-    enable = mkEnableOption "zellij";
-
-    package = mkOption {
-      type = types.package;
-      default = pkgs.zellij;
-      defaultText = literalExpression "pkgs.zellij";
-      description = ''
-        The zellij package to install.
-      '';
-    };
-
-    settings = mkOption {
-      type = yamlFormat.type;
-      default = { };
-      example = literalExpression ''
-        {
-          theme = "custom";
-          themes.custom.fg = "#ffffff";
-        }
-      '';
-      description = ''
-        Configuration written to
-        {file}`$XDG_CONFIG_HOME/zellij/config.yaml`.
-
-        See <https://zellij.dev/documentation> for the full
-        list of options.
-      '';
-    };
-
-    enableBashIntegration = mkEnableOption "Bash integration" // {
-      default = false;
-    };
-
-    enableZshIntegration = mkEnableOption "Zsh integration" // {
-      default = false;
-    };
-
-    enableFishIntegration = mkEnableOption "Fish integration" // {
-      default = false;
-    };
-  };
-
-  config = mkIf cfg.enable {
-    home.packages = [ cfg.package ];
-
-    # Zellij switched from yaml to KDL in version 0.32.0:
-    # https://github.com/zellij-org/zellij/releases/tag/v0.32.0
-    xdg.configFile."zellij/config.yaml" = mkIf
-      (cfg.settings != { } && (versionOlder cfg.package.version "0.32.0")) {
-        source = yamlFormat.generate "zellij.yaml" cfg.settings;
+    themes = {
+      gruvbox-dark = {
+        fg = [213 196 161];
+        bg = [40 40 40];
+        black = [60 56 54];
+        red = [204 36 29];
+        green = [152 151 26];
+        yellow = [215 153 33];
+        blue = [69 133 136];
+        magenta = [177 98 134];
+        cyan = [104 157 106];
+        white = [251 241 199];
+        orange = [214 93 14];
       };
-
-    xdg.configFile."zellij/config.kdl" = mkIf
-      (cfg.settings != { } && (versionAtLeast cfg.package.version "0.32.0")) {
-        text = lib.hm.generators.toKDL { } cfg.settings;
-      };
-
-    programs.bash.initExtra = mkIf cfg.enableBashIntegration (mkOrder 200 ''
-      eval "$(${zellijCmd} setup --generate-auto-start bash)"
-    '');
-
-    programs.zsh.initExtra = mkIf cfg.enableZshIntegration (mkOrder 200 ''
-      eval "$(${zellijCmd} setup --generate-auto-start zsh)"
-    '');
-
-    programs.fish.interactiveShellInit = mkIf cfg.enableFishIntegration
-      (mkOrder 200 ''
-        eval (${zellijCmd} setup --generate-auto-start fish | string collect)
-      '');
+    };
   };
 }
