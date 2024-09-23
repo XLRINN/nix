@@ -23,5 +23,5 @@ _:
   "google-chrome"
   "microsoft-edge"
   "duckduckgo"
- # "zen"
+  "via"
 ]

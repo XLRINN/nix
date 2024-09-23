@@ -5,10 +5,7 @@ let
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-   nixvim = import (builtins.fetchGit {
-    url = "https://github.com/nix-community/nixvim"; });
-  
-
+   
     in
 {
 
@@ -47,6 +44,7 @@ let
       bss = "nix run .#build-switch && source ~/.zshrc";
       fmu = "clear && nix run .#build-switch && source ~/.zshrc";
       sauce = "source ~/.zshrc";
+      addcask = "nvim ~/nix/modules/darwin/casks.nix";
       };
 
 
@@ -81,10 +79,7 @@ zellij = {
   };
 };
 
-imports = [
-    # For home-manager
-    nixvim.homeManagerModules.nixvim
-];
+
 
 /*
 neovim = {
