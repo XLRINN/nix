@@ -62,19 +62,6 @@ let user = "david";
     xserver = {
       enable = true;
 
-      # Uncomment these for AMD or Nvidia GPU
-      # boot.initrd.kernelModules = [ "amdgpu" ];
-      # videoDrivers = [ "amdgpu" ];
-      # videoDrivers = [ "nvidia" ];
-
-      # Uncomment for Nvidia GPU
-      # This helps fix tearing of windows for Nvidia cards
-      # screenSection = ''
-      #   Option       "metamodes" "nvidia-auto-select +0+0 {ForceFullCompositionPipeline=On}"
-      #   Option       "AllowIndirectGLXProtocol" "off"
-      #   Option       "TripleBuffer" "on"
-      # '';
-
       displayManager = {
         defaultSession = "none+bspwm";
         lightdm = {
