@@ -61,7 +61,7 @@ let user = "david";
   services = { 
     xserver = {
       enable = true;
-
+/*
       displayManager = {
         defaultSession = "none+bspwm";
         lightdm = {
@@ -70,9 +70,21 @@ let user = "david";
           background = ../../modules/nixos/config/login-wallpaper.png;
         };
       };
+*/
+   displayManager = {
+        defaultSession = "none+gnome";
+        gdm = {
+          enable = true;
+        };
+      };
 
       # Tiling window manager
       windowManager.bspwm = {
+        enable = true;
+      };
+
+        # GNOME desktop environment
+      desktopManager.gnome = {
         enable = true;
       };
 
