@@ -87,13 +87,6 @@ let user = "dustin";
           background = ../../modules/nixos/config/login-wallpaper.png;
         };
       };
-*/
-   displayManager = {
-        defaultSession = "none+gnome";
-        gdm = {
-          enable = true;
-        };
-      };
 
       # Tiling window manager
       windowManager.bspwm = {

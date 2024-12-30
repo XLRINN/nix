@@ -35,6 +35,7 @@ _prompt() {
   read -r $variable
 }
 
+
 # Fetch username from the system
 export USERNAME=$(whoami)
 
