@@ -113,45 +113,6 @@ let user = "dustin";
       drivers = [ pkgs.brlaser ]; # Brother printer driver
     };
 
-    syncthing = {
-      enable = true;
-      openDefaultPorts = true;
-      dataDir = "/home/${user}/.local/share/syncthing";
-      configDir = "/home/${user}/.config/syncthing";
-      user = "${user}";
-      group = "users";
-      guiAddress = "127.0.0.1:8384";
-      overrideFolders = true;
-      overrideDevices = true;
-
-      settings = {
-        devices = {
-          "Macbook Pro" = {
-            id = "P2FYLQW-PKDFJGZ-EUGI2T7-OW4AH4I-KI462HD-U2VL3X3-GN55PP2-VNRE5AH";
-            autoAcceptFolders = true;
-            allowedNetwork = "192.168.0.0/16";
-            addresses = [ "tcp://192.168.0.99:51820" ];
-          };
-          "Home Lab" = {
-            id = "WW5O366-THBBBA3-HKQAYCP-EWADS4I-4KDDC5Z-3JCO42M-RLBZ3DY-NM7PEQA";
-            allowedNetwork = "192.168.0.0/16";
-            autoAcceptFolders = true;
-            addresses = [ "tcp://192.168.0.103:51820" ];
-          };
-        };
-
-        folders = {
-          "XDG Share" = {
-            id = "ukrub-quh7k";
-            path = "/home/${user}/.local/share";
-            devices = [ "Macbook Pro" "Home Lab" ];
-          };
-        };
-
-        options.globalAnnounceEnabled = false; # Only sync on LAN
-      };
-
-    };
 
     # Picom, my window compositor with fancy effects
     #
@@ -247,11 +208,7 @@ let user = "dustin";
     # Let's be able to SSH into this machine
     openssh.enable = true;
 
-    # My editor runs as a daemon
-    emacs = {
-      enable = true;
-      package = pkgs.emacs-unstable;
-    };
+  
 
     gvfs.enable = true; # Mount, trash, and other functionalities
     tumbler.enable = true; # Thumbnail support for images
@@ -275,8 +232,6 @@ let user = "dustin";
 
     nvidia.modesetting.enable = true;
 
-    # Crypto wallet support
-    ledger.enable = true;
   };
 
   # Sync state between machines
