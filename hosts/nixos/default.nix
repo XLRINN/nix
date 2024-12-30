@@ -214,9 +214,7 @@ let user = "dustin";
     tumbler.enable = true; # Thumbnail support for images
   };
 
-  systemd.user.services.emacs = {
-    serviceConfig.TimeoutStartSec = "7min";
-  };
+  
 
   # Enable sound
   sound.enable = true;
@@ -276,7 +274,6 @@ let user = "dustin";
 
   fonts.packages = with pkgs; [
     dejavu_fonts
-    emacs-all-the-icons-fonts
     feather-font # from overlay
     jetbrains-mono
     font-awesome
