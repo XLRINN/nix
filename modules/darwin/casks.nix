@@ -18,6 +18,7 @@ _:
   "zed"
   "superkey"
   "charmstone"
+  "vnc-viewer"
   
   # Browsers
   "firefox"

@@ -61,20 +61,7 @@ let user = "david";
   services = { 
     xserver = {
       enable = true;
-
-      # Uncomment these for AMD or Nvidia GPU
-      # boot.initrd.kernelModules = [ "amdgpu" ];
-      # videoDrivers = [ "amdgpu" ];
-      # videoDrivers = [ "nvidia" ];
-
-      # Uncomment for Nvidia GPU
-      # This helps fix tearing of windows for Nvidia cards
-      # screenSection = ''
-      #   Option       "metamodes" "nvidia-auto-select +0+0 {ForceFullCompositionPipeline=On}"
-      #   Option       "AllowIndirectGLXProtocol" "off"
-      #   Option       "TripleBuffer" "on"
-      # '';
-
+/*
       displayManager = {
         defaultSession = "none+bspwm";
         lightdm = {
@@ -83,9 +70,21 @@ let user = "david";
           background = ../../modules/nixos/config/login-wallpaper.png;
         };
       };
+*/
+   displayManager = {
+        defaultSession = "none+gnome";
+        gdm = {
+          enable = true;
+        };
+      };
 
       # Tiling window manager
       windowManager.bspwm = {
+        enable = true;
+      };
+
+        # GNOME desktop environment
+      desktopManager.gnome = {
         enable = true;
       };
 

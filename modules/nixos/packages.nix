@@ -28,18 +28,32 @@ shared-packages ++ [
   pulseaudio # Sound server
 
   # Testing and development tools
-  direnv
-  rofi
-  rofi-calc
-  postgresql
-  libtool # for Emacs vterm
+  
+  visual-studio-code
+  vlc
+  rectangle
+  alacritty
+  kitty
+
+
+  termius
+  zoom
+  microsoft-remote-desktop
+
+  vnc-viewer
+  
+  # Browsers
+  google-chrome
+  duckduckgo
+  firefox
+]
 
   # Screenshot and recording tools
   flameshot
 
   # Text and terminal utilities
-  feh # Manage wallpapers
-  screenkey
+
+
   tree
   unixtools.ifconfig
   unixtools.netstat
@@ -48,23 +62,13 @@ shared-packages ++ [
   xorg.xrandr
 
   # File and system utilities
-  inotify-tools # inotifywait, inotifywatch - For file system events
-  i3lock-fancy-rapid
-  libnotify
   pcmanfm # File browser
   sqlite
   xdg-utils
-
-  # Other utilities
-  yad # yad-calendar is used with polybar
   xdotool
   google-chrome
   firefox
-  
-
   # PDF viewer
   zathura
 
-  # Music and entertainment
-  spotify
 ]

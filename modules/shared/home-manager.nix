@@ -81,7 +81,7 @@ zellij = {
 
 
 
-/*
+
 neovim = {
     enable = true;
     vimAlias = true;
@@ -96,7 +96,7 @@ neovim = {
   
   };
 
-
+/*
 
   nixvim = {
     enable = true;
