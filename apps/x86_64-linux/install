@@ -14,17 +14,13 @@ cleanup() {
   rm -rf nixos-config-main.zip nixos-config-main nixos-config
 }
 
-#download_config() {
- # curl -LJ0 https://github.com/xlrinn/nix/archive/main.zip -o nixos-config-main.zip
- # unzip nixos-config-main.zip
- # mv nixos-config-main/templates/starter nixos-config
-  #cd nixos-config
-#}
-
 download_config() {
-nix-env -iA git
- cd nix
+  curl -LJ0 https://github.com/XLRINN/nix/archive/refs/heads/master.zip -o nix.zip
+  unzip nix.zip
+  mv nix/templates/starter nix
+  cd nix
 }
+
 
 run_apply() {
   ./apps/x86_64-linux/apply
