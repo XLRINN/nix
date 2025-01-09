@@ -21,7 +21,7 @@ download_config() {
   curl -LJ0 https://github.com/XLRINN/nix/archive/refs/heads/master.zip -o nix.zip
   unzip nix.zip
   #mv nix-master/templates/starter nix 
-  cd nix
+  cd nix-master
 }
 
 
