@@ -129,12 +129,5 @@ let user = "david";
     neovim
   ];
 
-  gc = {
-    user = "root";
-    automatic = true;
-    interval = { Day = 14; Hour = 2; Minute = 0; };
-    options = "--delete-older-than 30d";
-  };
-
   system.stateVersion = "21.05"; # Don't change this
 }

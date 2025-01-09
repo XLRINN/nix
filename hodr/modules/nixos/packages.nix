@@ -33,7 +33,7 @@ shared-packages ++ [
   rofi
   rofi-calc
   postgresql
-
+  libtool # for Emacs vterm
 
   # Screenshot and recording tools
   flameshot
@@ -49,25 +49,25 @@ shared-packages ++ [
   xorg.xrandr
 
   # File and system utilities
- # inotify-tools # inotifywait, inotifywatch - For file system events
- # i3lock-fancy-rapid
- # libnotify
- # pcmanfm # File browser
- # sqlite
+  inotify-tools # inotifywait, inotifywatch - For file system events
+  i3lock-fancy-rapid
+  libnotify
+  pcmanfm # File browser
+  sqlite
   xdg-utils
 
   # Other utilities
   yad # yad-calendar is used with polybar
-  #xdotool
-  #google-chrome
+  xdotool
+  google-chrome
 
   # PDF viewer
   zathura
 
   # Music and entertainment
-  #spotify
+  spotify
 
   # Wireless in GNOME
-  #networkmanager
-  #networkmanagerapplet
+  networkmanager
+  networkmanagerapplet
 ]

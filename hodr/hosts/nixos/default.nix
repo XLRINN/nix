@@ -99,42 +99,11 @@ let user = "david";
     noto-fonts-emoji
   ];
 
-  # Turn on flag for proprietary software
-  nix = {
-    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nixos-config:/etc/nixos" ];
-    settings = {
-      allowed-users = [ "${user}" ];
-      trusted-users = [ "@admin" "${user}" ];
-      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
-      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
-    };
-
-    package = pkgs.nix;
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
-  };
-
-  # Manages keys and such
-  programs = {
-    gnupg.agent.enable = true;
-
-    # Needed for anything GTK related
-    dconf.enable = true;
-  };
-
   environment.systemPackages = with pkgs; [
     gitAndTools.gitFull
     inetutils
     neovim
   ];
-
-  gc = {
-    user = "root";
-    automatic = true;
-    interval = { Day = 14; Hour = 2; Minute = 0; };
-    options = "--delete-older-than 30d";
-  };
 
   system.stateVersion = "21.05"; # Don't change this
 }

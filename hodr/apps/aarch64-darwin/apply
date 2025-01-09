@@ -108,7 +108,6 @@ if [[ "$OS" != "Darwin" ]]; then
   select_boot_disk
 fi
 
-# Confirmation step
 confirm_details() {
   _print "${GREEN}Username: $USERNAME"
   _print "Email: $GIT_EMAIL"
@@ -137,7 +136,6 @@ confirm_details() {
   esac
 }
 
-# Call the confirmation function
 confirm_details
 
 # Function to replace tokens in each file
