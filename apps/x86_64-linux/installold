@@ -3,29 +3,32 @@ set -exu
 
 check_installer() {
   if [ -e /etc/NIXOS ]; then
-    echo -e "\\e[1;32mRunning in the NixOS installer environment.\\e[0m"
+    echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
   else
-    echo -e "\\e[1;31mNot running in the NixOS installer environment.\\e[0m"
+    echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
     exit 1
   fi
 }
 
 cleanup() {
-  rm -rf nix.zip nix-master nixos-config
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config
 }
 
+
+
+
 download_config() {
-  # Download your GitHub repository
-  curl -LJ0 https://github.com/xlrinn/nix/archive/refs/heads/master.zip -o nix.zip
+  curl -LJ0 https://github.com/XLRINN/nix/archive/refs/heads/master.zip -o nix.zip
   unzip nix.zip
-  mv nix-master nixos-config
-  cd nixos-config
+  #mv nix-master/templates/starter nix 
+  cd nix-master
 }
+
 
 run_apply() {
   ./apps/x86_64-linux/apply
   if [ ! -f /tmp/username.txt ]; then
-    echo -e "\\e[1;31mError: /tmp/username.txt does not exist.\\e[0m"
+    echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
     exit 1
   fi
   export USERNAME=$(cat /tmp/username.txt)
@@ -65,8 +68,8 @@ install_nixos() {
 prompt_reboot() {
   read -p "Do you want to reboot now? (y/yes) " choice
   case "$choice" in
-  y|Y|yes|YES ) echo -e "\\e[1;32mRebooting...\\e[0m" && sudo reboot;;
-  * ) echo -e "\\e[1;33mReboot skipped.\\e[0m";;
+  y|Y|yes|YES ) echo -e "\e[1;32mRebooting...\e[0m" && sudo reboot;;
+  * ) echo -e "\e[1;33mReboot skipped.\e[0m";;
   esac
 }
 
