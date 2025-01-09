@@ -36,32 +36,10 @@ _prompt() {
 }
 
 
-# Fetch username from the system
-export USERNAME=$(whoami)
-
-# If the username is 'nixos' or 'root', ask the user for their username
-if [[ "$USERNAME" == "nixos" ]] || [[ "$USERNAME" == "root" ]]; then
-  _prompt "${YELLOW}You're running as $USERNAME. THIS WORKEDx86 linux - username: ${NC}" USERNAME
-fi
-
-# Check if git is available
-if command -v git >/dev/null 2>&1; then
-  # Fetch email and name from git config
-  export GIT_EMAIL=$(git config --get user.email)
-  export GIT_NAME=$(git config --get user.name)
-else
-  _print "${RED}Git is not available on this system.${NC}"
-fi
-
-# If git email is not found or git is not available, ask the user
-if [[ -z "$GIT_EMAIL" ]]; then
-  _prompt "${YELLOW}Please enter your email: ${NC}" GIT_EMAIL
-fi
-
-# If git name is not found or git is not available, ask the user
-if [[ -z "$GIT_NAME" ]]; then
-  _prompt "${YELLOW}Please enter your name: ${NC}" GIT_NAME
-fi
+# Set predefined variables
+export USERNAME="david"
+export GIT_EMAIL="xlrin.morgan@gmail.com"
+export GIT_NAME="David"
 
 select_boot_disk() {
   local disks
