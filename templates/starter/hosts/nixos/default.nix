@@ -133,6 +133,7 @@ let user = "david";
     #   To find the value for a specific application, use `xprop` at the
     #   terminal and then click on a window of the application in question
     #
+   /*
     picom = {
       enable = true;
       settings = {
@@ -228,7 +229,7 @@ let user = "david";
   systemd.user.services.emacs = {
     serviceConfig.TimeoutStartSec = "7min";
   };
-
+*/
   # Enable sound
   # sound.enable = true;
 

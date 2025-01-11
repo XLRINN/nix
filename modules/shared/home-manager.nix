@@ -24,20 +24,20 @@ let
     syntaxHighlighting.enable = true;
     cdpath = [ "~/.local/share/src" ];
     plugins = [
-      
-      
+ /*
       {
-          name = "powerlevel10k";
-          src = pkgs.zsh-powerlevel10k;
-          file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+        name = "ohmyposh";
+        src = pkgs.ohmyposh;
+        file = "path/to/ohmyposh.zsh-theme";
       }
       {
-          name = "powerlevel10k-config";
-          src = lib.cleanSource ./config;
-          file = ".p10k.zsh";
+        name = "ohmyposh-config";
+        src = lib.cleanSource ./config;
+        file = ".slim.";
       }
+    
+*/
     ];
-
     shellAliases = {
       pf = "pfetch";
       bs = "nix run .#build-switch";

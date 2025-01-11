@@ -28,7 +28,7 @@ let user = "david";
   networking = {
     hostName = "hodr"; # Define your hostname.
     useDHCP = false;
-    interfaces."enp57s0u1u4".useDHCP = true;
+    #interfaces."enp57s0u1u4".useDHCP = true;
     networkmanager.enable = true; # Enable NetworkManager
   };
 
@@ -97,6 +97,7 @@ let user = "david";
     font-awesome
     noto-fonts
     noto-fonts-emoji
+    fira-code-nerdfont
   ];
 
   # Turn on flag for proprietary software
@@ -113,6 +114,12 @@ let user = "david";
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
+
+    gc = {
+      automatic = true;
+      dates = "14d";
+      options = "--delete-older-than 30d";
+    };
   };
 
   # Manages keys and such
@@ -127,14 +134,8 @@ let user = "david";
     gitAndTools.gitFull
     inetutils
     neovim
+    noto-fonts-emoji
   ];
-
-  gc = {
-    user = "root";
-    automatic = true;
-    interval = { Day = 14; Hour = 2; Minute = 0; };
-    options = "--delete-older-than 30d";
-  };
 
   system.stateVersion = "21.05"; # Don't change this
 }

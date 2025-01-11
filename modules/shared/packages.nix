@@ -2,7 +2,7 @@
 
 with pkgs; [
   # General packages for development and system management
-  alacritty
+ # alacritty
   aspell
   aspellDicts.en
   bash-completion
@@ -40,5 +40,6 @@ with pkgs; [
   unrar
   unzip
   zsh-powerlevel10k
-
+  oh-my-posh
+  synergy
 ]

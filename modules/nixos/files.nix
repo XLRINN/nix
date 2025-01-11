@@ -6,7 +6,7 @@ let
   xdg_dataHome   = "${home}/.local/share";
   xdg_stateHome  = "${home}/.local/state"; in
 {
-
+/*
   "${xdg_configHome}/bspwm/bspwmrc" = {
     executable = true;
     text = ''
@@ -161,7 +161,13 @@ let
 
     # Terminal emulator
     super + Return
-          bspc rule -a Alacritty -o state=floating rectangle=1024x768x0x0 center=true && /etc/profiles/per-user/${user}/bin/alacritty
+          bspc rule -a       { config, pkgs, ... }:
+      
+      {
+        programs.alacritty.enable = true;
+      
+        # Other configurations can go here
+      } -o state=floating rectangle=1024x768x0x0 center=true && /etc/profiles/per-user/${user}/bin/alacritty
 
     # Terminal emulator
     super + ctrl + Return
@@ -365,4 +371,5 @@ let
       esac
    '';
   };
+  */
 }

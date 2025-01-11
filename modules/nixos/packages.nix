@@ -10,6 +10,8 @@ shared-packages ++ [
   vscode
   bitwarden
   firefox
+  #alacritty
+
   # App and package management
   appimage-run
   gnumake
