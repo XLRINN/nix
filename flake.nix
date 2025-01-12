@@ -49,6 +49,7 @@
 
     nixvim = {
       url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -136,7 +137,6 @@
               users.${user} = import ./modules/nixos/home-manager.nix;
             };
           }
-          #nixvim.module
           ./hosts/nixos
         ];
      });

@@ -28,7 +28,6 @@ let user = "david";
   networking = {
     hostName = "hodr"; # Define your hostname.
     useDHCP = false;
-    #interfaces."enp57s0u1u4".useDHCP = true;
     networkmanager.enable = true; # Enable NetworkManager
   };
 

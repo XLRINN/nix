@@ -41,5 +41,9 @@ with pkgs; [
   zsh-powerlevel10k
   oh-my-posh
   synergy
-  
+  nodejs
+  ripgrep   
+  fd 
+  lua
+  #luajit           
 ]

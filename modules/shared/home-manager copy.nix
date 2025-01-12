@@ -5,6 +5,12 @@ let
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
   nvimPath = ./config/nvim/default.nix;
+/*
+  lzvim = pkgs.callPackage nvimPath {
+    name = "lzvim";
+    conf-repo-url = "https://github.com/LazyVim/starter.git";
+  };
+*/
 
 in
 {
@@ -40,7 +46,7 @@ in
       addcask = "nvim ~/nix/modules/darwin/casks.nix";
       cbs = "clear && bs";
       gc = "nix-collect-garbage -d";
-      p10k =  "cp ~/.p10k.zsh nix/modules/shared/config/power10k/p10k.zsh";
+      p10k =  "cp ~/.p10k.zsh nix/modules/shared/config/p10k.zsh";
     };
     initExtra = ''
       if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
@@ -74,29 +80,9 @@ in
     enable = true;
     settings = {
       pane_frames = false;
-      theme = "Solarized";
+      #default_layout = "compact";
+      theme = "nord";
     };
-  };
-
-  yazi = {
-    enable = true;
-    enableZshIntegration = true;
-    settings = {
-        show_hidden = true;
-        show_symlink = true;
-    };
-
-  };
-
-kitty = {
-  	enable = true;
-  	theme = "Chalk";
-  	font.name = "JetBrainsMono Nerd Font";
-  	settings = {
-  		confirm_os_window_close = -0;
-  		copy_on_select = true;
-  		clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
-  	};
   };
 
   neovim = {
