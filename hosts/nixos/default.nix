@@ -34,7 +34,7 @@ let user = "david";
 
   hardware = {
     enableAllFirmware = true; # Enable all firmware
-    opengl.enable = true;
+    graphics.enable = true; # Update from opengl.enable to graphics.enable
     ledger.enable = true;
     firmware = [ pkgs.linux-firmware ]; # Include firmware
   };
@@ -73,16 +73,16 @@ let user = "david";
     }];
   };
 
+   programs.hyprland.enable = true;
   services = { 
     xserver = {
       enable = true;
       displayManager.gdm.enable = true;
       desktopManager.gnome.enable = true;
-      layout = "us";
-      xkbOptions = "ctrl:nocaps";
-      libinput.enable = true;
+      xkb.layout = "us"; # Update from layout to xkb.layout
+      xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-
+    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh.enable = true;
 
     gvfs.enable = true;
@@ -97,7 +97,7 @@ let user = "david";
     font-awesome
     noto-fonts
     noto-fonts-emoji
-    fira-code-nerdfont
+    nerd-fonts.fira-code # Update from fira-code-nerdfont to nerd-fonts.fira-code
   ];
 
   # Turn on flag for proprietary software

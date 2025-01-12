@@ -19,9 +19,8 @@ with pkgs; [
   sqlite
   wget
   zip
-
-  oh-my-zsh
-
+  kitty
+  oh-my-zsh 
   zsh
   lazygit
   fzf
@@ -42,4 +41,5 @@ with pkgs; [
   zsh-powerlevel10k
   oh-my-posh
   synergy
+  
 ]

@@ -1,11 +1,16 @@
 { config, pkgs, lib, ... }:
 
 let 
+
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
 in
 {
+
+
+
+
   direnv = {
     enable = true;
     enableZshIntegration = true;
@@ -27,7 +32,7 @@ in
       {
           name = "powerlevel10k-config";
           src = lib.cleanSource ./config;
-          file = ".p10k.zsh";
+          file = "p10k.zsh";
       }];
     shellAliases = {
       pf = "pfetch";
@@ -38,6 +43,7 @@ in
       addcask = "nvim ~/nix/modules/darwin/casks.nix";
       cbs = "clear && bs";
       gc = "nix-collect-garbage -d";
+      p10k =  "cp ~/.p10k.zsh nix/modules/shared/config/p10k.zsh";
     };
     initExtra = ''
       if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
@@ -71,9 +77,28 @@ in
     enable = true;
     settings = {
       pane_frames = false;
-      #default_layout = "compact";
+      default_layout = "compact";
       theme = "nord";
     };
   };
 
+  neovim = {
+    enable = true;
+    plugins = with pkgs.vimPlugins; [
+      vim-airline
+      vim-airline-themes
+      copilot-vim
+      vim-startify
+      vim-tmux-navigator
+    ];
+    extraConfig = ''
+      call plug#begin('~/.local/share/nvim/plugged')
+      Plug 'vim-airline/vim-airline'
+      Plug 'vim-airline/vim-airline-themes'
+      Plug 'github/copilot.vim'
+      Plug 'mhinz/vim-startify'
+      Plug 'christoomey/vim-tmux-navigator'
+      call plug#end()
+    '';
+  };
 }

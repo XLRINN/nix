@@ -58,7 +58,10 @@ in
     };
 
     # Auto mount devices
-    udiskie.enable = true;
+    udiskie = {
+      enable = false;
+      tray = false; # Disable tray functionality to avoid the error
+    };
 
     polybar = {
       enable = true;

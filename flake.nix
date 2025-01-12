@@ -30,16 +30,30 @@
     oh-my-posh = {
       url = "github:JanDeDobbeleer/oh-my-posh";
       flake = false;
-      };
+    };
 
     stylix = {
       url = "github:danth/stylix";
       flake = false;
     };
 
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nvf = { 
+      url = "github:notashelf/nvf";
+      flake = false;
+    };
+
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko,oh-my-posh,stylix } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -123,6 +137,7 @@
               users.${user} = import ./modules/nixos/home-manager.nix;
             };
           }
+          #nixvim.module
           ./hosts/nixos
         ];
      });
