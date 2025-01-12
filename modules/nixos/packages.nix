@@ -10,7 +10,7 @@ shared-packages ++ [
   vscode
   bitwarden
   firefox
-  #alacritty
+  alacritty
 
   # App and package management
   appimage-run

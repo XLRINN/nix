@@ -1,20 +1,16 @@
 { config, pkgs, lib, ... }:
 
-
 let 
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-   
-    in
+in
 {
-
-
   direnv = {
-      enable = true;
-      enableZshIntegration = true;
-      nix-direnv.enable = true;
-    };
+    enable = true;
+    enableZshIntegration = true;
+    nix-direnv.enable = true;
+  };
 
   zsh = {
     enable = true;
@@ -23,21 +19,16 @@ let
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
     cdpath = [ "~/.local/share/src" ];
-    plugins = [
- /*
-      {
-        name = "ohmyposh";
-        src = pkgs.ohmyposh;
-        file = "path/to/ohmyposh.zsh-theme";
+    plugins = [ {
+          name = "powerlevel10k";
+          src = pkgs.zsh-powerlevel10k;
+          file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
       }
       {
-        name = "ohmyposh-config";
-        src = lib.cleanSource ./config;
-        file = ".slim.";
-      }
-    
-*/
-    ];
+          name = "powerlevel10k-config";
+          src = lib.cleanSource ./config;
+          file = ".p10k.zsh";
+      }];
     shellAliases = {
       pf = "pfetch";
       bs = "nix run .#build-switch";
@@ -45,9 +36,15 @@ let
       fmu = "clear && nix run .#build-switch && source ~/.zshrc";
       sauce = "source ~/.zshrc";
       addcask = "nvim ~/nix/modules/darwin/casks.nix";
-      };
-
-
+      cbs = "clear && bs";
+      gc = "nix-collect-garbage -d";
+    };
+    initExtra = ''
+      if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
+        export ZELLIJ_RUNNING=1
+        zellij
+      fi
+    '';
   };
 
   git = {
@@ -61,7 +58,7 @@ let
     extraConfig = {
       init.defaultBranch = "master";
       core = {
-	    editor = "vim";
+        editor = "vim";
         autocrlf = "input";
       };
       commit.gpgsign = false;
@@ -70,41 +67,13 @@ let
     };
   };
 
-zellij = {
-  enable = true;
-  settings = {
-    pane_frames = false;
-    #default_layout = "compact";
-    theme = "nord";
-  };
-};
-
-
-
-
-neovim = {
+  zellij = {
     enable = true;
-    vimAlias = true;
-    viAlias = true;
-    plugins = with pkgs.vimPlugins; [
-     # nvim-treesitter
-      lazy-nvim
-    ];
-    extraConfig = ''
-      source ./config/nvim/lua/config/lazy.lua
-    '';
-  
-  };
-
-/*
-
-  nixvim = {
-    enable = true;
-    plugins = {
-       colorschemes.catppuccin.enable = true;
-       plugins.lualine.enable = true;
+    settings = {
+      pane_frames = false;
+      #default_layout = "compact";
+      theme = "nord";
     };
   };
-*/
 
 }
