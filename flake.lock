@@ -516,22 +516,6 @@
         "type": "github"
       }
     },
-    "nixvim": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1736598781,
-        "narHash": "sha256-Y0o9ahm6Kk0DumTo80/vKspkHOkbtFgKCNiICyRjhMs=",
-        "owner": "nix-community",
-        "repo": "nixvim",
-        "rev": "2fc2132a78753fc3d7ec732044eff7ad69530055",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "nixvim",
-        "type": "github"
-      }
-    },
     "nvf": {
       "flake": false,
       "locked": {
@@ -598,7 +582,6 @@
         "hyprland": "hyprland",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs_4",
-        "nixvim": "nixvim",
         "nvf": "nvf",
         "oh-my-posh": "oh-my-posh",
         "stylix": "stylix"

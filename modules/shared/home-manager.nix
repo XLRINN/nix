@@ -14,6 +14,8 @@ in
     nix-direnv.enable = true;
   };
 
+  #environment.shellcheck.enable = false;
+
   zsh = {
     enable = true;
     autocd = false;
@@ -61,7 +63,7 @@ in
     extraConfig = {
       init.defaultBranch = "master";
       core = {
-        editor = "vim";
+        editor = "nvim";
         autocrlf = "input";
       };
       commit.gpgsign = false;
@@ -84,10 +86,12 @@ in
     settings = {
         show_hidden = true;
         show_symlink = true;
+          open.editor = "nvim";
+
     };
 
   };
-
+/*
 kitty = {
   	enable = true;
   	theme = "Chalk";
@@ -98,7 +102,7 @@ kitty = {
   		clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
   	};
   };
-
+*/
   neovim = {
     enable = true;
     plugins = with pkgs.vimPlugins; [
@@ -107,6 +111,9 @@ kitty = {
       nerdtree
       coc-nvim
       vim-fugitive
+      lazy-nvim
+      nvim-tree-lua
+      nvim-web-devicons
     ];
     extraConfig = ''
       if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))

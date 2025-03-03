@@ -51,7 +51,7 @@ in {
     {
       system.activationScripts.postUserActivation.text = ''
         echo >&2 "Setting up the Dock..."
-        haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
+        #haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
         
         # Apply autohide setting
         defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"};

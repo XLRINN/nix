@@ -2,12 +2,12 @@ _:
 
 [
   
-  "homebrew/cask/docker"
+#  "homebrew/cask/docker"
   "visual-studio-code"
   "vlc"
   "rectangle"
   "alacritty"
-  "kitty"
+  #"kitty"
   "bitwarden"
   "warp"
   "raycast"
@@ -19,6 +19,7 @@ _:
   "superkey"
   "charmstone"
   "vnc-viewer"
+  
   
   # Browsers
   "firefox"
