@@ -4,3 +4,38 @@ normal.family = "MesloLGS NF"
 bold.family = "MesloLGS NF"
 italic.family = "MesloLGS NF"
 bold_italic.family = "MesloLGS NF"
+
+[cursor]
+style = "Block"
+
+[window]
+opacity = 0.9
+padding = { x = 10, y = 10 }
+dynamic_padding = false
+decorations = "none"
+
+[colors]
+# Dark Pastels theme
+primary.background = "0x282c34"
+primary.foreground = "0xc5c8c6"
+
+normal.black = "0x282c34"
+normal.red = "0xcc6666"
+normal.green = "0xb5bd68"
+normal.yellow = "0xf0c674"
+normal.blue = "0x81a2be"
+normal.magenta = "0xb294bb"
+normal.cyan = "0x8abeb7"
+normal.white = "0xc5c8c6"
+
+bright.black = "0x969896"
+bright.red = "0xcc6666"
+bright.green = "0xb5bd68"
+bright.yellow = "0xf0c674"
+bright.blue = "0x81a2be"
+bright.magenta = "0xb294bb"
+bright.cyan = "0x8abeb7"
+bright.white = "0xffffff"
+
+[selection]
+semantic_escape_chars = " ,│`|:\"'()[]{}<>"

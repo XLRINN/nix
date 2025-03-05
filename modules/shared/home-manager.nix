@@ -4,7 +4,8 @@ let
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-  nvimPath = ./config/nvim/default.nix;
+  zshrc = config/shell/.zshrc;
+  #nvimPath = config/nvim/default.nix;
   yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
   alacritty = builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml);
 
@@ -16,6 +17,12 @@ in
     nix-direnv.enable = true;
   };
 
+  zsh = {
+    enable = true;
+    initExtra = builtins.readFile zshrc;
+  };
+
+  /*
   zsh = {
     enable = true;
     autocd = false;
@@ -51,6 +58,7 @@ in
       fi
     '';
   };
+  */
 
   git = {
     enable = true;
@@ -75,7 +83,7 @@ in
     enable = true;
     settings = {
       pane_frames = false;
-      theme = "Solarized";
+      theme = "dark_pastels";
     };
   };
 
