@@ -6,6 +6,7 @@ let
   email = "xlrin.morgan@gmail.com"; 
   nvimPath = ./config/nvim/default.nix;
   yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
+  alacritty = builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml);
 
 in
 {
@@ -41,7 +42,7 @@ in
       addcask = "nvim ~/nix/modules/darwin/casks.nix";
       cbs = "clear && bs";
       gc = "nix-collect-garbage -d";
-      p10k =  "cp ~/.p10k.zsh nix/modules/shared/config/power10k/p10k.zsh";
+      pretty =  "POWERLEVEL9K_CONFIG_FILE=~/nix/modules/shared/config/power10k/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/p10k.zsh";
     };
     initExtra = ''
       if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
@@ -117,6 +118,11 @@ in
       ]]
       EOF
     '';
+  };
+
+  alacritty = {
+    enable = true;
+    settings = alacritty;
   };
 
 }

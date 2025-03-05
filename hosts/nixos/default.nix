@@ -89,14 +89,18 @@ let user = "david";
   };
 
   fonts.packages = with pkgs; [
-    dejavu_fonts
-    emacs-all-the-icons-fonts
-    feather-font
-    jetbrains-mono
-    font-awesome
-    noto-fonts
-    noto-fonts-emoji
-    nerd-fonts.fira-code # Update from fira-code-nerdfont to nerd-fonts.fira-code
+      noto-fonts
+      noto-fonts-cjk
+      noto-fonts-emoji
+      fira-code
+      hack
+      inconsolata
+      dejavu_fonts
+      emacs-all-the-icons-fonts
+      feather-font
+      jetbrains-mono
+      font-awesome
+      nerd-fonts.fira-code
   ];
 
   # Turn on flag for proprietary software

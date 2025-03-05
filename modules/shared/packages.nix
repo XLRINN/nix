@@ -46,5 +46,17 @@ with pkgs; [
   fd 
   lua
   ranger
-  #luajit           
+  # fonts
+  noto-fonts
+  noto-fonts-cjk-sans
+  noto-fonts-emoji
+  fira-code
+  inconsolata
+  dejavu_fonts
+  emacs-all-the-icons-fonts
+  feather-font
+  jetbrains-mono
+  font-awesome
+  nerd-fonts.fira-code
+  meslo-lgs-nf
 ]

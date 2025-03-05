@@ -97,6 +97,9 @@ let user = "david";
     font-awesome
     noto-fonts
     noto-fonts-emoji
+    fira-code
+    fira-code-symbols
+    
   ];
 
   # Turn on flag for proprietary software
