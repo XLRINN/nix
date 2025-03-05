@@ -16,7 +16,7 @@ source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Powerlevel10k theme
-source ./config/shell/p10k.zsh
+source /Users/david/nix/modules/shared/config/shell/p10k.zsh
 
 # Aliases
 alias pf="pfetch"
