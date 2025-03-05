@@ -45,5 +45,6 @@ with pkgs; [
   ripgrep   
   fd 
   lua
+  ranger
   #luajit           
 ]

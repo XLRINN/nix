@@ -58,7 +58,7 @@
         default = with pkgs; mkShell {
           nativeBuildInputs = with pkgs; [ bashInteractive git ];
           shellHook = with pkgs; ''
-            export EDITOR=nvim
+            export EDITOR=neovim
           '';
         };
       };
@@ -134,6 +134,9 @@
           }
           ./hosts/nixos
         ];
+        environment.variables = {
+          EDITOR = "neovim";
+        };
      });
   };
 }

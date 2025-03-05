@@ -5,6 +5,7 @@ let
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
   nvimPath = ./config/nvim/default.nix;
+  yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
 
 in
 {
@@ -13,8 +14,6 @@ in
     enableZshIntegration = true;
     nix-direnv.enable = true;
   };
-
-  #environment.shellcheck.enable = false;
 
   zsh = {
     enable = true;
@@ -71,7 +70,6 @@ in
       rebase.autoStash = true;
     };
   };
-
   zellij = {
     enable = true;
     settings = {
@@ -82,27 +80,13 @@ in
 
   yazi = {
     enable = true;
-    enableZshIntegration = true;
-    settings = {
-        show_hidden = true;
-        show_symlink = true;
-          open.editor = "nvim";
-
-    };
-
+    settings = yazi;
   };
-/*
-kitty = {
-  	enable = true;
-  	theme = "Chalk";
-  	font.name = "JetBrainsMono Nerd Font";
-  	settings = {
-  		confirm_os_window_close = -0;
-  		copy_on_select = true;
-  		clipboard_control = "write-clipboard read-clipboard write-primary read-primary";
-  	};
+
+  ranger = {
+    enable = true;
   };
-*/
+
   neovim = {
     enable = true;
     plugins = with pkgs.vimPlugins; [
@@ -134,4 +118,5 @@ kitty = {
       EOF
     '';
   };
+
 }
