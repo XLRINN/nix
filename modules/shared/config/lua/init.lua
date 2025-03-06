@@ -33,6 +33,7 @@ require("lazy").setup({
     { "preservim/nerdtree" },
     { "tpope/vim-fugitive" },
     { "Exafunction/codeium.vim" },  -- Add Codeium plugin
+    { import = "plugins" },
     { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
   },
 })

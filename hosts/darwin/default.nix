@@ -13,6 +13,9 @@ let user = "david"; in
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
 
+  # Enable sudo Touch ID authentication
+  security.pam.enableSudoTouchIdAuth = true;
+
   # Setup user, packages, programs
   nix = {
     package = pkgs.nix;
@@ -33,23 +36,6 @@ let user = "david"; in
 
   # Turn off NIX_PATH warnings now that we're using flakes
   system.checks.verifyNixPath = false;
-/*
-  # Install fonts
-  environment.systemPackages = with pkgs; [
-    noto-fonts
-    noto-fonts-cjk-sans
-    noto-fonts-emoji
-    fira-code
-    hack
-    inconsolata
-    dejavu_fonts
-    emacs-all-the-icons-fonts
-    feather-font
-    jetbrains-mono
-    font-awesome
-    nerd-fonts.fira-code
-  ];
-  */
 
 
   system = {

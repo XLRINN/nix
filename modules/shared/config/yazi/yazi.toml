@@ -1,4 +1,4 @@
-#editor = "neovim"
+editor = "neovim"
 
 [manager]
 ratio = [1, 4, 3]
@@ -9,6 +9,7 @@ sort_dir_first = true
 linemode = "none"
 show_hidden = true
 show_symlink = true
+enable_mouse = true
 
 [preview]
 image_filter = "lanczos3"
@@ -19,6 +20,7 @@ max_height = 900
 cache_dir = ""
 ueberzug_scale = 1
 ueberzug_offset = [0, 0, 0, 0]
+enable_image_previews = true
 
 [tasks]
 micro_workers = 5
@@ -44,3 +46,9 @@ bright_blue = "0x81a2be"
 bright_magenta = "0xb294bb"
 bright_cyan = "0x8abeb7"
 bright_white = "0xffffff"
+
+[open]
+rules = [
+	{ mime = "*/*", use = "edit" },
+	{ name = "*", use = "edit" },
+]

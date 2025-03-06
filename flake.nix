@@ -46,9 +46,14 @@
       url = "github:notashelf/nvf";
       flake = false;
     };
+
+      nixvim= {
+        url = "github:dc-tec/nixvim";
+        flake = false;
+      };
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf,nixvim, } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -58,7 +63,7 @@
         default = with pkgs; mkShell {
           nativeBuildInputs = with pkgs; [ bashInteractive git ];
           shellHook = with pkgs; ''
-            export EDITOR=neovim
+              export EDITOR="nvim"
           '';
         };
       };
@@ -135,7 +140,7 @@
           ./hosts/nixos
         ];
         environment.variables = {
-          EDITOR = "neovim";
+          EDITOR = "nvim";
         };
      });
   };

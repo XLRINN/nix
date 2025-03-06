@@ -19,13 +19,15 @@ _:
   "superkey"
   "charmstone"
   "vnc-viewer"
-  
-  
+  "ghostty"
+   "via"
+    "wezterm"
+
   # Browsers
   "firefox"
   "arc"
   "google-chrome"
   "microsoft-edge"
   "duckduckgo"
-  "via"
+
 ]

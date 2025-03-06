@@ -3,6 +3,7 @@
 with pkgs; [
   # General packages for development and system management
  # alacritty
+  #ghostty
   aspell
   aspellDicts.en
   bash-completion
@@ -46,6 +47,10 @@ with pkgs; [
   fd 
   lua
   ranger
+  ueberzug
+  tmux
+  #nixvim
+
   # fonts
   noto-fonts
   noto-fonts-cjk-sans

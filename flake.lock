@@ -516,6 +516,22 @@
         "type": "github"
       }
     },
+    "nixvim": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1736323355,
+        "narHash": "sha256-UijEZMhflb4Vy5xrBsRHBFv90gFxro6oKh4kR0WpPnE=",
+        "owner": "dc-tec",
+        "repo": "nixvim",
+        "rev": "7090b197a7f01b169a7c6e131467d1a8ace78788",
+        "type": "github"
+      },
+      "original": {
+        "owner": "dc-tec",
+        "repo": "nixvim",
+        "type": "github"
+      }
+    },
     "nvf": {
       "flake": false,
       "locked": {
@@ -582,6 +598,7 @@
         "hyprland": "hyprland",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs_4",
+        "nixvim": "nixvim",
         "nvf": "nvf",
         "oh-my-posh": "oh-my-posh",
         "stylix": "stylix"
