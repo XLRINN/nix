@@ -1,4 +1,5 @@
 { config, pkgs, lib, ... }:
+  
 
 let 
   name = "david";
@@ -9,9 +10,20 @@ let
   yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
   alacritty = builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml);
   rifle = ./config/ranger/rifle.conf;
-
+  ghost = ./config/ghostty/config;
+  tmux = ./config/tmux/tmux.conf;
 in
 {
+
+imports = [
+      ./config/ghostty/ghostty.nix
+];
+
+ ghostty = {
+   enable = true;
+  };
+
+
   direnv = {
     enable = true;
     enableZshIntegration = true;
@@ -38,6 +50,8 @@ in
     };
   };
 
+  
+
   zellij = {
     enable = true;
     settings = {
@@ -60,49 +74,87 @@ in
     enable = true;
     defaultEditor = true;
     extraPackages = with pkgs; [
-      lua-language-server
       stylua
       ripgrep
     ];
     extraConfig = ''
       set number
       set relativenumber
-      syntax on
-      set tabstop=4
-      set shiftwidth=4
       set expandtab
+      set tabstop=2
+      set softtabstop=2
+      set shiftwidth=2
+      set smartindent
       set mouse=a
+      set termguicolors
+      set background=dark
       set clipboard=unnamedplus
-
+      set termguicolors
       " Keybindings to toggle NERDTree
       nnoremap <leader>n :NERDTreeToggle<CR>
 
-      " Ensure lazy.nvim is installed
-      lua << EOF
-      local install_path = vim.fn.stdpath('data')..'/site/pack/lazy/start/lazy.nvim'
-      if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-        vim.fn.system({'git', 'clone', '--filter=blob:none', 'https://github.com/folke/lazy.nvim.git', '--branch=stable', install_path})
-        vim.cmd [[packadd lazy.nvim]]
-      end
-      EOF
-
       " Plugin management using lazy.nvim
       lua << EOF
+      -- bootstrap lazy.nvim
+      local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+      if not vim.loop.fs_stat(lazypath) then
+        vim.fn.system({
+          "git",
+          "clone",
+          "--filter=blob:none",
+          "https://github.com/folke/lazy.nvim.git",
+          "--branch=stable",
+          lazypath,
+        })
+      end
+      vim.opt.rtp:prepend(lazypath)
+
+      -- leader key setup
+      vim.g.mapleader = " "
+      vim.g.maplocalleader = " "
+
+      -- setup plugins
       require("lazy").setup({
-        defaults = {
-          lazy = true,
-        },
         spec = {
-          { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+          {
+            "LazyVim/LazyVim",
+            import = "lazyvim.plugins",
+            opts = {
+              -- explicitly set fzf as the picker
+              ui = {
+                picker = "fzf",
+              },
+            },
+          },
           { "nvim-telescope/telescope-fzf-native.nvim", enabled = true },
           { "williamboman/mason-lspconfig.nvim", enabled = false },
           { "williamboman/mason.nvim", enabled = false },
           { "preservim/nerdtree" },
           { "tpope/vim-fugitive" },
-          { "Exafunction/codeium.vim" },  -- Add Codeium plugin
+          { "Exafunction/codeium.vim", event = "BufEnter" },
+          { "Exafunction/codeium.nvim",
+            dependencies = {
+              "nvim-lua/plenary.nvim",
+              "hrsh7th/nvim-cmp",
+            },
+            config = function()
+              require("codeium").setup({
+                tools = {
+                  chat = {
+                    enable = true,
+                    debug = false,
+                  },
+                },
+              })
+            end,
+          },
           { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
+          { "neovim/nvim-lspconfig", enabled = false },
+          { "andersevenrud/nordic.nvim" },
         },
       })
+
+
       EOF
     '';
   };
@@ -136,13 +188,12 @@ in
       pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
       pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
     };
-    /*
+  
     initExtra = ''
       if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
         export ZELLIJ_RUNNING=1
         zellij
       fi
     '';
-    */
   };
 }

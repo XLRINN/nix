@@ -47,6 +47,7 @@ with pkgs; [
   fd 
   lua
   ranger
+  lynx
   ueberzug
   tmux
   #nixvim

@@ -20,9 +20,9 @@ _:
   "charmstone"
   "vnc-viewer"
   "ghostty"
-   "via"
-    "wezterm"
-
+  "via"
+  "wezterm"
+  "windsurf"
   # Browsers
   "firefox"
   "arc"
