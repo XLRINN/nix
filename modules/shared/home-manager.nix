@@ -196,7 +196,6 @@ in
               "nvim-telescope/telescope.nvim"
             },
             config = function()
-              -- vim.env.OPENAI_API_KEY = ""
               require("chatgpt").setup({
                 openai_params = {
                   -- model = "gpt-4",
