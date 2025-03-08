@@ -155,9 +155,7 @@ in
           { "tanvirtin/monokai.nvim", priority = 1000 },
           { "Mofiqul/vscode.nvim", priority = 1000 },
           { "zaldih/themery.nvim",
- 
- 
-           config = function()
+            config = function()
               require("themery").setup({
                 themes = {
                   "tokyonight",
@@ -182,39 +180,10 @@ in
                   "neon",
                   "monokai",
                   "vscode",
- 
                 },
                 themeConfigFile = vim.fn.stdpath("config") .. "/lua/theme.lua",
                 livePreview = true,
               })
-            end,
-          },
-          { "jackMort/ChatGPT.nvim",
-            dependencies = {
-              "MunifTanjim/nui.nvim",
-              "nvim-lua/plenary.nvim",
-              "nvim-telescope/telescope.nvim"
-            },
-            config = function()
-<<<<<<< HEAD
-=======
-              vim.env.OPENAI_API_KEY = "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"
->>>>>>> 2d8bc4f (D - gpt gone, zellij is taking)
-              require("chatgpt").setup({
-                openai_params = {
-                  -- model = "gpt-4",
-                 -- max_tokens = 2000,
-                },
-                keymaps = {
-                  close = "<C-c>",
-                  submit = "<C-s>",
-                  yank_last = "<C-y>",
-                  scroll_up = "<C-u>",
-                  scroll_down = "<C-d>",
-                },
-              })
-              vim.keymap.set('n', '<leader>cc', ':ChatGPT<CR>', { noremap = true, silent = true })
-              vim.keymap.set('n', '<leader>ce', ':ChatGPTEditWithInstructions<CR>', { noremap = true, silent = true })
             end,
           },
           { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
@@ -222,8 +191,6 @@ in
           { "andersevenrud/nordic.nvim" },
         },
       })
-
-
       EOF
     '';
   };
