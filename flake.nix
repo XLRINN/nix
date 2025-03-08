@@ -118,6 +118,7 @@
                 };
                 mutableTaps = false;
                 autoMigrate = true;
+
               };
             }
             ./hosts/darwin

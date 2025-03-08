@@ -15,14 +15,7 @@ let
 in
 {
 
-imports = [
-      ./config/ghostty/ghostty.nix
-];
-
- ghostty = {
-   enable = true;
-  };
-
+#imports = [];
 
   direnv = {
     enable = true;
@@ -55,10 +48,13 @@ imports = [
   zellij = {
     enable = true;
     settings = {
+      defaultLayout = "compact";
       pane_frames = false;
-      theme = "dark_pastels";
+      theme = "Nord";
+      simplified_ui = true;
     };
-  };
+  
+    };
 
   yazi = {
     enable = true;
@@ -76,6 +72,7 @@ imports = [
     extraPackages = with pkgs; [
       stylua
       ripgrep
+      curl
     ];
     extraConfig = ''
       set number
@@ -113,6 +110,9 @@ imports = [
       vim.g.mapleader = " "
       vim.g.maplocalleader = " "
 
+      -- setup keymaps
+      vim.keymap.set('n', '<leader>th', ':Themery<CR>', { noremap = true, silent = true })
+
       -- setup plugins
       require("lazy").setup({
         spec = {
@@ -122,7 +122,7 @@ imports = [
             opts = {
               -- explicitly set fzf as the picker
               ui = {
-                picker = "fzf",
+                -- picker = "fzf",
               },
             },
           },
@@ -131,21 +131,87 @@ imports = [
           { "williamboman/mason.nvim", enabled = false },
           { "preservim/nerdtree" },
           { "tpope/vim-fugitive" },
-          { "Exafunction/codeium.vim", event = "BufEnter" },
-          { "Exafunction/codeium.nvim",
+          { "craftzdog/solarized-osaka.nvim", priority = 1000, config = true },
+          { "folke/tokyonight.nvim", priority = 1000, config = true },
+          { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
+          { "rose-pine/neovim", name = "rose-pine", priority = 1000 },
+          { "projekt0n/github-nvim-theme", priority = 1000 },
+          { "rebelot/kanagawa.nvim", priority = 1000 },
+          { "EdenEast/nightfox.nvim", priority = 1000 },
+          { "sainnhe/gruvbox-material", priority = 1000 },
+          { "navarasu/onedark.nvim", priority = 1000 },
+          { "shaunsingh/nord.nvim", priority = 1000, config = function()
+              vim.cmd("colorscheme nord")
+            end },
+          { "sainnhe/everforest", priority = 1000 },
+          { "sainnhe/edge", priority = 1000 },
+          { "sainnhe/sonokai", priority = 1000 },
+          { "marko-cerovac/material.nvim", priority = 1000 },
+          { "dracula/vim", as = "dracula", priority = 1000 },
+          { "glepnir/zephyr-nvim", priority = 1000 },
+          { "bluz71/vim-nightfly-guicolors", priority = 1000 },
+          { "bluz71/vim-moonfly-colors", priority = 1000 },
+          { "rafamadriz/neon", priority = 1000 },
+          { "tanvirtin/monokai.nvim", priority = 1000 },
+          { "Mofiqul/vscode.nvim", priority = 1000 },
+          { "zaldih/themery.nvim",
+ 
+ 
+           config = function()
+              require("themery").setup({
+                themes = {
+                  "tokyonight",
+                  "catppuccin",
+                  "rose-pine",
+                  "github_dark",
+                  "kanagawa",
+                  "nightfox",
+                  "gruvbox-material",
+                  "onedark",
+                  "solarized-osaka",
+                  "nordic",
+                  "nord",
+                  "everforest",
+                  "edge",
+                  "sonokai",
+                  "material",
+                  "dracula",
+                  "zephyr",
+                  "nightfly",
+                  "moonfly",
+                  "neon",
+                  "monokai",
+                  "vscode",
+ 
+                },
+                themeConfigFile = vim.fn.stdpath("config") .. "/lua/theme.lua",
+                livePreview = true,
+              })
+            end,
+          },
+          { "jackMort/ChatGPT.nvim",
             dependencies = {
+              "MunifTanjim/nui.nvim",
               "nvim-lua/plenary.nvim",
-              "hrsh7th/nvim-cmp",
+              "nvim-telescope/telescope.nvim"
             },
             config = function()
-              require("codeium").setup({
-                tools = {
-                  chat = {
-                    enable = true,
-                    debug = false,
-                  },
+              vim.env.OPENAI_API_KEY = "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"
+              require("chatgpt").setup({
+                openai_params = {
+                  -- model = "gpt-4",
+                 -- max_tokens = 2000,
+                },
+                keymaps = {
+                  close = "<C-c>",
+                  submit = "<C-s>",
+                  yank_last = "<C-y>",
+                  scroll_up = "<C-u>",
+                  scroll_down = "<C-d>",
                 },
               })
+              vim.keymap.set('n', '<leader>cc', ':ChatGPT<CR>', { noremap = true, silent = true })
+              vim.keymap.set('n', '<leader>ce', ':ChatGPTEditWithInstructions<CR>', { noremap = true, silent = true })
             end,
           },
           { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
@@ -194,6 +260,7 @@ imports = [
         export ZELLIJ_RUNNING=1
         zellij
       fi
+
     '';
   };
 }

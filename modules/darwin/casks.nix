@@ -23,6 +23,7 @@ _:
   "via"
   "wezterm"
   "windsurf"
+  #"yabai"
   # Browsers
   "firefox"
   "arc"
