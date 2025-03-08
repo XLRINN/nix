@@ -196,6 +196,10 @@ in
               "nvim-telescope/telescope.nvim"
             },
             config = function()
+<<<<<<< HEAD
+=======
+              vim.env.OPENAI_API_KEY = "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"
+>>>>>>> 2d8bc4f (D - gpt gone, zellij is taking)
               require("chatgpt").setup({
                 openai_params = {
                   -- model = "gpt-4",
