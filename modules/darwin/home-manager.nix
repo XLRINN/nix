@@ -18,7 +18,7 @@ in
     isHidden = false;
     shell = pkgs.zsh;
   };
-
+/*
   services.yabai = {
     enable = true;
     package = pkgs.yabai;
@@ -52,9 +52,14 @@ in
       right_padding                = 10;
       window_gap                   = 10;};
   };
+*/
 
 
+services.aerospace = {
+    enable = true;
+  };
 
+   
   homebrew = {
     # This is a module from nix-darwin
     # Homebrew is *installed* via the flake input nix-homebrew

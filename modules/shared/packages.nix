@@ -50,7 +50,7 @@ with pkgs; [
   lynx
   ueberzug
   tmux
-  #nixvim
+  powershell
 
   # fonts
   noto-fonts

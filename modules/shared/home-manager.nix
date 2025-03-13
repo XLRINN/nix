@@ -45,16 +45,20 @@ in
 
   
 
-  zellij = {
-    enable = true;
-    settings = {
-      defaultLayout = "compact";
-      pane_frames = false;
-      theme = "Nord";
-      simplified_ui = true;
-    };
+ zellij = {
+  enable = true;
+  settings = {
+    default_Layout = "compact";
+    pane_frames = false;
+    theme = "ansi";
+    simplified_ui = true;
+    hide_session_name = true;
+    rounded_corners = true;
+  };
+};
+
   
-    };
+    
 
   yazi = {
     enable = true;
@@ -155,9 +159,7 @@ in
           { "tanvirtin/monokai.nvim", priority = 1000 },
           { "Mofiqul/vscode.nvim", priority = 1000 },
           { "zaldih/themery.nvim",
- 
- 
-           config = function()
+            config = function()
               require("themery").setup({
                 themes = {
                   "tokyonight",
@@ -182,36 +184,10 @@ in
                   "neon",
                   "monokai",
                   "vscode",
- 
                 },
                 themeConfigFile = vim.fn.stdpath("config") .. "/lua/theme.lua",
                 livePreview = true,
               })
-            end,
-          },
-          { "jackMort/ChatGPT.nvim",
-            dependencies = {
-              "MunifTanjim/nui.nvim",
-              "nvim-lua/plenary.nvim",
-              "nvim-telescope/telescope.nvim"
-            },
-            config = function()
-              vim.env.OPENAI_API_KEY = "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"
-              require("chatgpt").setup({
-                openai_params = {
-                  -- model = "gpt-4",
-                 -- max_tokens = 2000,
-                },
-                keymaps = {
-                  close = "<C-c>",
-                  submit = "<C-s>",
-                  yank_last = "<C-y>",
-                  scroll_up = "<C-u>",
-                  scroll_down = "<C-d>",
-                },
-              })
-              vim.keymap.set('n', '<leader>cc', ':ChatGPT<CR>', { noremap = true, silent = true })
-              vim.keymap.set('n', '<leader>ce', ':ChatGPTEditWithInstructions<CR>', { noremap = true, silent = true })
             end,
           },
           { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
@@ -219,8 +195,6 @@ in
           { "andersevenrud/nordic.nvim" },
         },
       })
-
-
       EOF
     '';
   };

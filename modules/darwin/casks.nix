@@ -13,6 +13,7 @@ _:
   "raycast"
   "termius"
   "zoom"
+  # "nikitabobko/tap/aerospace"
   "microsoft-remote-desktop"
   "chatgpt"
   "zed"
