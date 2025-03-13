@@ -193,6 +193,7 @@ in
           { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
           { "neovim/nvim-lspconfig", enabled = false },
           { "andersevenrud/nordic.nvim" },
+          {"github/copilot.vim"},
         },
       })
       EOF

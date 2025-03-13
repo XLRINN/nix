@@ -69,10 +69,11 @@ let
 
   "${xdg_configHome}/rofi/bin/launcher.sh" = {
     executable = true;
-    text = ''
-      #!/bin/sh
-
-      rofi -no-config -no-lazy-grab -show drun -modi drun -theme ~/.config/rofi/launcher.rasi
+/*
+text = ''      
+      #      #!/bin/sh
+      #
+      #      rofi -no-config -no-lazy-grab -show drun -modi drun -theme ~/.config/rofi/launcher.#rasi
     '';
   };
 
@@ -160,4 +161,5 @@ let
       esac
    '';
   };
+  #  
 }
