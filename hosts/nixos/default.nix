@@ -90,10 +90,9 @@ let user = "david";
 
   fonts.packages = with pkgs; [
       noto-fonts
-      noto-fonts-cjk
+      noto-fonts-cjk-sans
       noto-fonts-emoji
       fira-code
-      hack
       inconsolata
       dejavu_fonts
       emacs-all-the-icons-fonts

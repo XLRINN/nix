@@ -140,9 +140,9 @@
           }
           ./hosts/nixos
         ];
-        environment.variables = {
-          EDITOR = "nvim";
-        };
+#        environment.variables = {
+#          EDITOR = "nvim";
+#        };
      });
   };
 }
