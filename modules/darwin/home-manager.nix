@@ -54,11 +54,11 @@ in
   };
 */
 
-
+  /*
 services.aerospace = {
     enable = true;
   };
-
+*/
    
   homebrew = {
     # This is a module from nix-darwin

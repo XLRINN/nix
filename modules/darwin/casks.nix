@@ -2,10 +2,10 @@ _:
 
 [
   
-#  "homebrew/cask/docker"
+  "homebrew/cask/docker"
   "visual-studio-code"
   "vlc"
-  "rectangle"
+  #"rectangle"
   "alacritty"
   #"kitty"
   "bitwarden"
@@ -13,6 +13,7 @@ _:
   "raycast"
   "termius"
   "zoom"
+  "qbittorrent"
   # "nikitabobko/tap/aerospace"
   "microsoft-remote-desktop"
   "chatgpt"
