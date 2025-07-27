@@ -61,7 +61,7 @@ with pkgs; [
   fira-code
   inconsolata
   dejavu_fonts
-  emacs-all-the-icons-fonts
+
   feather-font
   jetbrains-mono
   font-awesome

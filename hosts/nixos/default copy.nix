@@ -91,7 +91,7 @@ let user = "david";
 
   fonts.packages = with pkgs; [
     dejavu_fonts
-    emacs-all-the-icons-fonts
+    
     feather-font
     jetbrains-mono
     font-awesome
@@ -104,7 +104,7 @@ let user = "david";
 
   # Turn on flag for proprietary software
   nix = {
-    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nixos-config:/etc/nixos" ];
+    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nix:/etc/nixos" ];
     settings = {
       allowed-users = [ "${user}" ];
       trusted-users = [ "@admin" "${user}" ];

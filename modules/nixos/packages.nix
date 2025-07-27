@@ -46,7 +46,7 @@ shared-packages ++ [
   tree
   unixtools.ifconfig
   unixtools.netstat
-  xclip # For the org-download package in Emacs
+  xclip # For clipboard operations
   xorg.xwininfo # Provides a cursor to click and learn about windows
   xorg.xrandr
 
