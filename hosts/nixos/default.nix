@@ -36,13 +36,13 @@ let user = "david";
   };
 
   hardware = {
-    # enableAllFirmware = true; # Enable all firmware - DISABLED FOR TESTING
-    # graphics.enable = true; # Update from opengl.enable to graphics.enable - DISABLED FOR TESTING
-    # ledger.enable = true; # DISABLED FOR TESTING
-    # firmware = [ pkgs.linux-firmware ]; # Include firmware - DISABLED FOR TESTING
+    enableAllFirmware = true; # Enable all firmware
+    graphics.enable = true; # Update from opengl.enable to graphics.enable
+    ledger.enable = true;
+    firmware = [ pkgs.linux-firmware ]; # Include firmware
   };
 
-  # virtualisation.docker.enable = true; # DISABLED FOR TESTING
+  virtualisation.docker.enable = true;
 
   programs.zsh.enable = true; # Enable zsh
 
@@ -76,40 +76,40 @@ let user = "david";
     }];
   };
 
-   # programs.hyprland.enable = true; # DISABLED FOR TESTING
+   programs.hyprland.enable = true;
   services = { 
-    # xserver = {
-    #   enable = true;
-    #   displayManager.gdm.enable = true;
-    #   desktopManager.gnome.enable = true;
-    #   xkb.layout = "us"; # Update from layout to xkb.layout
-    #   xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
-    # }; # DISABLED FOR TESTING
-    # libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable - DISABLED FOR TESTING
+    xserver = {
+      enable = true;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+      xkb.layout = "us"; # Update from layout to xkb.layout
+      xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
+    };
+    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh.enable = true;
 
-    # gvfs.enable = true; # DISABLED FOR TESTING
-    # tumbler.enable = true; # DISABLED FOR TESTING
+    gvfs.enable = true;
+    tumbler.enable = true;
   };
 
-  # Swap file configuration for hibernation - DISABLED FOR TESTING
-  # swapDevices = [{
-  #   device = "/swap/swapfile";
-  #   size = 0; # Will be set to RAM size during installation
-  # }];
+  # Swap file configuration for hibernation
+  swapDevices = [{
+    device = "/swap/swapfile";
+    size = 0; # Will be set to RAM size during installation
+  }];
 
-  # fonts.packages = with pkgs; [
-  #     noto-fonts
-  #     noto-fonts-cjk-sans
-  #     noto-fonts-emoji
-  #     fira-code
-  #     inconsolata
-  #     dejavu_fonts
-  #     feather-font
-  #     jetbrains-mono
-  #     font-awesome
-  #     nerd-fonts.fira-code
-  # ]; # DISABLED FOR TESTING
+  fonts.packages = with pkgs; [
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-emoji
+      fira-code
+      inconsolata
+      dejavu_fonts
+      feather-font
+      jetbrains-mono
+      font-awesome
+      nerd-fonts.fira-code
+  ];
 
   # Turn on flag for proprietary software
   nix = {
