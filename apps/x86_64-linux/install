@@ -10,16 +10,36 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}Starting NixOS installation...${NC}"
 
+# Detect system architecture
+SYSTEM=$(uname -m)
+case "$SYSTEM" in
+  x86_64)
+    FLAKE_TARGET="x86_64-linux"
+    APP_DIR="x86_64-linux"
+    ;;
+  aarch64)
+    FLAKE_TARGET="aarch64-linux"
+    APP_DIR="aarch64-linux"
+    ;;
+  *)
+    echo -e "${RED}Unsupported architecture: $SYSTEM${NC}"
+    exit 1
+    ;;
+esac
+
+echo -e "${YELLOW}Detected architecture: $SYSTEM${NC}"
+echo -e "${YELLOW}Using flake target: $FLAKE_TARGET${NC}"
+
 # Run the apply script first to configure the system
 echo -e "${YELLOW}Running apply script to configure installation...${NC}"
-./apps/aarch64-linux/apply
+./apps/$APP_DIR/apply
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Configuration applied successfully.${NC}"
     
     # Run the build-switch script to install
     echo -e "${YELLOW}Building and switching to new configuration...${NC}"
-    ./apps/aarch64-linux/build-switch
+    ./apps/$APP_DIR/build-switch
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Installation completed successfully!${NC}"
