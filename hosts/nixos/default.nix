@@ -20,6 +20,10 @@ let user = "david";
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
     kernelModules = [ "uinput" "iwlwifi" ];
+    
+    # Hibernation support
+    resumeDevice = "/dev/disk/by-label/swap";
+    kernelParams = [ "resume_offset=0" ];
   };
 
   # Set your time zone.
@@ -32,13 +36,13 @@ let user = "david";
   };
 
   hardware = {
-    enableAllFirmware = true; # Enable all firmware
-    graphics.enable = true; # Update from opengl.enable to graphics.enable
-    ledger.enable = true;
-    firmware = [ pkgs.linux-firmware ]; # Include firmware
+    # enableAllFirmware = true; # Enable all firmware - DISABLED FOR TESTING
+    # graphics.enable = true; # Update from opengl.enable to graphics.enable - DISABLED FOR TESTING
+    # ledger.enable = true; # DISABLED FOR TESTING
+    # firmware = [ pkgs.linux-firmware ]; # Include firmware - DISABLED FOR TESTING
   };
 
-  virtualisation.docker.enable = true;
+  # virtualisation.docker.enable = true; # DISABLED FOR TESTING
 
   programs.zsh.enable = true; # Enable zsh
 
@@ -72,34 +76,40 @@ let user = "david";
     }];
   };
 
-   programs.hyprland.enable = true;
+   # programs.hyprland.enable = true; # DISABLED FOR TESTING
   services = { 
-    xserver = {
-      enable = true;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
-      xkb.layout = "us"; # Update from layout to xkb.layout
-      xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
-    };
-    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
+    # xserver = {
+    #   enable = true;
+    #   displayManager.gdm.enable = true;
+    #   desktopManager.gnome.enable = true;
+    #   xkb.layout = "us"; # Update from layout to xkb.layout
+    #   xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
+    # }; # DISABLED FOR TESTING
+    # libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable - DISABLED FOR TESTING
     openssh.enable = true;
 
-    gvfs.enable = true;
-    tumbler.enable = true;
+    # gvfs.enable = true; # DISABLED FOR TESTING
+    # tumbler.enable = true; # DISABLED FOR TESTING
   };
 
-  fonts.packages = with pkgs; [
-      noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-emoji
-      fira-code
-      inconsolata
-      dejavu_fonts
-      feather-font
-      jetbrains-mono
-      font-awesome
-      nerd-fonts.fira-code
-  ];
+  # Swap file configuration for hibernation - DISABLED FOR TESTING
+  # swapDevices = [{
+  #   device = "/swap/swapfile";
+  #   size = 0; # Will be set to RAM size during installation
+  # }];
+
+  # fonts.packages = with pkgs; [
+  #     noto-fonts
+  #     noto-fonts-cjk-sans
+  #     noto-fonts-emoji
+  #     fira-code
+  #     inconsolata
+  #     dejavu_fonts
+  #     feather-font
+  #     jetbrains-mono
+  #     font-awesome
+  #     nerd-fonts.fira-code
+  # ]; # DISABLED FOR TESTING
 
   # Turn on flag for proprietary software
   nix = {
