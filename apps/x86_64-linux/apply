@@ -72,19 +72,8 @@ select_boot_disk() {
   disks=$(lsblk -nd --output NAME,SIZE | grep -v loop)
   echo "$disks"
 
-  # Warning message for data deletion
-  _print "${RED}WARNING: All data on the chosen disk will be erased during the installation!${NC}"
   _prompt "${YELLOW}Please enter the name of your boot disk (e.g., sda, nvme0n1). Do not include the full path ("/dev/"): ${NC}" _boot_disk
-
-  # Confirmation for disk selection to prevent accidental data loss
-  _print "${YELLOW}You have selected $_boot_disk as the boot disk. This will delete everything on this disk. Are you sure? (Y/N): ${NC}"
-  read -r confirmation
-  if [[ "$confirmation" =~ ^[Yy]$ ]]; then
-    export BOOT_DISK=$_boot_disk
-  else
-    _print "${RED}Disk selection cancelled by the user. Please run the script again to select the correct disk.${NC}"
-    exit 1
-  fi
+  export BOOT_DISK=$_boot_disk
 }
 
 # Set hostname and find primary disk if this is NixOS
@@ -135,30 +124,17 @@ confirm_details() {
 # Call the confirmation function
 confirm_details
 
-# Function to replace tokens in each file
-replace_tokens() {
-  local file="$1"
-  if [[ $(basename $1) != "apply" ]]; then
-    if [[ "$OS" == "Darwin" ]]; then
-      # macOS
-      LC_ALL=C LANG=C sed -i '' -e "s/%USER%/$USERNAME/g" "$file"
-      LC_ALL=C LANG=C sed -i '' -e "s/%EMAIL%/$GIT_EMAIL/g" "$file"
-      LC_ALL=C LANG=C sed -i '' -e "s/%NAME%/$GIT_NAME/g" "$file"
-    else
-      # Linux or other
-      sed -i -e "s/%USER%/$USERNAME/g" "$file"
-      sed -i -e "s/%EMAIL%/$GIT_EMAIL/g" "$file"
-      sed -i -e "s/%NAME%/$GIT_NAME/g" "$file"
-      sed -i -e "s/%INTERFACE%/$PRIMARY_IFACE/g" "$file"
-      sed -i -e "s/%DISK%/$BOOT_DISK/g" "$file"
-      sed -i -e "s/%HOST%/$HOST_NAME/g" "$file"
-    fi
-  fi
-}
-
-# Traverse directories and call replace_tokens on each Nix file
-export -f replace_tokens
-find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
+# Token replacement is not needed when running from flake
+# The configuration will use the environment variables directly
+echo "Configuration values collected:"
+echo "Username: $USERNAME"
+echo "Email: $GIT_EMAIL"
+echo "Name: $GIT_NAME"
+if [[ "$OS" != "Darwin" ]]; then
+  echo "Interface: $PRIMARY_IFACE"
+  echo "Disk: $BOOT_DISK"
+  echo "Hostname: $HOST_NAME"
+fi
 
 echo "$USERNAME" > /tmp/username.txt
 _print "${GREEN}User $USERNAME information applied.${NC}"
