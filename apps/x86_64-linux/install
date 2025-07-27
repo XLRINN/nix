@@ -32,14 +32,14 @@ echo -e "${YELLOW}Using flake target: $FLAKE_TARGET${NC}"
 
 # Run the apply script first to configure the system
 echo -e "${YELLOW}Running apply script to configure installation...${NC}"
-./apps/$APP_DIR/apply
+$0/../$APP_DIR/apply
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Configuration applied successfully.${NC}"
     
     # Run the build-switch script to install
     echo -e "${YELLOW}Building and switching to new configuration...${NC}"
-    ./apps/$APP_DIR/build-switch
+    $0/../$APP_DIR/build-switch
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Installation completed successfully!${NC}"
