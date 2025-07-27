@@ -33,6 +33,11 @@ echo -e "${YELLOW}Using flake target: $FLAKE_TARGET${NC}"
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APPS_DIR="$(dirname "$SCRIPT_DIR")"
+FLAKE_DIR="$(dirname "$APPS_DIR")"
+
+# Change to the flake directory first
+cd "$FLAKE_DIR"
+echo -e "${YELLOW}Changed to flake directory: $FLAKE_DIR${NC}"
 
 # Run the apply script first to configure the system
 echo -e "${YELLOW}Running apply script to configure installation...${NC}"

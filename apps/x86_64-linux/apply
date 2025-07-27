@@ -35,47 +35,33 @@ _prompt() {
   read -r $variable
 }
 
-ask_for_star() {
-  _print "${YELLOW}Would you like to support my work by starring my GitHub repo? yes/no [yes]: ${NC}"
-  local response
-  read -r response
-  response=${response:-yes} # Set default response to 'yes' if input is empty
-  if [[ "$response" =~ ^[Yy](es)?$ ]] || [[ -z "$response" ]]; then
-    if [[ "$OS" == "Darwin" ]]; then
-      open "https://github.com/xlrinn/nix"
-    else
-      xdg-open "https://github.com/xlrinn/nix"
-    fi
+
+
+# Set default values
+export USERNAME="david"
+export GIT_EMAIL="xlrin.morgan@gmail.com"
+export GIT_NAME="david"
+
+# Ask if user wants to change defaults
+_print "${YELLOW}Default values:${NC}"
+_print "${GREEN}Username: $USERNAME${NC}"
+_print "${GREEN}Email: $GIT_EMAIL${NC}"
+_print "${GREEN}Name: $GIT_NAME${NC}"
+
+_prompt "${YELLOW}Do you want to change these defaults? (y/N): ${NC}" change_defaults
+
+if [[ "$change_defaults" =~ ^[Yy]$ ]]; then
+  # If the username is 'nixos' or 'root', ask the user for their username
+  if [[ "$USERNAME" == "nixos" ]] || [[ "$USERNAME" == "root" ]]; then
+    _prompt "${YELLOW}You're running as $USERNAME. Please enter your desired username: ${NC}" USERNAME
+  else
+    _prompt "${YELLOW}Please enter your username: ${NC}" USERNAME
   fi
-}
-
-ask_for_star
-
-# Fetch username from the system
-export USERNAME=$(whoami)
-
-# If the username is 'nixos' or 'root', ask the user for their username
-if [[ "$USERNAME" == "nixos" ]] || [[ "$USERNAME" == "root" ]]; then
-  _prompt "${YELLOW}You're running as $USERNAME. Please enter your desired username: ${NC}" USERNAME
-fi
-
-# Check if git is available
-if command -v git >/dev/null 2>&1; then
-  # Fetch email and name from git config
-  export GIT_EMAIL=$(git config --get user.email)
-  export GIT_NAME=$(git config --get user.name)
-else
-  _print "${RED}Git is not available on this system.${NC}"
-fi
-
-# If git email is not found or git is not available, ask the user
-if [[ -z "$GIT_EMAIL" ]]; then
+  
   _prompt "${YELLOW}Please enter your email: ${NC}" GIT_EMAIL
-fi
-
-# If git name is not found or git is not available, ask the user
-if [[ -z "$GIT_NAME" ]]; then
   _prompt "${YELLOW}Please enter your name: ${NC}" GIT_NAME
+else
+  _print "${GREEN}Using default values.${NC}"
 fi
 
 select_boot_disk() {
@@ -103,8 +89,17 @@ select_boot_disk() {
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
-  _prompt "${YELLOW}Please enter a hostname for the system: ${NC}" HOST_NAME
-  export HOST_NAME
+  export HOST_NAME="loki"
+  
+  _print "${YELLOW}Default hostname: $HOST_NAME${NC}"
+  _prompt "${YELLOW}Do you want to change the hostname? (y/N): ${NC}" change_hostname
+  
+  if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
+    _prompt "${YELLOW}Please enter a hostname for the system: ${NC}" HOST_NAME
+  else
+    _print "${GREEN}Using default hostname: $HOST_NAME${NC}"
+  fi
+  
   select_boot_disk
 fi
 
