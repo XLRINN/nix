@@ -30,16 +30,31 @@ esac
 echo -e "${YELLOW}Detected architecture: $SYSTEM${NC}"
 echo -e "${YELLOW}Using flake target: $FLAKE_TARGET${NC}"
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APPS_DIR="$(dirname "$SCRIPT_DIR")"
+
 # Run the apply script first to configure the system
 echo -e "${YELLOW}Running apply script to configure installation...${NC}"
-$0/../$APP_DIR/apply
+echo -e "${YELLOW}Script directory: $SCRIPT_DIR${NC}"
+echo -e "${YELLOW}Apps directory: $APPS_DIR${NC}"
+echo -e "${YELLOW}Looking for: $APPS_DIR/$APP_DIR/apply${NC}"
+
+if [ -f "$APPS_DIR/$APP_DIR/apply" ]; then
+    "$APPS_DIR/$APP_DIR/apply"
+else
+    echo -e "${RED}Could not find apply script at $APPS_DIR/$APP_DIR/apply${NC}"
+    echo -e "${YELLOW}Available files in $APPS_DIR/$APP_DIR/:${NC}"
+    ls -la "$APPS_DIR/$APP_DIR/" 2>/dev/null || echo "Directory not found"
+    exit 1
+fi
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Configuration applied successfully.${NC}"
     
     # Run the build-switch script to install
     echo -e "${YELLOW}Building and switching to new configuration...${NC}"
-    $0/../$APP_DIR/build-switch
+    "$APPS_DIR/$APP_DIR/build-switch"
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Installation completed successfully!${NC}"
