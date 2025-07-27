@@ -134,6 +134,17 @@ if [[ "$OS" != "Darwin" ]]; then
   echo "Interface: $PRIMARY_IFACE"
   echo "Disk: $BOOT_DISK"
   echo "Hostname: $HOST_NAME"
+  
+  # Get RAM size for swap file
+  RAM_SIZE_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+  RAM_SIZE_MB=$((RAM_SIZE_KB / 1024))
+  RAM_SIZE_GB=$((RAM_SIZE_MB / 1024))
+  
+  echo "Detected RAM: ${RAM_SIZE_GB}GB (${RAM_SIZE_MB}MB)"
+  echo "Swap file will be created with size: ${RAM_SIZE_MB}MB"
+  
+  # Export RAM size for use in post-installation setup
+  echo "$RAM_SIZE_MB" > /tmp/ram_size_mb.txt
 fi
 
 echo "$USERNAME" > /tmp/username.txt

@@ -1,10 +1,9 @@
 _: {
-  # This formats the disk with the ext4 filesystem
-  # Other examples found here: https://github.com/nix-community/disko/tree/master/example
+  # Btrfs configuration with hibernation support
   disko.devices = {
     disk = {
       vdb = {
-        device = "/dev/sda";
+        device = "/dev/%DISK%";
         type = "disk";
         content = {
           type = "gpt";
@@ -21,9 +20,72 @@ _: {
             root = {
               size = "100%";
               content = {
-                type = "filesystem";
-                format = "ext4";
+                type = "btrfs";
+                extraArgs = [ "-f" ];
                 mountpoint = "/";
+                mountOptions = [
+                  "defaults"
+                  "noatime"
+                  "compress=zstd"
+                  "space_cache=v2"
+                  "subvol=@"
+                ];
+                subvolumes = {
+                  "@" = {
+                    mountpoint = "/";
+                    mountOptions = [
+                      "defaults"
+                      "noatime"
+                      "compress=zstd"
+                      "space_cache=v2"
+                    ];
+                  };
+                  "@home" = {
+                    mountpoint = "/home";
+                    mountOptions = [
+                      "defaults"
+                      "noatime"
+                      "compress=zstd"
+                      "space_cache=v2"
+                    ];
+                  };
+                  "@nix" = {
+                    mountpoint = "/nix";
+                    mountOptions = [
+                      "defaults"
+                      "noatime"
+                      "compress=zstd"
+                      "space_cache=v2"
+                    ];
+                  };
+                  "@var" = {
+                    mountpoint = "/var";
+                    mountOptions = [
+                      "defaults"
+                      "noatime"
+                      "compress=zstd"
+                      "space_cache=v2"
+                    ];
+                  };
+                  "@tmp" = {
+                    mountpoint = "/tmp";
+                    mountOptions = [
+                      "defaults"
+                      "noatime"
+                      "compress=zstd"
+                      "space_cache=v2"
+                    ];
+                  };
+                  "@swap" = {
+                    mountpoint = "/swap";
+                    mountOptions = [
+                      "defaults"
+                      "noatime"
+                      "compress=zstd"
+                      "space_cache=v2"
+                    ];
+                  };
+                };
               };
             };
           };
