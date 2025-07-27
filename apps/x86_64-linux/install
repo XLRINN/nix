@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+VERSION=1.0
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}Starting NixOS installation...${NC}"
+
+# Run the apply script first to configure the system
+echo -e "${YELLOW}Running apply script to configure installation...${NC}"
+./apps/aarch64-linux/apply
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}Configuration applied successfully.${NC}"
+    
+    # Run the build-switch script to install
+    echo -e "${YELLOW}Building and switching to new configuration...${NC}"
+    ./apps/aarch64-linux/build-switch
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Installation completed successfully!${NC}"
+        echo -e "${YELLOW}You can now reboot your system.${NC}"
+    else
+        echo -e "${RED}Build-switch failed. Please check the error messages above.${NC}"
+        exit 1
+    fi
+else
+    echo -e "${RED}Apply script failed. Please check the error messages above.${NC}"
+    exit 1
+fi 
