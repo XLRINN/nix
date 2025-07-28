@@ -142,8 +142,34 @@ if [[ "$1" != "--non-interactive" ]]; then
   confirm_details
 fi
 
-# Token replacement is not needed when running from flake
-# The configuration will use the environment variables directly
+# Token replacement function
+replace_tokens() {
+  local file="$1"
+  if [[ $(basename $1) != "apply" ]]; then
+    if [[ "$OS" == "Darwin" ]]; then
+      # macOS
+      LC_ALL=C LANG=C sed -i '' -e "s/%USER%/$USERNAME/g" "$file"
+      LC_ALL=C LANG=C sed -i '' -e "s/%EMAIL%/$GIT_EMAIL/g" "$file"
+      LC_ALL=C LANG=C sed -i '' -e "s/%NAME%/$GIT_NAME/g" "$file"
+    else
+      # Linux
+      sed -i "s/%USER%/$USERNAME/g" "$file"
+      sed -i "s/%EMAIL%/$GIT_EMAIL/g" "$file"
+      sed -i "s/%NAME%/$GIT_NAME/g" "$file"
+      sed -i "s/%HOST%/$HOST_NAME/g" "$file"
+      sed -i "s/%INTERFACE%/$PRIMARY_IFACE/g" "$file"
+      sed -i "s/%DISK%/$BOOT_DISK/g" "$file"
+    fi
+  fi
+}
+
+# Replace tokens in all Nix files
+if [[ "$OS" != "Darwin" ]]; then
+  # Traverse directories and call replace_tokens on each Nix file
+  export -f replace_tokens
+  find . -type f -name "*.nix" -exec bash -c 'replace_tokens "$0"' {} \;
+fi
+
 echo "Configuration values collected:"
 echo "Username: $USERNAME"
 echo "Email: $GIT_EMAIL"
@@ -152,17 +178,6 @@ if [[ "$OS" != "Darwin" ]]; then
   echo "Interface: $PRIMARY_IFACE"
   echo "Disk: $BOOT_DISK"
   echo "Hostname: $HOST_NAME"
-  
-  # Get RAM size for swap file
-  RAM_SIZE_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-  RAM_SIZE_MB=$((RAM_SIZE_KB / 1024))
-  RAM_SIZE_GB=$((RAM_SIZE_MB / 1024))
-  
-  echo "Detected RAM: ${RAM_SIZE_GB}GB (${RAM_SIZE_MB}MB)"
-  echo "Swap file will be created with size: ${RAM_SIZE_MB}MB"
-  
-  # Export RAM size for use in post-installation setup
-  echo "$RAM_SIZE_MB" > /tmp/ram_size_mb.txt
 fi
 
 echo "$USERNAME" > /tmp/username.txt
