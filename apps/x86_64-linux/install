@@ -28,23 +28,12 @@ download_config() {
 }
 
 run_apply() {
-  ./apps/aarch64-linux/apply
+  ./apps/x86_64-linux/apply
   if [ ! -f /tmp/username.txt ]; then
     echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
     exit 1
   fi
   export USERNAME=$(cat /tmp/username.txt)
-  
-  # Get the disk from the apply script output
-  if [ -f /tmp/boot_disk.txt ]; then
-    export DISK=$(cat /tmp/boot_disk.txt)
-  else
-    echo -e "\e[1;31mError: /tmp/boot_disk.txt does not exist.\e[0m"
-    exit 1
-  fi
-  
-  # Replace disk token in disk configuration
-  sed -i "s/%DISK%/$DISK/g" modules/nixos/disk-config.nix
 }
 
 run_disko() {
