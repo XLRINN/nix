@@ -115,7 +115,7 @@ let user = "david";
     xserver = {
       enable = true;
       displayManager.gdm.enable = true;
-      # desktopManager.gnome.enable = true; # Removed GNOME desktop
+      desktopManager.gnome.enable = true; # GNOME desktop
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };

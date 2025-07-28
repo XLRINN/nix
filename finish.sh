@@ -73,18 +73,8 @@ case $choice in
     4)
         echo "🔐 Setting up authentication..."
         
-        # GitHub CLI authentication (FIRST - handles git auth)
-        echo "📋 Setting up GitHub CLI (FIRST - handles git authentication)..."
-        if command -v gh &> /dev/null; then
-            echo "GitHub CLI found. Running authentication..."
-            echo "This will set up git authentication for all future operations."
-            gh auth login
-        else
-            echo "❌ GitHub CLI not found. Please install it first."
-        fi
-        
-        # Bitwarden CLI authentication (SECOND - contains all passkeys)
-        echo "🔑 Setting up Bitwarden CLI (SECOND - contains all your passkeys)..."
+        # Bitwarden CLI authentication (FIRST - contains all passkeys)
+        echo "🔑 Setting up Bitwarden CLI (FIRST - contains all your passkeys)..."
         if command -v bw &> /dev/null; then
             echo "Bitwarden CLI found. Please login:"
             echo "1. Run: bw login"
@@ -103,8 +93,8 @@ case $choice in
             echo "❌ Bitwarden CLI not found. Please install it first."
         fi
         
-        # Firefox setup (THIRD - can use passkeys from Bitwarden)
-        echo "🦊 Setting up Firefox (can use passkeys from Bitwarden)..."
+        # Firefox setup (SECOND - can use passkeys from Bitwarden)
+        echo "🦊 Setting up Firefox (SECOND - can use passkeys from Bitwarden)..."
         if command -v firefox &> /dev/null; then
             echo "Firefox found. Setup options:"
             echo "1. Firefox Sync (recommended):"
@@ -122,6 +112,16 @@ case $choice in
             read -p "Press Enter when ready to continue..."
         else
             echo "❌ Firefox not found. Please install it first."
+        fi
+        
+        # GitHub CLI authentication (THIRD - handles git auth)
+        echo "📋 Setting up GitHub CLI (THIRD - handles git authentication)..."
+        if command -v gh &> /dev/null; then
+            echo "GitHub CLI found. Running authentication..."
+            echo "This will set up git authentication for all future operations."
+            gh auth login
+        else
+            echo "❌ GitHub CLI not found. Please install it first."
         fi
         
         echo "✅ Authentication setup complete!"
