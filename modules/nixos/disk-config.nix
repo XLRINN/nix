@@ -1,5 +1,5 @@
 _: {
-  # This formats the disk with the ext4 filesystem and swap partition
+  # This formats the disk with the ext4 filesystem
   # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
     disk = {
@@ -16,13 +16,6 @@ _: {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-              };
-            };
-            swap = {
-              size = "8G";
-              content = {
-                type = "swap";
-                resumeDevice = true; # Enable hibernate support
               };
             };
             root = {

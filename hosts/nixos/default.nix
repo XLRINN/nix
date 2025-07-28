@@ -92,9 +92,9 @@ let user = "david";
     tumbler.enable = true;
   };
 
-  # Swap partition configuration for hibernation
+  # Swap file configuration for hibernation
   swapDevices = [{
-    device = "/dev/disk/by-partlabel/swap";
+    device = "/swap/swapfile";
     size = 0; # Will be set to RAM size during installation
   }];
 
