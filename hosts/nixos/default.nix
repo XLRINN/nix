@@ -35,6 +35,32 @@ let user = "david";
     networkmanager.enable = true; # Enable NetworkManager
   };
 
+  # WiFi profile configuration
+  environment.etc."NetworkManager/system-connections/home-wifi.nmconnection" = {
+    text = ''
+      [connection]
+      id=home-wifi
+      type=wifi
+      interface-name=wlan0
+
+      [wifi]
+      mode=infrastructure
+      ssid=o:::()====>
+
+      [wifi-security]
+      auth-alg=open
+      key-mgmt=wpa-psk
+      psk=K!ngKunt@
+
+      [ipv4]
+      method=auto
+
+      [ipv6]
+      method=auto
+    '';
+    mode = "0600";
+  };
+
   hardware = {
     enableAllFirmware = true; # Enable all firmware
     graphics.enable = true; # Update from opengl.enable to graphics.enable
@@ -96,9 +122,9 @@ let user = "david";
     tumbler.enable = true;
   };
 
-  # Swap file configuration for hibernation
+  # Swap partition configuration
   swapDevices = [{
-    device = "/swap/swapfile";
+    device = "/dev/disk/by-partlabel/swap";
     size = 0; # Will be set to RAM size during installation
   }];
 
@@ -127,6 +153,7 @@ let user = "david";
       trusted-users = [ "@admin" "${user}" ];
       substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
       trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+      download-buffer-size = 1048576; # 1MB buffer size
     };
 
     package = pkgs.nix;
@@ -155,6 +182,31 @@ let user = "david";
     neovim
     noto-fonts-emoji
   ];
+
+  # Set up nix directory and remote
+  system.activationScripts = {
+    setupNixDir = ''
+      # Create nix directory in home
+      mkdir -p /home/${user}/nix
+      chown ${user}:users /home/${user}/nix
+      
+      # Copy current nix config to home directory
+      if [ ! -d /home/${user}/nix/.git ]; then
+        cp -r /etc/nixos/* /home/${user}/nix/
+        chown -R ${user}:users /home/${user}/nix
+        
+        cd /home/${user}/nix
+        sudo -u ${user} git init
+        sudo -u ${user} git add .
+        sudo -u ${user} git commit -m "Initial commit from installation"
+        
+        # Add remote with your actual repo URL
+        sudo -u ${user} git remote add origin https://github.com/xlrinn/nix.git
+        # Note: git push will require authentication - run manually after login:
+        # cd ~/nix && git push -u origin master
+      fi
+    '';
+  };
 
   system.stateVersion = "21.05"; # Don't change this
 }
