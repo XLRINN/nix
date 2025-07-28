@@ -105,7 +105,6 @@ let user = "david";
       fira-code
       inconsolata
       dejavu_fonts
-      feather-font
       jetbrains-mono
       font-awesome
       nerd-fonts.fira-code
