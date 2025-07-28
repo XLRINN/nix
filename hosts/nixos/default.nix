@@ -111,7 +111,8 @@ let user = "david";
       # Icon fonts alternatives to feather-font:
       material-icons
       material-design-icons
-      nerd-fonts.complete
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.hack
   ];
 
   # Turn on flag for proprietary software
