@@ -70,8 +70,18 @@ case $choice in
     4)
         echo "🔐 Setting up authentication..."
         
-        # Bitwarden CLI authentication (FIRST - contains all passkeys)
-        echo "🔑 Setting up Bitwarden CLI (FIRST - contains all your passkeys)..."
+        # GitHub CLI authentication (FIRST - handles git auth)
+        echo "📋 Setting up GitHub CLI (FIRST - handles git authentication)..."
+        if command -v gh &> /dev/null; then
+            echo "GitHub CLI found. Running authentication..."
+            echo "This will set up git authentication for all future operations."
+            gh auth login
+        else
+            echo "❌ GitHub CLI not found. Please install it first."
+        fi
+        
+        # Bitwarden CLI authentication (SECOND - contains all passkeys)
+        echo "🔑 Setting up Bitwarden CLI (SECOND - contains all your passkeys)..."
         if command -v bw &> /dev/null; then
             echo "Bitwarden CLI found. Please login:"
             echo "1. Run: bw login"
@@ -88,16 +98,6 @@ case $choice in
             bw unlock
         else
             echo "❌ Bitwarden CLI not found. Please install it first."
-        fi
-        
-        # GitHub CLI authentication (SECOND - uses passkeys from Bitwarden)
-        echo "📋 Setting up GitHub CLI (using passkeys from Bitwarden)..."
-        if command -v gh &> /dev/null; then
-            echo "GitHub CLI found. Running authentication..."
-            echo "You can now use your passkeys from Bitwarden for GitHub login."
-            gh auth login
-        else
-            echo "❌ GitHub CLI not found. Please install it first."
         fi
         
         # Firefox setup (THIRD - can use passkeys from Bitwarden)

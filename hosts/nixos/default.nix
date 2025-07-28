@@ -1,7 +1,11 @@
 { config, inputs, pkgs, ... }:
 
 let user = "david";
-  keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ]; in
+  keys = [ 
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p"
+    # Add your SSH public key here
+    # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
+  ]; in
 {
   imports = [
     ../../modules/nixos/disk-config.nix
@@ -122,11 +126,11 @@ let user = "david";
     tumbler.enable = true;
   };
 
-  # Swap partition configuration
-  swapDevices = [{
-    device = "/dev/disk/by-partlabel/swap";
-    size = 0; # Will be set to RAM size during installation
-  }];
+  # Swap configuration removed to fix "a start job is running" issue
+  # swapDevices = [{
+  #   device = "/dev/disk/by-partlabel/swap";
+  #   size = 0; # Will be set to RAM size during installation
+  # }];
 
   fonts.packages = with pkgs; [
       noto-fonts
@@ -234,20 +238,23 @@ let user = "david";
         sudo -u ${user} git config --global user.name "david"
         sudo -u ${user} git config --global user.email "xlrin.morgan@gmail.com"
         
-        # Set up credential helper for Personal Access Token
-        sudo -u ${user} git config --global credential.helper store
-        # Note: Add your PAT to ~/.git-credentials after login:
-        # echo "https://your-username:your-pat@github.com" > ~/.git-credentials
-        
-        # Alternative: Set up SSH key authentication
-        # sudo -u ${user} git config --global url."git@github.com:".insteadOf "https://github.com/"
-        
-        # Note: After installation, authenticate with GitHub CLI:
-        # gh auth login
-        # Then sync with master:
-        # cd ~/nix
-        # nix run .#sync-master
+        # Note: GitHub CLI will handle authentication automatically
+        # No manual SSH key setup needed!
       fi
+    '';
+    
+    setupGitHubCLI = ''
+      # Set up GitHub CLI configuration
+      mkdir -p /home/${user}/.config/gh
+      chown -R ${user}:users /home/${user}/.config
+      
+      # Create GitHub CLI config file
+      cat > /home/${user}/.config/gh/config.yml << 'EOF'
+      # GitHub CLI configuration
+      # This will be set up after first login
+      EOF
+      
+      chown ${user}:users /home/${user}/.config/gh/config.yml
     '';
     
     setupFirefoxProfile = ''

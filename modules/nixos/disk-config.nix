@@ -18,13 +18,13 @@ _: {
                 mountpoint = "/boot";
               };
             };
-            swap = {
-              size = "100%";
-              content = {
-                type = "swap";
-                # No resumeDevice to avoid conflicts
-              };
-            };
+            # swap = {
+            #   size = "100%";
+            #   content = {
+            #     type = "swap";
+            #     # No resumeDevice to avoid conflicts
+            #   };
+            # };
             root = {
               size = "100%";
               content = {
