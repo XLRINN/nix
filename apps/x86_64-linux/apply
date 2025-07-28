@@ -37,18 +37,27 @@ _prompt() {
 
 
 
-# Set default values
-export USERNAME="david"
-export GIT_EMAIL="xlrin.morgan@gmail.com"
-export GIT_NAME="david"
+# Check if running non-interactively
+if [[ "$1" == "--non-interactive" ]]; then
+  # Use defaults without prompting
+  export USERNAME="david"
+  export GIT_EMAIL="xlrin.morgan@gmail.com"
+  export GIT_NAME="david"
+  export HOST_NAME="server"
+  export BOOT_DISK="sda"
+else
+  # Set default values
+  export USERNAME="david"
+  export GIT_EMAIL="xlrin.morgan@gmail.com"
+  export GIT_NAME="david"
 
-# Ask if user wants to change defaults
-_print "${YELLOW}Default values:${NC}"
-_print "${GREEN}Username: $USERNAME${NC}"
-_print "${GREEN}Email: $GIT_EMAIL${NC}"
-_print "${GREEN}Name: $GIT_NAME${NC}"
+  # Ask if user wants to change defaults
+  _print "${YELLOW}Default values:${NC}"
+  _print "${GREEN}Username: $USERNAME${NC}"
+  _print "${GREEN}Email: $GIT_EMAIL${NC}"
+  _print "${GREEN}Name: $GIT_NAME${NC}"
 
-_prompt "${YELLOW}Do you want to change these defaults? (y/N): ${NC}" change_defaults
+  _prompt "${YELLOW}Do you want to change these defaults? (y/N): ${NC}" change_defaults
 
 if [[ "$change_defaults" =~ ^[Yy]$ ]]; then
   # If the username is 'nixos' or 'root', ask the user for their username
@@ -62,6 +71,7 @@ if [[ "$change_defaults" =~ ^[Yy]$ ]]; then
   _prompt "${YELLOW}Please enter your name: ${NC}" GIT_NAME
 else
   _print "${GREEN}Using default values.${NC}"
+fi
 fi
 
 select_boot_disk() {
@@ -78,18 +88,24 @@ select_boot_disk() {
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
-  export HOST_NAME="loki"
-  
-  _print "${YELLOW}Default hostname: $HOST_NAME${NC}"
-  _prompt "${YELLOW}Do you want to change the hostname? (y/N): ${NC}" change_hostname
-  
-  if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
-    _prompt "${YELLOW}Please enter a hostname for the system: ${NC}" HOST_NAME
+  if [[ "$1" == "--non-interactive" ]]; then
+    # Use defaults for non-interactive mode
+    export HOST_NAME="server"
+    export BOOT_DISK="sda"
   else
-    _print "${GREEN}Using default hostname: $HOST_NAME${NC}"
+    export HOST_NAME="loki"
+    
+    _print "${YELLOW}Default hostname: $HOST_NAME${NC}"
+    _prompt "${YELLOW}Do you want to change the hostname? (y/N): ${NC}" change_hostname
+    
+    if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
+      _prompt "${YELLOW}Please enter a hostname for the system: ${NC}" HOST_NAME
+    else
+      _print "${GREEN}Using default hostname: $HOST_NAME${NC}"
+    fi
+    
+    select_boot_disk
   fi
-  
-  select_boot_disk
 fi
 
 # Confirmation step
@@ -121,8 +137,10 @@ confirm_details() {
   esac
 }
 
-# Call the confirmation function
-confirm_details
+# Call the confirmation function only if not in non-interactive mode
+if [[ "$1" != "--non-interactive" ]]; then
+  confirm_details
+fi
 
 # Token replacement is not needed when running from flake
 # The configuration will use the environment variables directly
