@@ -21,9 +21,9 @@ let user = "david";
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
     kernelModules = [ "uinput" "iwlwifi" ];
     
-    # Hibernation support
-    resumeDevice = "/dev/disk/by-label/swap";
-    kernelParams = [ "resume_offset=0" ];
+      # Hibernation support (commented out to avoid conflicts)
+  # resumeDevice = "/dev/disk/by-label/swap";
+  # kernelParams = [ "resume_offset=0" ];
   };
 
   # Set your time zone.
@@ -50,16 +50,20 @@ let user = "david";
     "${user}" = {
       isNormalUser = true;
       extraGroups = [
-        "wheel" # Enable ‘sudo’ for the user.
+        "wheel" # Enable 'sudo' for the user.
         "docker"
         "networkmanager"
       ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;
+      # Set initial password (change this after first login)
+      initialPassword = "6!y2c87T";
     };
 
     root = {
       openssh.authorizedKeys.keys = keys;
+      # Set initial root password (change this after first login)
+      initialPassword = "6!y2c87T";
     };
   };
 
