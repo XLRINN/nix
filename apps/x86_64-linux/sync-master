@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+# Sync master branch and make it current
+# This script pulls from master and updates the current branch
+
+set -e
+
+echo "🔄 Syncing with master branch..."
+
+# Get the current directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_ROOT"
+
+# Check if we're in a git repository
+if [ ! -d ".git" ]; then
+    echo "❌ Error: Not in a git repository"
+    exit 1
+fi
+
+# Get current branch
+CURRENT_BRANCH=$(git branch --show-current)
+echo "📍 Current branch: $CURRENT_BRANCH"
+
+# Check authentication
+echo "🔐 Checking git authentication..."
+if ! git ls-remote origin > /dev/null 2>&1; then
+    echo "❌ Error: Cannot access remote repository. Please ensure you're authenticated:"
+    echo "   git config --global user.name 'your-name'"
+    echo "   git config --global user.email 'your-email'"
+    echo "   # Or set up SSH keys / GitHub CLI"
+    exit 1
+fi
+
+# Fetch latest changes from remote
+echo "📥 Fetching latest changes from remote..."
+git fetch origin
+
+# Show available branches
+echo "🌿 Available branches:"
+git branch -r
+
+# Ask user what they want to do
+echo ""
+echo "What would you like to do?"
+echo "1) Switch to master and pull latest"
+echo "2) Merge master into current branch"
+echo "3) Just fetch (no changes)"
+read -p "Enter choice (1-3): " choice
+
+case $choice in
+    1)
+        echo "🔄 Switching to master and pulling latest..."
+        git checkout master 2>/dev/null || git checkout -b master origin/master
+        git pull origin master
+        echo "✅ Now on master with latest changes"
+        ;;
+    2)
+        echo "🔄 Merging master into $CURRENT_BRANCH..."
+        git checkout master 2>/dev/null || git checkout -b master origin/master
+        git pull origin master
+        git checkout "$CURRENT_BRANCH"
+        git merge master --no-edit
+        echo "✅ Successfully merged master into $CURRENT_BRANCH"
+        ;;
+    3)
+        echo "✅ Just fetched, no changes made"
+        ;;
+    *)
+        echo "❌ Invalid choice"
+        exit 1
+        ;;
+esac
+
+echo "🎉 Sync complete! Current branch is up to date with master." 

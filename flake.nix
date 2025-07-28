@@ -83,6 +83,7 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "install" = mkApp "install" system;
+        "sync-master" = mkApp "sync-master" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
