@@ -28,12 +28,19 @@ download_config() {
 }
 
 run_apply() {
-  ./apps/x86_64-linux/apply
+  ./apps/aarch64-linux/apply
   if [ ! -f /tmp/username.txt ]; then
     echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
     exit 1
   fi
   export USERNAME=$(cat /tmp/username.txt)
+  
+  # The apply script should have replaced %DISK% token
+  # If not, we need to do it manually
+  if grep -q "%DISK%" modules/nixos/disk-config.nix; then
+    echo -e "\e[1;31mError: %DISK% token not replaced by apply script.\e[0m"
+    exit 1
+  fi
 }
 
 run_disko() {
