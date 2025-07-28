@@ -17,14 +17,14 @@ check_installer() {
 }
 
 cleanup() {
-  rm -rf nix-config-main.zip nix-config-main nix-config
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config
 }
 
 download_config() {
-  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nix-config-main.zip
-  unzip -o nix-config-main.zip
-  mv nix-testing nix-config
-  cd nix-config
+  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nixos-config-main.zip
+  unzip nixos-config-main.zip
+  mv nix-testing nixos-config
+  cd nixos-config
 }
 
 run_apply() {
@@ -34,13 +34,6 @@ run_apply() {
     exit 1
   fi
   export USERNAME=$(cat /tmp/username.txt)
-  
-  # The apply script should have replaced %DISK% token
-  # If not, we need to do it manually
-  if grep -q "%DISK%" modules/nixos/disk-config.nix; then
-    echo -e "\e[1;31mError: %DISK% token not replaced by apply script.\e[0m"
-    exit 1
-  fi
 }
 
 run_disko() {
