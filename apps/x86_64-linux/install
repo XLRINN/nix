@@ -9,9 +9,9 @@ NC='\033[0m' # No Color
 
 check_installer() {
   if [ -e /etc/NIXOS ]; then
-    echo -e "${GREEN}Running in the NixOS installer environment.${NC}"
+    echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
   else
-    echo -e "${RED}Not running in the NixOS installer environment.${NC}"
+    echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
     exit 1
   fi
 }
@@ -21,40 +21,33 @@ cleanup() {
 }
 
 download_config() {
-  echo -e "${GREEN}Downloading configuration...${NC}"
   curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nix-config-main.zip
-
   unzip nix-config-main.zip
-  # The extracted directory name will be based on the branch name
   mv nix-testing nix-config
   cd nix-config
 }
 
 run_apply() {
-  echo -e "${GREEN}Running configuration setup...${NC}"
   ./apps/aarch64-linux/apply
   if [ ! -f /tmp/username.txt ]; then
-    echo -e "${RED}Error: /tmp/username.txt does not exist.${NC}"
+    echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
     exit 1
   fi
   export USERNAME=$(cat /tmp/username.txt)
 }
 
 run_disko() {
-  echo -e "${GREEN}Partitioning disk...${NC}"
   sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
     github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
 }
 
 setup_files() {
-  echo -e "${GREEN}Setting up configuration files...${NC}"
   sudo mkdir -p /mnt/etc/nixos
   sudo cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
 }
 
 install_nixos() {
-  echo -e "${GREEN}Installing NixOS...${NC}"
   ARCH=$(uname -m)
 
   case "$ARCH" in
@@ -70,16 +63,15 @@ install_nixos() {
       ;;
   esac
 
-  sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd
+  sudo nixos-install --flake .#$FLAKE_TARGET $@
   sudo chmod -R 775 /mnt/etc/nixos
 }
 
 prompt_reboot() {
-  echo -e "${YELLOW}Installation complete!${NC}"
   read -p "Do you want to reboot now? (y/yes) " choice
   case "$choice" in
-  y|Y|yes|YES ) echo -e "${GREEN}Rebooting...${NC}" && sudo reboot;;
-  * ) echo -e "${YELLOW}Reboot skipped.${NC}";;
+  y|Y|yes|YES ) echo -e "\e[1;32mRebooting...\e[0m" && sudo reboot;;
+  * ) echo -e "\e[1;33mReboot skipped.\e[0m";;
   esac
 }
 
