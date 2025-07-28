@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-VERSION=1.0
+set -exu
 
 # Color codes
 RED='\033[0;31m'
@@ -8,67 +7,87 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}Starting NixOS installation...${NC}"
-
-# Detect system architecture
-SYSTEM=$(uname -m)
-case "$SYSTEM" in
-  x86_64)
-    FLAKE_TARGET="x86_64-linux"
-    APP_DIR="x86_64-linux"
-    ;;
-  aarch64)
-    FLAKE_TARGET="aarch64-linux"
-    APP_DIR="aarch64-linux"
-    ;;
-  *)
-    echo -e "${RED}Unsupported architecture: $SYSTEM${NC}"
+check_installer() {
+  if [ -e /etc/NIXOS ]; then
+    echo -e "${GREEN}Running in the NixOS installer environment.${NC}"
+  else
+    echo -e "${RED}Not running in the NixOS installer environment.${NC}"
     exit 1
-    ;;
-esac
+  fi
+}
 
-echo -e "${YELLOW}Detected architecture: $SYSTEM${NC}"
-echo -e "${YELLOW}Using flake target: $FLAKE_TARGET${NC}"
+cleanup() {
+  rm -rf nix-config-main.zip nix-config-main nix-config
+}
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APPS_DIR="$(dirname "$SCRIPT_DIR")"
-FLAKE_DIR="$(dirname "$APPS_DIR")"
+download_config() {
+  echo -e "${GREEN}Downloading configuration...${NC}"
+  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nix-config-main.zip
 
-# Change to the flake directory first
-cd "$FLAKE_DIR"
-echo -e "${YELLOW}Changed to flake directory: $FLAKE_DIR${NC}"
+  unzip nix-config-main.zip
+  mv nix-config-main nix-config
+  cd nix-config
+}
 
-# Run the apply script first to configure the system
-echo -e "${YELLOW}Running apply script to configure installation...${NC}"
-echo -e "${YELLOW}Script directory: $SCRIPT_DIR${NC}"
-echo -e "${YELLOW}Apps directory: $APPS_DIR${NC}"
-echo -e "${YELLOW}Looking for: $APPS_DIR/$APP_DIR/apply${NC}"
-
-if [ -f "$APPS_DIR/$APP_DIR/apply" ]; then
-    "$APPS_DIR/$APP_DIR/apply"
-else
-    echo -e "${RED}Could not find apply script at $APPS_DIR/$APP_DIR/apply${NC}"
-    echo -e "${YELLOW}Available files in $APPS_DIR/$APP_DIR/:${NC}"
-    ls -la "$APPS_DIR/$APP_DIR/" 2>/dev/null || echo "Directory not found"
+run_apply() {
+  echo -e "${GREEN}Running configuration setup...${NC}"
+  ./apps/aarch64-linux/apply
+  if [ ! -f /tmp/username.txt ]; then
+    echo -e "${RED}Error: /tmp/username.txt does not exist.${NC}"
     exit 1
-fi
+  fi
+  export USERNAME=$(cat /tmp/username.txt)
+}
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Configuration applied successfully.${NC}"
-    
-    # Run the build-switch script to install
-    echo -e "${YELLOW}Building and switching to new configuration...${NC}"
-    "$APPS_DIR/$APP_DIR/build-switch"
-    
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Installation completed successfully!${NC}"
-        echo -e "${YELLOW}You can now reboot your system.${NC}"
-    else
-        echo -e "${RED}Build-switch failed. Please check the error messages above.${NC}"
-        exit 1
-    fi
-else
-    echo -e "${RED}Apply script failed. Please check the error messages above.${NC}"
-    exit 1
-fi 
+run_disko() {
+  echo -e "${GREEN}Partitioning disk...${NC}"
+  sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+}
+
+setup_files() {
+  echo -e "${GREEN}Setting up configuration files...${NC}"
+  sudo mkdir -p /mnt/etc/nixos
+  sudo cp -r * /mnt/etc/nixos
+  cd /mnt/etc/nixos
+}
+
+install_nixos() {
+  echo -e "${GREEN}Installing NixOS...${NC}"
+  ARCH=$(uname -m)
+
+  case "$ARCH" in
+    x86_64)
+      FLAKE_TARGET="x86_64-linux"
+      ;;
+    aarch64)
+      FLAKE_TARGET="aarch64-linux"
+      ;;
+    *)
+      echo -e "${RED}Unsupported architecture: $ARCH${NC}"
+      exit 1
+      ;;
+  esac
+
+  sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd
+  sudo chmod -R 775 /mnt/etc/nixos
+}
+
+prompt_reboot() {
+  echo -e "${YELLOW}Installation complete!${NC}"
+  read -p "Do you want to reboot now? (y/yes) " choice
+  case "$choice" in
+  y|Y|yes|YES ) echo -e "${GREEN}Rebooting...${NC}" && sudo reboot;;
+  * ) echo -e "${YELLOW}Reboot skipped.${NC}";;
+  esac
+}
+
+cleanup
+check_installer
+download_config
+run_apply
+run_disko
+setup_files
+install_nixos
+cleanup
+prompt_reboot 
