@@ -108,6 +108,10 @@ let user = "david";
       jetbrains-mono
       font-awesome
       nerd-fonts.fira-code
+      # Icon fonts alternatives to feather-font:
+      material-icons
+      material-design-icons
+      nerd-fonts.complete
   ];
 
   # Turn on flag for proprietary software
