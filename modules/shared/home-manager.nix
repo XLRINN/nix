@@ -236,6 +236,10 @@ in
         zellij
       fi
 
+      # Load API keys from environment
+      if [ -f /etc/secrets/api-keys ]; then
+        source /etc/secrets/api-keys
+      fi
     '';
   };
 }
