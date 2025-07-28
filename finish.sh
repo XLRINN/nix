@@ -22,24 +22,6 @@ fi
 CURRENT_BRANCH=$(git branch --show-current)
 echo "📍 Current branch: $CURRENT_BRANCH"
 
-# Check authentication
-echo "🔐 Checking git authentication..."
-if ! git ls-remote origin > /dev/null 2>&1; then
-    echo "❌ Error: Cannot access remote repository. Please ensure you're authenticated:"
-    echo "   git config --global user.name 'your-name'"
-    echo "   git config --global user.email 'your-email'"
-    echo "   # Or set up SSH keys / GitHub CLI"
-    exit 1
-fi
-
-# Fetch latest changes from remote
-echo "📥 Fetching latest changes from remote..."
-git fetch origin
-
-# Show available branches
-echo "🌿 Available branches:"
-git branch -r
-
 # Ask user what they want to do
 echo ""
 echo "What would you like to do?"
@@ -52,12 +34,24 @@ read -p "Enter choice (1-4): " choice
 case $choice in
     1)
         echo "🔄 Switching to master and pulling latest..."
+        # Check authentication before proceeding
+        if ! git ls-remote origin > /dev/null 2>&1; then
+            echo "❌ Error: Cannot access remote repository. Please run option 4 first to set up authentication."
+            exit 1
+        fi
+        git fetch origin
         git checkout master 2>/dev/null || git checkout -b master origin/master
         git pull origin master
         echo "✅ Now on master with latest changes"
         ;;
     2)
         echo "🔄 Merging master into $CURRENT_BRANCH..."
+        # Check authentication before proceeding
+        if ! git ls-remote origin > /dev/null 2>&1; then
+            echo "❌ Error: Cannot access remote repository. Please run option 4 first to set up authentication."
+            exit 1
+        fi
+        git fetch origin
         git checkout master 2>/dev/null || git checkout -b master origin/master
         git pull origin master
         git checkout "$CURRENT_BRANCH"
@@ -65,6 +59,15 @@ case $choice in
         echo "✅ Successfully merged master into $CURRENT_BRANCH"
         ;;
     3)
+        echo "📥 Fetching latest changes from remote..."
+        # Check authentication before proceeding
+        if ! git ls-remote origin > /dev/null 2>&1; then
+            echo "❌ Error: Cannot access remote repository. Please run option 4 first to set up authentication."
+            exit 1
+        fi
+        git fetch origin
+        echo "🌿 Available branches:"
+        git branch -r
         echo "✅ Just fetched, no changes made"
         ;;
     4)
