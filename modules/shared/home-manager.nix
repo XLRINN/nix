@@ -228,7 +228,7 @@ in
       gc = "nix-collect-garbage -d";
       pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
       pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
-      bw = "bw";  # Bitwarden CLI alias
+
     };
   
     initExtra = ''
@@ -242,9 +242,7 @@ in
         source /etc/secrets/api-keys
       fi
       
-      # Auto-login helpers
-      alias firefox-login="firefox --new-tab 'https://accounts.google.com'"
-      alias bitwarden-login="bw login"
+
     '';
   };
 }

@@ -51,9 +51,17 @@
         url = "github:dc-tec/nixvim";
         flake = false;
       };
+    claude-desktop = {
+      url = "github:k3d3/claude-desktop-linux-flake";
+      inputs = { 
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf,nixvim, } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, claude-desktop, flake-utils } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];

@@ -186,8 +186,7 @@ let user = "david";
     neovim
     noto-fonts-emoji
     gh  # GitHub CLI
-    firefox  # Browser for auto-login
-    bitwarden-cli  # Bitwarden CLI for password management
+    claude-desktop.packages.${pkgs.system}.claude-desktop  # Claude Desktop
   ];
 
   # Environment variables for API keys
@@ -255,17 +254,6 @@ let user = "david";
       EOF
       
       chown ${user}:users /home/${user}/.config/gh/config.yml
-    '';
-    
-    setupFirefoxProfile = ''
-      # Create Firefox profile directory
-      mkdir -p /home/${user}/.mozilla/firefox
-      chown -R ${user}:users /home/${user}/.mozilla
-      
-      # Note: After installation, import your Firefox profile:
-      # 1. Copy your Firefox profile from another system
-      # 2. Or use Firefox Sync to restore your profile
-      # 3. Or manually configure saved passwords
     '';
   };
 
