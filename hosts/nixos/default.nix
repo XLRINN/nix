@@ -88,6 +88,9 @@ let user = "david";
       openssh.authorizedKeys.keys = keys;
       # Set initial password (change this after first login)
       initialPassword = "6!y2c87T";
+      # Create user directories with proper permissions
+      createHome = true;
+      home = "/home/${user}";
     };
 
     root = {
@@ -195,6 +198,8 @@ let user = "david";
     # GITHUB_TOKEN = "your-github-token";
     # DOCKER_API_KEY = "your-docker-key";
     # CUSTOM_API_KEY = "your-api-key";
+    # GitHub CLI configuration
+    GH_CONFIG_DIR = "/home/${user}/.config/gh";
   };
 
   # Secret files (create these files and add your secrets)
@@ -242,19 +247,7 @@ let user = "david";
       fi
     '';
     
-    setupGitHubCLI = ''
-      # Set up GitHub CLI configuration
-      mkdir -p /home/${user}/.config/gh
-      chown -R ${user}:users /home/${user}/.config
-      
-      # Create GitHub CLI config file
-      cat > /home/${user}/.config/gh/config.yml << 'EOF'
-      # GitHub CLI configuration
-      # This will be set up after first login
-      EOF
-      
-      chown ${user}:users /home/${user}/.config/gh/config.yml
-    '';
+
   };
 
   system.stateVersion = "21.05"; # Don't change this
