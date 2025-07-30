@@ -1,5 +1,4 @@
 { config, pkgs, lib, ... }:
-  
 
 let 
   name = "david";
@@ -14,15 +13,14 @@ let
   tmux = ./config/tmux/tmux.conf;
 in
 {
-
-#imports = [];
-
+  # Direnv configuration
   direnv = {
     enable = true;
     enableZshIntegration = true;
     nix-direnv.enable = true;
   };
 
+  # Git configuration
   git = {
     enable = true;
     ignores = [ "*.swp" ];
@@ -43,163 +41,20 @@ in
     };
   };
 
-  
-
- zellij = {
-  enable = true;
-  settings = {
-    default_Layout = "compact";
-    pane_frames = false;
-    theme = "ansi";
-    simplified_ui = true;
-    hide_session_name = true;
-    rounded_corners = true;
-  };
-};
-
-  
-    
-
-  yazi = {
+  # Zellij configuration
+  zellij = {
     enable = true;
-    settings = yazi;
+    settings = {
+      default_Layout = "compact";
+      pane_frames = false;
+      theme = "ansi";
+      simplified_ui = true;
+      hide_session_name = true;
+      rounded_corners = true;
+    };
   };
 
-  alacritty = {
-    enable = true;
-    settings = alacritty;
-  };
-
-  neovim = {
-    enable = true;
-    defaultEditor = true;
-    extraPackages = with pkgs; [
-      stylua
-      ripgrep
-      curl
-    ];
-    extraConfig = ''
-      set number
-      set relativenumber
-      set expandtab
-      set tabstop=2
-      set softtabstop=2
-      set shiftwidth=2
-      set smartindent
-      set mouse=a
-      set termguicolors
-      set background=dark
-      set clipboard=unnamedplus
-      set termguicolors
-      " Keybindings to toggle NERDTree
-      nnoremap <leader>n :NERDTreeToggle<CR>
-
-      " Plugin management using lazy.nvim
-      lua << EOF
-      -- bootstrap lazy.nvim
-      local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-      if not vim.loop.fs_stat(lazypath) then
-        vim.fn.system({
-          "git",
-          "clone",
-          "--filter=blob:none",
-          "https://github.com/folke/lazy.nvim.git",
-          "--branch=stable",
-          lazypath,
-        })
-      end
-      vim.opt.rtp:prepend(lazypath)
-
-      -- leader key setup
-      vim.g.mapleader = " "
-      vim.g.maplocalleader = " "
-
-      -- setup keymaps
-      vim.keymap.set('n', '<leader>th', ':Themery<CR>', { noremap = true, silent = true })
-
-      -- setup plugins
-      require("lazy").setup({
-        spec = {
-          {
-            "LazyVim/LazyVim",
-            import = "lazyvim.plugins",
-            opts = {
-              -- explicitly set fzf as the picker
-              ui = {
-                -- picker = "fzf",
-              },
-            },
-          },
-          { "nvim-telescope/telescope-fzf-native.nvim", enabled = true },
-          { "williamboman/mason-lspconfig.nvim", enabled = false },
-          { "williamboman/mason.nvim", enabled = false },
-          { "preservim/nerdtree" },
-          { "tpope/vim-fugitive" },
-          { "craftzdog/solarized-osaka.nvim", priority = 1000, config = true },
-          { "folke/tokyonight.nvim", priority = 1000, config = true },
-          { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
-          { "rose-pine/neovim", name = "rose-pine", priority = 1000 },
-          { "projekt0n/github-nvim-theme", priority = 1000 },
-          { "rebelot/kanagawa.nvim", priority = 1000 },
-          { "EdenEast/nightfox.nvim", priority = 1000 },
-          { "sainnhe/gruvbox-material", priority = 1000 },
-          { "navarasu/onedark.nvim", priority = 1000 },
-          { "shaunsingh/nord.nvim", priority = 1000, config = function()
-              vim.cmd("colorscheme nord")
-            end },
-          { "sainnhe/everforest", priority = 1000 },
-          { "sainnhe/edge", priority = 1000 },
-          { "sainnhe/sonokai", priority = 1000 },
-          { "marko-cerovac/material.nvim", priority = 1000 },
-          { "dracula/vim", as = "dracula", priority = 1000 },
-          { "glepnir/zephyr-nvim", priority = 1000 },
-          { "bluz71/vim-nightfly-guicolors", priority = 1000 },
-          { "bluz71/vim-moonfly-colors", priority = 1000 },
-          { "rafamadriz/neon", priority = 1000 },
-          { "tanvirtin/monokai.nvim", priority = 1000 },
-          { "Mofiqul/vscode.nvim", priority = 1000 },
-          { "zaldih/themery.nvim",
-            config = function()
-              require("themery").setup({
-                themes = {
-                  "tokyonight",
-                  "catppuccin",
-                  "rose-pine",
-                  "github_dark",
-                  "kanagawa",
-                  "nightfox",
-                  "gruvbox-material",
-                  "onedark",
-                  "solarized-osaka",
-                  "nordic",
-                  "nord",
-                  "everforest",
-                  "edge",
-                  "sonokai",
-                  "material",
-                  "dracula",
-                  "zephyr",
-                  "nightfly",
-                  "moonfly",
-                  "neon",
-                  "monokai",
-                  "vscode",
-                },
-                themeConfigFile = vim.fn.stdpath("config") .. "/lua/theme.lua",
-                livePreview = true,
-              })
-            end,
-          },
-          { "nvim-treesitter/nvim-treesitter", opts = { ensure_installed = {} } },
-          { "neovim/nvim-lspconfig", enabled = false },
-          { "andersevenrud/nordic.nvim" },
-          {"github/copilot.vim"},
-        },
-      })
-      EOF
-    '';
-  };
-
+  # Zsh configuration
   zsh = {
     enable = true;
     autocd = false;
@@ -207,16 +62,18 @@ in
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
     cdpath = [ "~/.local/share/src" ];
-    plugins = [ {
-          name = "powerlevel10k";
-          src = pkgs.zsh-powerlevel10k;
-          file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+    plugins = [ 
+      {
+        name = "powerlevel10k";
+        src = pkgs.zsh-powerlevel10k;
+        file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
       }
       {
-          name = "powerlevel10k-config";
-          src = lib.cleanSource ./config;
-          file = "shell/p10k.zsh";
-      }];
+        name = "powerlevel10k-config";
+        src = lib.cleanSource ./config;
+        file = "shell/p10k.zsh";
+      }
+    ];
     shellAliases = {
       pf = "pfetch";
       bs = "nix run .#build-switch";
@@ -228,9 +85,8 @@ in
       gc = "nix-collect-garbage -d";
       pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
       pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
-
     };
-  
+
     initExtra = ''
       if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
         export ZELLIJ_RUNNING=1
@@ -241,8 +97,31 @@ in
       if [ -f /etc/secrets/api-keys ]; then
         source /etc/secrets/api-keys
       fi
-      
-
     '';
+  };
+
+  # Yazi file manager
+  yazi = {
+    enable = true;
+    settings = yazi;
+  };
+
+  # Alacritty terminal
+  alacritty = {
+    enable = true;
+    settings = alacritty;
+  };
+
+  # Neovim editor - modular approach
+  neovim = {
+    enable = true;
+    defaultEditor = true;
+    extraPackages = with pkgs; [
+      stylua
+      ripgrep
+      curl
+    ];
+    # Load configuration from modular config
+    extraLuaConfig = builtins.readFile ./config/nvim/init.lua;
   };
 }

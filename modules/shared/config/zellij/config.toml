@@ -1,0 +1,6 @@
+default_Layout = "compact"
+pane_frames = false
+theme = "ansi"
+simplified_ui = true
+hide_session_name = true
+rounded_corners = true 

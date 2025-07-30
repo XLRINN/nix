@@ -52,8 +52,8 @@ with pkgs; [
   lynx
   ueberzug
   tmux
-  powershell
 
+  powershell  
   # fonts
   noto-fonts
   noto-fonts-cjk-sans
