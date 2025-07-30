@@ -137,7 +137,7 @@
 
       nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = inputs;
+        specialArgs = { inherit inputs claude-desktop; };
         modules = [
           disko.nixosModules.disko
           home-manager.nixosModules.home-manager {

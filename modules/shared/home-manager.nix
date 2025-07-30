@@ -124,4 +124,10 @@ in
     # Load configuration from modular config
     extraLuaConfig = builtins.readFile ./config/nvim/init.lua;
   };
+
+  # AI CLI tools
+  home.packages = with pkgs; [
+    chatgpt-cli  # ChatGPT CLI tool
+    # Note: claude-desktop is installed via system packages in NixOS configuration
+  ];
 }

@@ -189,7 +189,7 @@ let user = "david";
     neovim
     noto-fonts-emoji
     gh  # GitHub CLI
-    claude-desktop.packages.${pkgs.system}.claude-desktop  # Claude Desktop
+    inputs.claude-desktop.packages.${pkgs.system}.claude-desktop  # Claude Desktop
   ];
 
   # Environment variables for API keys
