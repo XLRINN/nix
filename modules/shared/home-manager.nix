@@ -125,8 +125,4 @@ in
     extraLuaConfig = builtins.readFile ./config/nvim/init.lua;
   };
 
-  # AI CLI tools
-  home.packages = with pkgs; [
-    # Note: claude-desktop is installed via system packages in NixOS configuration
-  ];
 }
