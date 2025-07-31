@@ -127,7 +127,6 @@ in
 
   # AI CLI tools
   home.packages = with pkgs; [
-    chatgpt-cli  # ChatGPT CLI tool
     # Note: claude-desktop is installed via system packages in NixOS configuration
   ];
 }
