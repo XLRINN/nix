@@ -26,7 +26,6 @@ with pkgs; [
   lazygit
   fzf
   colima
-  chatgpt-cli
   ddgr
   zoxide
   docker
