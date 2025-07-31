@@ -45,20 +45,7 @@ pkgs.writeTextFile rec {
         end,
       },
 
-      -- ChatGPT.nvim integration
-      {
-        "jackMort/ChatGPT.nvim",
-        config = function()
-          require("chatgpt").setup({
-            api_key_cmd = "cat ~/.openai_api_key",
-          })
-        end,
-        dependencies = {
-          "MunifTanjim/nui.nvim",
-          "nvim-lua/plenary.nvim",
-          "nvim-telescope/telescope.nvim",
-        },
-      },
+
 
       -- CoC for LSP and autocompletion
       {
