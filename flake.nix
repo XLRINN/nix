@@ -92,6 +92,7 @@
         "check-keys" = mkApp "check-keys" system;
         "install" = mkApp "install" system;
         "sync-master" = mkApp "sync-master" system;
+        "cli-only" = mkApp "cli-only" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -140,6 +141,7 @@
         specialArgs = { inherit inputs claude-desktop; };
         modules = [
           disko.nixosModules.disko
+          agenix.nixosModules.default
           home-manager.nixosModules.home-manager {
             home-manager = {
               useGlobalPkgs = true;
@@ -152,6 +154,24 @@
 #        environment.variables = {
 #          EDITOR = "nvim";
 #        };
-     });
+     }) // {
+       # CLI-only configuration
+       "x86_64-linux-cli" = nixpkgs.lib.nixosSystem {
+         system = "x86_64-linux";
+         specialArgs = { inherit inputs claude-desktop; };
+         modules = [
+           disko.nixosModules.disko
+           agenix.nixosModules.default
+           home-manager.nixosModules.home-manager {
+             home-manager = {
+               useGlobalPkgs = true;
+               useUserPackages = true;
+               users.${user} = import ./modules/nixos/home-manager.nix;
+             };
+           }
+           ./hosts/nixos/cli-only.nix
+         ];
+       };
+     };
   };
 }

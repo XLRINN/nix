@@ -69,99 +69,7 @@ _check_nix() {
 _create_cli_config() {
     _section "Creating CLI-only configuration"
     
-    # Create temporary CLI-only config that imports your existing config
-    cat > /tmp/cli-only.nix << 'EOF'
-{ config, inputs, pkgs, ... }:
-
-{
-  imports = [
-    ../../hosts/nixos/default.nix
-  ];
-
-  # Override desktop-specific configurations
-  services.xserver.enable = false;
-  services.displayManager.enable = false;
-  services.desktopManager.enable = false;
-  
-  # Disable desktop-specific services
-  services.gdm.enable = false;
-  services.gnome.gdm.enable = false;
-  services.gnome.gnome-keyring.enable = false;
-  
-  # Disable desktop applications
-  environment.systemPackages = with pkgs; [
-    # Keep essential CLI tools
-    agenix.packages."${pkgs.system}".default
-    gitAndTools.gitFull
-    neovim
-    gh  # GitHub CLI
-    inputs.claude-desktop.packages.${pkgs.system}.claude-desktop
-    # CLI tools
-    htop
-    tmux
-    ripgrep
-    fd
-    fzf
-    bat
-    exa
-    jq
-    curl
-    wget
-    tree
-    unzip
-    zip
-    rsync
-    ncdu
-    lsof
-    netcat
-    nmap
-    traceroute
-    mtr
-    iotop
-    iftop
-    nethogs
-    tcpdump
-    wireshark-cli
-    # Development tools
-    gcc
-    gnumake
-    cmake
-    pkg-config
-    python3
-    nodejs
-    rustc
-    cargo
-  ];
-
-  # Keep SSH server for remote access
-  services.openssh = {
-    enable = true;
-    settings = {
-      PubkeyAuthentication = true;
-      PasswordAuthentication = false;
-      PermitRootLogin = "prohibit-password";
-      KexAlgorithms = [ "curve25519-sha256@libssh.org" "diffie-hellman-group16-sha512" ];
-      Ciphers = [ "chacha20-poly1305@openssh.com" "aes256-gcm@openssh.com" ];
-      MACs = [ "hmac-sha2-256-etm@openssh.com" "hmac-sha2-512-etm@openssh.com" ];
-    };
-  };
-
-  # Keep secrets management
-  age.identityPaths = [
-    "/home/david/.ssh/id_ed25519"
-  ];
-
-  # Environment variables for secrets
-  environment.variables = {
-    AVANTE_API_KEY = config.age.secrets."avante-api-key".path;
-    GITHUB_TOKEN = config.age.secrets."github-token".path;
-    GH_TOKEN = config.age.secrets."github-token".path;
-    GH_CONFIG_DIR = "/home/david/.config/gh";
-  };
-}
-EOF
-
-    _success "CLI-only configuration created"
+    _success "Using CLI-only configuration from hosts/nixos/cli-only.nix"
 }
 
 # Function to build and switch to CLI-only system
@@ -181,7 +89,7 @@ _build_cli_system() {
     _print "${BLUE}" "Building CLI-only system..."
     
     # Build the system with the CLI-only config
-    if nix build .#nixosConfigurations.x86_64-linux.config.system.build.toplevel --impure; then
+    if nix build .#nixosConfigurations.x86_64-linux-cli.config.system.build.toplevel --impure; then
         _success "Build completed successfully"
     else
         _error "Build failed"
