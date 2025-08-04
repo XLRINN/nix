@@ -158,10 +158,9 @@
        "x86_64-linux-cli" = nixpkgs.lib.nixosSystem {
          system = "x86_64-linux";
          specialArgs = { inherit inputs claude-desktop; };
-         modules = [
-           disko.nixosModules.disko
-           agenix.nixosModules.default
-           home-manager.nixosModules.home-manager {
+                   modules = [
+            disko.nixosModules.disko
+            home-manager.nixosModules.home-manager {
              home-manager = {
                useGlobalPkgs = true;
                useUserPackages = true;

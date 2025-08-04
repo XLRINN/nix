@@ -28,7 +28,22 @@ download_config() {
 }
 
 run_apply() {
-  ./apps/aarch64-linux/apply --non-interactive
+  ARCH=$(uname -m)
+  
+  case "$ARCH" in
+    x86_64)
+      APPLY_SCRIPT="./apps/x86_64-linux/apply"
+      ;;
+    aarch64)
+      APPLY_SCRIPT="./apps/aarch64-linux/apply"
+      ;;
+    *)
+      echo -e "${RED}Unsupported architecture: $ARCH${NC}"
+      exit 1
+      ;;
+  esac
+  
+  $APPLY_SCRIPT --non-interactive
   if [ ! -f /tmp/username.txt ]; then
     echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
     exit 1
