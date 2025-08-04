@@ -1,5 +1,5 @@
 _: {
-  # This formats the disk with the ext4 filesystem and swap partition
+  # This formats the disk with the ext4 filesystem - minimal setup for server
   # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
     disk = {
@@ -11,20 +11,13 @@ _: {
           partitions = {
             ESP = {
               type = "EF00";
-              size = "100M";
+              size = "500M";
               content = {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
               };
             };
-            # swap = {
-            #   size = "100%";
-            #   content = {
-            #     type = "swap";
-            #     # No resumeDevice to avoid conflicts
-            #   };
-            # };
             root = {
               size = "100%";
               content = {
