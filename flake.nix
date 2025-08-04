@@ -27,10 +27,6 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    agenix = {
-      url = "github:ryantm/agenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     oh-my-posh = {
       url = "github:JanDeDobbeleer/oh-my-posh";
       flake = false;
@@ -65,7 +61,7 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, agenix, oh-my-posh, stylix, hyprland, nvf, nixvim, claude-desktop, flake-utils } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, claude-desktop, flake-utils } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -145,7 +141,6 @@
         specialArgs = { inherit inputs claude-desktop; };
         modules = [
           disko.nixosModules.disko
-          agenix.nixosModules.default
           home-manager.nixosModules.home-manager {
             home-manager = {
               useGlobalPkgs = true;
