@@ -91,6 +91,7 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "install" = mkApp "install" system;
+        "server" = mkApp "server" system;
         "sync-master" = mkApp "sync-master" system;
         "cli-only" = mkApp "cli-only" system;
       };
@@ -158,9 +159,24 @@
        "x86_64-linux-cli" = nixpkgs.lib.nixosSystem {
          system = "x86_64-linux";
          specialArgs = { inherit inputs claude-desktop; };
-                   modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager {
+         modules = [
+           disko.nixosModules.disko
+           home-manager.nixosModules.home-manager {
+             home-manager = {
+               useGlobalPkgs = true;
+               useUserPackages = true;
+               users.${user} = import ./modules/nixos/home-manager.nix;
+             };
+           }
+           ./hosts/nixos/cli-only.nix
+         ];
+       };
+       "aarch64-linux-cli" = nixpkgs.lib.nixosSystem {
+         system = "aarch64-linux";
+         specialArgs = { inherit inputs claude-desktop; };
+         modules = [
+           disko.nixosModules.disko
+           home-manager.nixosModules.home-manager {
              home-manager = {
                useGlobalPkgs = true;
                useUserPackages = true;
