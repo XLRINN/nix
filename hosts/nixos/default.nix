@@ -81,6 +81,7 @@ let user = "david";
       isNormalUser = true;
       extraGroups = [
         "wheel" # Enable 'sudo' for the user.
+        "admin" # Admin group for additional privileges
         "docker"
         "networkmanager"
       ];

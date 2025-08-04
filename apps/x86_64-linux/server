@@ -43,7 +43,7 @@ run_apply() {
       ;;
   esac
   
-  $APPLY_SCRIPT --non-interactive
+  $APPLY_SCRIPT
   if [ ! -f /tmp/username.txt ]; then
     echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
     exit 1

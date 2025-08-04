@@ -53,24 +53,32 @@ else
 
   # Ask if user wants to change defaults
   _print "${YELLOW}Default values:${NC}"
-  _print "${GREEN}Username: $USERNAME${NC}"
+  _print "${GREEN}Username: $USERNAME (leave blank to use default)${NC}"
   _print "${GREEN}Email: $GIT_EMAIL${NC}"
-  _print "${GREEN}Name: $GIT_NAME${NC}"
+  _print "${GREEN}Name: Will be same as username${NC}"
 
   _prompt "${YELLOW}Do you want to change these defaults? (y/N): ${NC}" change_defaults
 
 if [[ "$change_defaults" =~ ^[Yy]$ ]]; then
   # If the username is 'nixos' or 'root', ask the user for their username
   if [[ "$USERNAME" == "nixos" ]] || [[ "$USERNAME" == "root" ]]; then
-    _prompt "${YELLOW}You're running as $USERNAME. Please enter your desired username: ${NC}" USERNAME
+    _prompt "${YELLOW}You're running as $USERNAME. Please enter your desired username (or leave blank for 'david'): ${NC}" USERNAME
   else
-    _prompt "${YELLOW}Please enter your username: ${NC}" USERNAME
+    _prompt "${YELLOW}Please enter your username (or leave blank for 'david'): ${NC}" USERNAME
   fi
   
   _prompt "${YELLOW}Please enter your email: ${NC}" GIT_EMAIL
-  _prompt "${YELLOW}Please enter your name: ${NC}" GIT_NAME
+  
+  # Set defaults if left blank
+  if [[ -z "$USERNAME" ]]; then
+    export USERNAME="david"
+  fi
+  # Always set name to same as username
+  export GIT_NAME="$USERNAME"
 else
   _print "${GREEN}Using default values.${NC}"
+  # Ensure name is same as username
+  export GIT_NAME="$USERNAME"
 fi
 fi
 
@@ -82,8 +90,46 @@ select_boot_disk() {
   disks=$(lsblk -nd --output NAME,SIZE | grep -v loop)
   echo "$disks"
 
-  _prompt "${YELLOW}Please enter the name of your boot disk (e.g., sda, nvme0n1). Do not include the full path ("/dev/"): ${NC}" _boot_disk
-  export BOOT_DISK=$_boot_disk
+  _print "${YELLOW}Default boot disk: sda${NC}"
+  _prompt "${YELLOW}Do you want to change the boot disk? (y/N): ${NC}" change_disk
+
+  case "$change_disk" in
+    [Yy] | [Yy][Ee][Ss] )
+      _prompt "${YELLOW}Please enter the name of your boot disk (e.g., sda, nvme0n1). Do not include the full path ("/dev/"): ${NC}" _boot_disk
+      export BOOT_DISK=$_boot_disk
+      ;;
+    *)
+      export BOOT_DISK="sda"
+      _print "${GREEN}Using default boot disk: sda${NC}"
+      ;;
+  esac
+}
+
+select_network_config() {
+  _print "${YELLOW}Network Configuration:${NC}"
+  _print "${GREEN}1. DHCP (automatic IP assignment)${NC}"
+  _print "${GREEN}2. Static IP (manual configuration)${NC}"
+  
+  _prompt "${YELLOW}Select network configuration (1 or 2): ${NC}" network_choice
+  
+  case "$network_choice" in
+    1)
+      export NETWORK_CONFIG="dhcp"
+      _print "${GREEN}Using DHCP for automatic IP assignment${NC}"
+      ;;
+    2)
+      export NETWORK_CONFIG="static"
+      _print "${YELLOW}Static IP Configuration:${NC}"
+      _prompt "${YELLOW}Enter static IP address (e.g., 192.168.69.100): ${NC}" STATIC_IP
+      _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
+      _print "${GREEN}Gateway will be set to 192.168.69.1${NC}"
+      export GATEWAY="192.168.69.1"
+      ;;
+    *)
+      _print "${RED}Invalid choice. Using DHCP.${NC}"
+      export NETWORK_CONFIG="dhcp"
+      ;;
+  esac
 }
 
 # Set hostname and find primary disk if this is NixOS
@@ -92,19 +138,20 @@ if [[ "$OS" != "Darwin" ]]; then
     # Use defaults for non-interactive mode
     export HOST_NAME="server"
     export BOOT_DISK="sda"
+    export NETWORK_CONFIG="dhcp"
   else
-    export HOST_NAME="loki"
+    # For server installations, ask for hostname
+    _print "${YELLOW}Please enter a hostname for the server (required): ${NC}"
+    _prompt "${YELLOW}Hostname: ${NC}" HOST_NAME
     
-    _print "${YELLOW}Default hostname: $HOST_NAME${NC}"
-    _prompt "${YELLOW}Do you want to change the hostname? (y/N): ${NC}" change_hostname
-    
-    if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
-      _prompt "${YELLOW}Please enter a hostname for the system: ${NC}" HOST_NAME
-    else
-      _print "${GREEN}Using default hostname: $HOST_NAME${NC}"
-    fi
+    # Ensure hostname is not empty
+    while [[ -z "$HOST_NAME" ]]; do
+      _print "${RED}Hostname cannot be empty. Please enter a hostname: ${NC}"
+      _prompt "${YELLOW}Hostname: ${NC}" HOST_NAME
+    done
     
     select_boot_disk
+    select_network_config
   fi
 fi
 
@@ -117,7 +164,14 @@ confirm_details() {
   if([[ "$OS" != "Darwin" ]]); then
     _print "${GREEN}Primary interface: $PRIMARY_IFACE"
     _print "Boot disk: $BOOT_DISK"
-    _print "Hostname: $HOST_NAME${NC}"
+    _print "Hostname: $HOST_NAME"
+    _print "Network: $NETWORK_CONFIG${NC}"
+    
+    if [[ "$NETWORK_CONFIG" == "static" ]]; then
+      _print "${GREEN}Static IP: $STATIC_IP"
+      _print "Subnet Mask: $SUBNET_MASK"
+      _print "Gateway: $GATEWAY${NC}"
+    fi
   fi
 
   _prompt "${YELLOW}Is this correct? yes/no: ${NC}" choice
@@ -159,6 +213,12 @@ replace_tokens() {
       sed -i "s/%HOST%/$HOST_NAME/g" "$file"
       sed -i "s/%INTERFACE%/$PRIMARY_IFACE/g" "$file"
       sed -i "s/%DISK%/$BOOT_DISK/g" "$file"
+      sed -i "s/%NETWORK_CONFIG%/$NETWORK_CONFIG/g" "$file"
+      if [[ "$NETWORK_CONFIG" == "static" ]]; then
+        sed -i "s/%STATIC_IP%/$STATIC_IP/g" "$file"
+        sed -i "s/%SUBNET_MASK%/$SUBNET_MASK/g" "$file"
+        sed -i "s/%GATEWAY%/$GATEWAY/g" "$file"
+      fi
     fi
   fi
 }
@@ -178,6 +238,12 @@ if [[ "$OS" != "Darwin" ]]; then
   echo "Interface: $PRIMARY_IFACE"
   echo "Disk: $BOOT_DISK"
   echo "Hostname: $HOST_NAME"
+  echo "Network: $NETWORK_CONFIG"
+  if [[ "$NETWORK_CONFIG" == "static" ]]; then
+    echo "Static IP: $STATIC_IP"
+    echo "Subnet Mask: $SUBNET_MASK"
+    echo "Gateway: $GATEWAY"
+  fi
 fi
 
 echo "$USERNAME" > /tmp/username.txt
