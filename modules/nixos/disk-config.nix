@@ -19,7 +19,7 @@ _: {
               };
             };
             root = {
-              size = "95%";
+              size = "90%";
               content = {
                 type = "filesystem";
                 format = "ext4";

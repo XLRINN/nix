@@ -46,9 +46,8 @@ check_installer() {
 }
 
 get_user_info() {
-  _print "${CYAN}${USER} User Configuration${NC}"
-  _print "${YELLOW}Default username: david${NC}"
-  _prompt "${YELLOW}Enter username (or press Enter for 'david'): ${NC}" USERNAME
+  _print "${CYAN}${USER} User Setup${NC}"
+  _prompt "${YELLOW}Username (Enter for 'david'): ${NC}" USERNAME
   
   if [[ -z "$USERNAME" ]]; then
     export USERNAME="david"
@@ -62,8 +61,8 @@ get_user_info() {
 }
 
 get_hostname() {
-  _print "${CYAN}${HOSTNAME} Server Hostname${NC}"
-  _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
+  _print "${CYAN}${HOSTNAME} Hostname${NC}"
+  _prompt "${YELLOW}Hostname: ${NC}" HOST_NAME
   
   while [[ -z "$HOST_NAME" ]]; do
     _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
@@ -74,14 +73,12 @@ get_hostname() {
 }
 
 get_boot_disk() {
-  _print "${CYAN}${DISK} Boot Disk Selection${NC}"
+  _print "${CYAN}${DISK} Boot Disk${NC}"
   
-  _print "${YELLOW}Available disks:${NC}"
   disks=$(lsblk -nd --output NAME,SIZE | grep -v loop)
   echo "$disks"
   
-  _print "${YELLOW}Default boot disk: sda${NC}"
-  _prompt "${YELLOW}Do you want to change the boot disk? (y/N): ${NC}" change_disk
+  _prompt "${YELLOW}Change boot disk? (y/N): ${NC}" change_disk
   
   case "$change_disk" in
     [Yy] | [Yy][Ee][Ss] )
@@ -95,9 +92,8 @@ get_boot_disk() {
 }
 
 get_network_config() {
-  _print "${CYAN}${NETWORK} Network Configuration${NC}"
-  _print "${YELLOW}Enter static IP address (or press Enter for DHCP): ${NC}"
-  _prompt "${YELLOW}IP address: ${NC}" STATIC_IP
+  _print "${CYAN}${NETWORK} Network${NC}"
+  _prompt "${YELLOW}Static IP (Enter for DHCP): ${NC}" STATIC_IP
   
   if [[ -z "$STATIC_IP" ]]; then
     export NETWORK_CONFIG="dhcp"
@@ -111,7 +107,7 @@ get_network_config() {
 }
 
 confirm_configuration() {
-  _print "${CYAN}${INFO} Configuration Summary${NC}"
+  _print "${CYAN}${INFO} Summary${NC}"
   _print "${GREEN}Username: $USERNAME${NC}"
   _print "${GREEN}Email: $GIT_EMAIL${NC}"
   _print "${GREEN}Name: $GIT_NAME${NC}"
@@ -125,15 +121,15 @@ confirm_configuration() {
     _print "${GREEN}Gateway: $GATEWAY${NC}"
   fi
   
-  _prompt "${YELLOW}${WARNING} Is this configuration correct? (Y/n): ${NC}" confirm
+  _prompt "${YELLOW}${WARNING} Continue? (Y/n): ${NC}" confirm
   
   case "$confirm" in
-    [Yy] | [Yy][Ee][Ss] )
-      _print "${GREEN}${SUCCESS} Configuration confirmed!${NC}"
+    [Nn] | [Nn][Oo] )
+      _print "${RED}${ERROR} Cancelled.${NC}"
+      exit 1
       ;;
     *)
-      _print "${RED}${ERROR} Configuration cancelled.${NC}"
-      exit 1
+      _print "${GREEN}${SUCCESS} Confirmed!${NC}"
       ;;
   esac
 }
