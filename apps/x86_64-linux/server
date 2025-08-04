@@ -159,6 +159,10 @@ download_config() {
   _print "${CYAN}${SERVER} Downloading Configuration${NC}"
   curl -LJ0 https://github.com/xlrinn/nix/archive/server.zip -o nixos-config-main.zip
   unzip nixos-config-main.zip
+  
+  # Remove existing directory if it exists
+  rm -rf nixos-config
+  
   mv nix-server nixos-config
   cd nixos-config
   _print "${GREEN}${SUCCESS} Configuration downloaded!${NC}"
@@ -179,6 +183,13 @@ run_disko() {
 
 setup_files() {
   _print "${CYAN}${SERVER} Setting up NixOS files${NC}"
+  
+  # Clean up space before copying files
+  _print "${YELLOW}Cleaning up space...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
+  
   sudo mkdir -p /mnt/etc/nixos
   sudo cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
@@ -187,6 +198,13 @@ setup_files() {
 
 install_nixos() {
   _print "${CYAN}${ROCKET} Installing NixOS${NC}"
+  
+  # Final cleanup before installation
+  _print "${YELLOW}Final cleanup...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
+  
   ARCH=$(uname -m)
 
   case "$ARCH" in
