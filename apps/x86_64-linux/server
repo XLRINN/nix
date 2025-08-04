@@ -56,7 +56,7 @@ get_user_info() {
   
   _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
   
-  _prompt "${YELLOW}${EMAIL} Enter your email: ${NC}" GIT_EMAIL
+  export GIT_EMAIL="xlrin.morgan@gmail.com"
   export GIT_NAME="$USERNAME"
   _print "${GREEN}${SUCCESS} Name set to: $GIT_NAME${NC}"
 }
@@ -135,6 +135,14 @@ confirm_configuration() {
     _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
     _print "${GREEN}Gateway: $GATEWAY${NC}"
   fi
+  
+  _prompt "${YELLOW}${WARNING} Do you want to change the email? (y/N): ${NC}" change_email
+  
+  case "$change_email" in
+    [Yy] | [Yy][Ee][Ss] )
+      _prompt "${YELLOW}${EMAIL} Enter new email: ${NC}" GIT_EMAIL
+      ;;
+  esac
   
   _prompt "${YELLOW}${WARNING} Is this configuration correct? (y/N): ${NC}" confirm
   
