@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+set -exu
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Emojis
+ROCKET="🚀"
+SERVER="🖥️"
+DISK="💾"
+NETWORK="🌐"
+USER="👤"
+EMAIL="📧"
+HOSTNAME="🏷️"
+SUCCESS="✅"
+ERROR="❌"
+WARNING="⚠️"
+INFO="ℹ️"
+
+# Custom print function
+_print() {
+  echo -e "$1"
+}
+
+# Custom prompt function
+_prompt() {
+  local message="$1"
+  local variable="$2"
+  _print "$message"
+  read -r $variable
+}
+
+check_installer() {
+  if [ -e /etc/NIXOS ]; then
+    _print "${GREEN}${SUCCESS} Running in the NixOS installer environment.${NC}"
+  else
+    _print "${RED}${ERROR} Not running in the NixOS installer environment.${NC}"
+    exit 1
+  fi
+}
+
+get_user_info() {
+  _print "${CYAN}${USER} User Configuration${NC}"
+  _print "${YELLOW}Default username: david${NC}"
+  _prompt "${YELLOW}Enter username (or press Enter for 'david'): ${NC}" USERNAME
+  
+  if [[ -z "$USERNAME" ]]; then
+    export USERNAME="david"
+  fi
+  
+  _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
+  
+  _prompt "${YELLOW}${EMAIL} Enter your email: ${NC}" GIT_EMAIL
+  export GIT_NAME="$USERNAME"
+  _print "${GREEN}${SUCCESS} Name set to: $GIT_NAME${NC}"
+}
+
+get_hostname() {
+  _print "${CYAN}${HOSTNAME} Server Hostname${NC}"
+  _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
+  
+  while [[ -z "$HOST_NAME" ]]; do
+    _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
+    _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
+  done
+  
+  _print "${GREEN}${SUCCESS} Hostname set to: $HOST_NAME${NC}"
+}
+
+get_boot_disk() {
+  _print "${CYAN}${DISK} Boot Disk Selection${NC}"
+  
+  _print "${YELLOW}Available disks:${NC}"
+  disks=$(lsblk -nd --output NAME,SIZE | grep -v loop)
+  echo "$disks"
+  
+  _print "${YELLOW}Default boot disk: sda${NC}"
+  _prompt "${YELLOW}Do you want to change the boot disk? (y/N): ${NC}" change_disk
+  
+  case "$change_disk" in
+    [Yy] | [Yy][Ee][Ss] )
+      _prompt "${YELLOW}Enter boot disk name (e.g., sda, nvme0n1): ${NC}" BOOT_DISK
+      ;;
+    *)
+      export BOOT_DISK="sda"
+      _print "${GREEN}${SUCCESS} Using default boot disk: sda${NC}"
+      ;;
+  esac
+}
+
+get_network_config() {
+  _print "${CYAN}${NETWORK} Network Configuration${NC}"
+  _print "${GREEN}1. DHCP (automatic IP assignment)${NC}"
+  _print "${GREEN}2. Static IP (manual configuration)${NC}"
+  
+  _prompt "${YELLOW}Select network configuration (1 or 2): ${NC}" network_choice
+  
+  case "$network_choice" in
+    1)
+      export NETWORK_CONFIG="dhcp"
+      _print "${GREEN}${SUCCESS} Using DHCP for automatic IP assignment${NC}"
+      ;;
+    2)
+      export NETWORK_CONFIG="static"
+      _print "${YELLOW}Static IP Configuration:${NC}"
+      _prompt "${YELLOW}Enter static IP address (e.g., 192.168.69.100): ${NC}" STATIC_IP
+      _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
+      export GATEWAY="192.168.69.1"
+      _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
+      ;;
+    *)
+      _print "${RED}${ERROR} Invalid choice. Using DHCP.${NC}"
+      export NETWORK_CONFIG="dhcp"
+      ;;
+  esac
+}
+
+confirm_configuration() {
+  _print "${CYAN}${INFO} Configuration Summary${NC}"
+  _print "${GREEN}Username: $USERNAME${NC}"
+  _print "${GREEN}Email: $GIT_EMAIL${NC}"
+  _print "${GREEN}Name: $GIT_NAME${NC}"
+  _print "${GREEN}Hostname: $HOST_NAME${NC}"
+  _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
+  _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
+  
+  if [[ "$NETWORK_CONFIG" == "static" ]]; then
+    _print "${GREEN}Static IP: $STATIC_IP${NC}"
+    _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
+    _print "${GREEN}Gateway: $GATEWAY${NC}"
+  fi
+  
+  _prompt "${YELLOW}${WARNING} Is this configuration correct? (y/N): ${NC}" confirm
+  
+  case "$confirm" in
+    [Yy] | [Yy][Ee][Ss] )
+      _print "${GREEN}${SUCCESS} Configuration confirmed!${NC}"
+      ;;
+    *)
+      _print "${RED}${ERROR} Configuration cancelled.${NC}"
+      exit 1
+      ;;
+  esac
+}
+
+apply_configuration() {
+  _print "${CYAN}${ROCKET} Applying Configuration${NC}"
+  
+  # Replace tokens in Nix files
+  find . -type f -name "*.nix" -exec sed -i "s/%USER%/$USERNAME/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i "s/%EMAIL%/$GIT_EMAIL/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i "s/%NAME%/$GIT_NAME/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i "s/%HOST%/$HOST_NAME/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i "s/%DISK%/$BOOT_DISK/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i "s/%NETWORK_CONFIG%/$NETWORK_CONFIG/g" {} \;
+  
+  if [[ "$NETWORK_CONFIG" == "static" ]]; then
+    find . -type f -name "*.nix" -exec sed -i "s/%STATIC_IP%/$STATIC_IP/g" {} \;
+    find . -type f -name "*.nix" -exec sed -i "s/%SUBNET_MASK%/$SUBNET_MASK/g" {} \;
+    find . -type f -name "*.nix" -exec sed -i "s/%GATEWAY%/$GATEWAY/g" {} \;
+  fi
+  
+  echo "$USERNAME" > /tmp/username.txt
+  _print "${GREEN}${SUCCESS} Configuration applied!${NC}"
+}
+
+download_config() {
+  _print "${CYAN}${SERVER} Downloading Configuration${NC}"
+  curl -LJ0 https://github.com/xlrinn/nix/archive/server.zip -o nixos-config-main.zip
+  unzip nixos-config-main.zip
+  mv nix-server nixos-config
+  cd nixos-config
+  _print "${GREEN}${SUCCESS} Configuration downloaded!${NC}"
+}
+
+run_disko() {
+  _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
+  sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
+}
+
+setup_files() {
+  _print "${CYAN}${SERVER} Setting up NixOS files${NC}"
+  sudo mkdir -p /mnt/etc/nixos
+  sudo cp -r * /mnt/etc/nixos
+  cd /mnt/etc/nixos
+  _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
+}
+
+install_nixos() {
+  _print "${CYAN}${ROCKET} Installing NixOS${NC}"
+  ARCH=$(uname -m)
+
+  case "$ARCH" in
+    x86_64)
+      FLAKE_TARGET="x86_64-linux-cli"
+      ;;
+    aarch64)
+      FLAKE_TARGET="aarch64-linux-cli"
+      ;;
+    *)
+      _print "${RED}${ERROR} Unsupported architecture: $ARCH${NC}"
+      exit 1
+      ;;
+  esac
+
+  sudo nixos-install --flake .#$FLAKE_TARGET $@
+  sudo chmod -R 775 /mnt/etc/nixos
+  _print "${GREEN}${SUCCESS} NixOS installation complete!${NC}"
+}
+
+prompt_reboot() {
+  _print "${CYAN}${INFO} Installation Complete!${NC}"
+  _prompt "${YELLOW}${WARNING} Do you want to reboot now? (y/N): ${NC}" choice
+  case "$choice" in
+  y|Y|yes|YES ) 
+    _print "${GREEN}${ROCKET} Rebooting...${NC}" 
+    sudo reboot
+    ;;
+  * ) 
+    _print "${YELLOW}${INFO} Reboot skipped. You can reboot manually later.${NC}"
+    ;;
+  esac
+}
+
+cleanup() {
+  _print "${CYAN}${INFO} Cleaning up temporary files${NC}"
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config
+  _print "${GREEN}${SUCCESS} Cleanup complete!${NC}"
+}
+
+# Main execution
+_print "${PURPLE}${ROCKET} NixOS Server Installation${NC}"
+_print "${BLUE}This will install a CLI-only NixOS server configuration${NC}"
+
+check_installer
+get_user_info
+get_hostname
+get_boot_disk
+get_network_config
+confirm_configuration
+download_config
+apply_configuration
+run_disko
+setup_files
+install_nixos
+cleanup
+prompt_reboot 
