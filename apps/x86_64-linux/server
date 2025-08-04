@@ -96,29 +96,18 @@ get_boot_disk() {
 
 get_network_config() {
   _print "${CYAN}${NETWORK} Network Configuration${NC}"
-  _print "${GREEN}1. DHCP (automatic IP assignment)${NC}"
-  _print "${GREEN}2. Static IP (manual configuration)${NC}"
+  _print "${YELLOW}Enter static IP address (or press Enter for DHCP): ${NC}"
+  _prompt "${YELLOW}IP address: ${NC}" STATIC_IP
   
-  _prompt "${YELLOW}Select network configuration (1 or 2): ${NC}" network_choice
-  
-  case "$network_choice" in
-    1)
-      export NETWORK_CONFIG="dhcp"
-      _print "${GREEN}${SUCCESS} Using DHCP for automatic IP assignment${NC}"
-      ;;
-    2)
-      export NETWORK_CONFIG="static"
-      _print "${YELLOW}Static IP Configuration:${NC}"
-      _prompt "${YELLOW}Enter static IP address (e.g., 192.168.69.100): ${NC}" STATIC_IP
-      _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
-      export GATEWAY="192.168.69.1"
-      _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
-      ;;
-    *)
-      _print "${RED}${ERROR} Invalid choice. Using DHCP.${NC}"
-      export NETWORK_CONFIG="dhcp"
-      ;;
-  esac
+  if [[ -z "$STATIC_IP" ]]; then
+    export NETWORK_CONFIG="dhcp"
+    _print "${GREEN}${SUCCESS} Using DHCP for automatic IP assignment${NC}"
+  else
+    export NETWORK_CONFIG="static"
+    _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
+    export GATEWAY="192.168.69.1"
+    _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
+  fi
 }
 
 confirm_configuration() {
@@ -136,15 +125,7 @@ confirm_configuration() {
     _print "${GREEN}Gateway: $GATEWAY${NC}"
   fi
   
-  _prompt "${YELLOW}${WARNING} Do you want to change the email? (y/N): ${NC}" change_email
-  
-  case "$change_email" in
-    [Yy] | [Yy][Ee][Ss] )
-      _prompt "${YELLOW}${EMAIL} Enter new email: ${NC}" GIT_EMAIL
-      ;;
-  esac
-  
-  _prompt "${YELLOW}${WARNING} Is this configuration correct? (y/N): ${NC}" confirm
+  _prompt "${YELLOW}${WARNING} Is this configuration correct? (Y/n): ${NC}" confirm
   
   case "$confirm" in
     [Yy] | [Yy][Ee][Ss] )
