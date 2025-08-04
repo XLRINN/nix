@@ -137,18 +137,18 @@ confirm_configuration() {
 apply_configuration() {
   _print "${CYAN}${ROCKET} Applying Configuration${NC}"
   
-  # Replace tokens in Nix files
-  find . -type f -name "*.nix" -exec sed -i "s/%USER%/$USERNAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%EMAIL%/$GIT_EMAIL/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%NAME%/$GIT_NAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%HOST%/$HOST_NAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%DISK%/$BOOT_DISK/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%NETWORK_CONFIG%/$NETWORK_CONFIG/g" {} \;
+  # Replace tokens in Nix files (non-interactive)
+  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%USER%/$USERNAME/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%EMAIL%/$GIT_EMAIL/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%NAME%/$GIT_NAME/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%HOST%/$HOST_NAME/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%DISK%/$BOOT_DISK/g" {} \;
+  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%NETWORK_CONFIG%/$NETWORK_CONFIG/g" {} \;
   
   if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    find . -type f -name "*.nix" -exec sed -i "s/%STATIC_IP%/$STATIC_IP/g" {} \;
-    find . -type f -name "*.nix" -exec sed -i "s/%SUBNET_MASK%/$SUBNET_MASK/g" {} \;
-    find . -type f -name "*.nix" -exec sed -i "s/%GATEWAY%/$GATEWAY/g" {} \;
+    find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%STATIC_IP%/$STATIC_IP/g" {} \;
+    find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%SUBNET_MASK%/$SUBNET_MASK/g" {} \;
+    find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%GATEWAY%/$GATEWAY/g" {} \;
   fi
   
   echo "$USERNAME" > /tmp/username.txt
@@ -197,6 +197,9 @@ setup_files() {
 }
 
 install_nixos() {
+  # Clear screen before installation
+  clear
+  
   _print "${CYAN}${ROCKET} Installing NixOS${NC}"
   
   # Final cleanup before installation
