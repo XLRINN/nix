@@ -548,4 +548,6 @@ run_disko
 setup_files
 install_nixos
 cleanup
+prompt_reboot
+cleanup
 prompt_reboot 
