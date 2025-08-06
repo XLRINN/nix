@@ -1,5 +1,5 @@
 _: {
-  # Simple server disk configuration
+  # Server disk configuration with BIOS Boot Partition for GRUB
   disko.devices = {
     disk = {
       vdb = {
@@ -8,6 +8,10 @@ _: {
         content = {
           type = "gpt";
           partitions = {
+            bios = {
+              type = "EF02";
+              size = "1M";
+            };
             root = {
               size = "100%";
               content = {
