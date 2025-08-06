@@ -93,6 +93,9 @@ in
     };
   };
 
+  # Enable zsh at system level
+  programs.zsh.enable = true;
+
   # Minimal packages - just essentials
   environment.systemPackages = with pkgs; [
     git
@@ -101,7 +104,6 @@ in
     curl
     htop
     tree
-    zsh
   ];
 
   system.stateVersion = "21.05";
