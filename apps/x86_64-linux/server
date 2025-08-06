@@ -440,14 +440,33 @@ install_nixos() {
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
   
-  # Try installation with timeout and skip root password
-  if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
+  # Pre-installation cleanup for low-resource systems
+  _print "${YELLOW}Pre-installation cleanup for Hetzner...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo systemctl restart nix-daemon || true
+  sleep 5
+  
+  # Conservative installation for Hetzner
+  _print "${BLUE}Trying conservative installation for Hetzner...${NC}"
+  if timeout 3600 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-substitute --verbose; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
   else
-    _print "${RED}${ERROR} Installation failed or timed out${NC}"
-    _print "${YELLOW}Try manually: sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
-    exit 1
+    _print "${RED}${ERROR} Conservative installation failed, trying minimal...${NC}"
+    
+    # Ultra-minimal installation
+    if timeout 3600 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-substitute --no-channel-copy --verbose; then
+      _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
+      sudo chmod -R 775 /mnt/etc/nixos
+    else
+      _print "${RED}${ERROR} All installation strategies failed${NC}"
+      _print "${YELLOW}Manual commands to try:${NC}"
+      _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-substitute${NC}"
+      _print "${YELLOW}2. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-substitute --no-channel-copy${NC}"
+      _print "${YELLOW}3. Check memory: free -h${NC}"
+      _print "${YELLOW}4. Check disk space: df -h${NC}"
+      exit 1
+    fi
   fi
 }
 

@@ -18,6 +18,7 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
+                extraArgs = [ "-L" "disk-main-root" ];
               };
             };
           };
