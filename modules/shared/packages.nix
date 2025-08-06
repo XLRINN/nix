@@ -8,19 +8,25 @@ let
     in (hostName == "loki" || hostName == "server")
   else false;
   
-  # Desktop-specific packages (GUI environments)
-  desktopPackages = with pkgs; [
+  # GUI-specific packages (desktop only)
+  guiPackages = with pkgs; [
     alacritty
     kitty
-  ] ++ desktopFonts ++ desktopAdditionalPackages;
-  
-  # Server-specific packages (SSH environments)
-  serverPackages = with pkgs; [
-    zellij
+    # fonts
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-emoji
+    fira-code
+    inconsolata
+    dejavu_fonts
+    jetbrains-mono
+    font-awesome
+    nerd-fonts.fira-code
+    meslo-lgs-nf
   ];
   
-  # Common packages for all environments
-  commonPackages = with pkgs; [
+  # Shared packages for all environments
+  sharedPackages = with pkgs; [
     #ghostty
     aspell
     aspellDicts.en
@@ -60,31 +66,13 @@ let
     #ranger
     lynx
     ueberzug
-  ];
-  
-  # Desktop-specific additional packages
-  desktopAdditionalPackages = with pkgs; [
+    # Development tools (shared)
     colima
     docker
     docker-compose
     nodejs
-  ];
-  
-
-  
-  # Desktop-specific packages (GUI environments)
-  desktopFonts = with pkgs; [
-    # fonts
-    noto-fonts
-    noto-fonts-cjk-sans
-    noto-fonts-emoji
-    fira-code
-    inconsolata
-    dejavu_fonts
-    jetbrains-mono
-    font-awesome
-    nerd-fonts.fira-code
-    meslo-lgs-nf
+    # Terminal multiplexer (shared)
+    zellij
   ];
 in
-  commonPackages ++ (if isServer then serverPackages else desktopPackages)
+  sharedPackages ++ (if isServer then [] else guiPackages)
