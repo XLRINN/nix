@@ -10,6 +10,9 @@ in
     ../../modules/server/disk-config.nix
   ];
 
+  # Import home-manager for user configuration
+  home-manager.users.${user} = import ../../modules/server/home-manager.nix;
+
   # Basic system configuration with GRUB bootloader for BIOS - optimized
   boot = {
     loader = {
@@ -27,9 +30,9 @@ in
     };
     # Use stable kernel for faster boot
     kernelPackages = pkgs.linuxPackages;
-    # Essential kernel modules for disk access
-    initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "virtio_blk" "virtio_pci" "virtio_net" ];
-    kernelModules = [ "virtio_blk" "virtio_pci" "virtio_net" ];
+    # Full kernel modules for maximum compatibility
+    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" "virtio_blk" "virtio_pci" "virtio_net" ];
+    kernelModules = [ "uinput" "iwlwifi" "virtio_blk" "virtio_pci" "virtio_net" ];
     # Faster boot options
     kernelParams = [ "quiet" "loglevel=3" "console=tty0" "console=ttyS0,115200" ];
     # Disable unnecessary services during boot
@@ -83,8 +86,8 @@ in
     }];
   };
 
-  # Conservative settings for Hetzner
-  powerManagement.cpuFreqGovernor = "ondemand";
+  # Performance settings for maximum compatibility
+  powerManagement.cpuFreqGovernor = "performance";
   
   # Disable unnecessary services for faster boot
   services = {
@@ -106,24 +109,29 @@ in
   # Reduce swappiness for better performance
   boot.kernel.sysctl."vm.swappiness" = 10;
 
-  # Nix configuration - optimized for low-resource systems
+  # Nix configuration - optimized for faster builds
   nix = {
     settings = {
       allowed-users = [ "${user}" ];
       trusted-users = [ "@admin" "${user}" ];
-      # Single substituter for Hetzner
+      # Multiple substituters for faster downloads
       substituters = [
+        "https://nix-community.cachix.org"
         "https://cache.nixos.org"
+        "https://nixpkgs-wayland.cachix.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "nix-community.cachix.org-1:mB9FSh9qf7dCedXfElpDXJmpnNR7e1yR4a7e+jQppM="
+        "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
       ];
-      # Conservative resource usage for Hetzner
-      max-jobs = 2;
-      cores = 2;
-      # Disable aggressive optimizations
-      auto-optimise-store = false;
-      builders-use-substitutes = false;
+      # Parallel builds and downloads
+      max-jobs = "auto";
+      cores = 0;
+      # Faster evaluation
+      auto-optimise-store = true;
+      # Use binary caches more aggressively
+      builders-use-substitutes = true;
     };
     extraOptions = ''
       experimental-features = nix-command flakes
@@ -131,19 +139,33 @@ in
     '';
     gc = {
       automatic = true;
-      dates = "7d";
-      options = "--delete-older-than 14d";
+      dates = "14d";
+      options = "--delete-older-than 30d";
     };
   };
 
   # Enable zsh at system level
   programs.zsh.enable = true;
 
-  # Ultra-minimal packages for Hetzner
+  # Full packages - all essentials
   environment.systemPackages = with pkgs; [
     git
     vim
     wget
+    curl
+    htop
+    tree
+    tmux
+    ripgrep
+    fd
+    bat
+    eza
+    fzf
+    jq
+    ncdu
+    rsync
+    unzip
+    zip
   ];
 
   system.stateVersion = "21.05";
