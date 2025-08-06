@@ -13,7 +13,9 @@ let
   tmux = ./config/tmux/tmux.conf;
   
   # Detect if this is a server environment
-  isServer = config.networking.hostName == "loki" || config.networking.hostName == "server";
+  isServer = let
+    hostName = config.networking.hostName or "unknown";
+  in hostName == "loki" || hostName == "server";
 in
 {
   # Direnv configuration

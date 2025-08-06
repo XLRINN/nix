@@ -3,14 +3,16 @@
 let
   # Detect if this is a server environment
   isServer = if config != null then 
-    (config.networking.hostName == "loki" || config.networking.hostName == "server")
+    let
+      hostName = config.networking.hostName or "unknown";
+    in (hostName == "loki" || hostName == "server")
   else false;
   
   # Desktop-specific packages (GUI environments)
   desktopPackages = with pkgs; [
     alacritty
     kitty
-  ];
+  ] ++ desktopFonts ++ desktopAdditionalPackages;
   
   # Server-specific packages (SSH environments)
   serverPackages = with pkgs; [
@@ -38,11 +40,8 @@ let
     zsh
     lazygit
     fzf
-    colima
     ddgr
     zoxide
-    docker
-    docker-compose
     htop
     hunspell
     iftop
@@ -55,14 +54,26 @@ let
     zsh-powerlevel10k
     #oh-my-posh
     #synergy
-    nodejs
     ripgrep   
     fd 
     lua
     #ranger
     lynx
     ueberzug
-    powershell  
+  ];
+  
+  # Desktop-specific additional packages
+  desktopAdditionalPackages = with pkgs; [
+    colima
+    docker
+    docker-compose
+    nodejs
+  ];
+  
+
+  
+  # Desktop-specific packages (GUI environments)
+  desktopFonts = with pkgs; [
     # fonts
     noto-fonts
     noto-fonts-cjk-sans
