@@ -10,8 +10,15 @@ in
     ../../modules/server/disk-config.nix
   ];
 
-  # Basic system configuration - let disko handle bootloader
+  # Basic system configuration with GRUB bootloader
   boot = {
+    loader = {
+      grub = {
+        enable = true;
+        device = "/dev/%DISK%";
+        useOSProber = false;
+      };
+    };
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
     kernelModules = [ "uinput" "iwlwifi" ];
