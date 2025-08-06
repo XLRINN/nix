@@ -6,10 +6,6 @@ let user = "david";
     ]; 
 in
 {
-  imports = [
-    ../../modules/server/disk-config.nix
-  ];
-
   # Basic system configuration with GRUB bootloader
   boot = {
     loader = {

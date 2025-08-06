@@ -250,8 +250,27 @@ run_disko() {
   sudo nix-collect-garbage -d || true
   sudo rm -rf /tmp/* || true
   
-  sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/server/disk-config.nix
+  # Manual partitioning for BIOS compatibility
+  _print "${YELLOW}Setting up disk manually for BIOS compatibility...${NC}"
+  
+  # Create GPT partition table
+  sudo parted /dev/$BOOT_DISK mklabel gpt
+  
+  # Create BIOS boot partition (1MB)
+  sudo parted /dev/$BOOT_DISK mkpart primary 1MiB 2MiB
+  sudo parted /dev/$BOOT_DISK set 1 bios_grub on
+  
+  # Create root partition (rest of disk)
+  sudo parted /dev/$BOOT_DISK mkpart primary 2MiB 100%
+  
+  # Format root partition
+  sudo mkfs.ext4 /dev/${BOOT_DISK}2
+  
+  # Mount root partition
+  sudo mount /dev/${BOOT_DISK}2 /mnt
+  
+  # Create boot directory
+  sudo mkdir -p /mnt/boot
   _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
 }
 
