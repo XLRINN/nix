@@ -16,7 +16,6 @@ with pkgs; [
   yazi
   lf
   nnn
-  openssh
   sqlite
   wget
   zip
