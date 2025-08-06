@@ -97,14 +97,6 @@ in
         PermitRootLogin = "prohibit-password";
       };
     };
-    # Optimize systemd
-    systemd = {
-      enableEmergencyMode = false;
-      extraConfig = ''
-        DefaultTimeoutStartSec=30s
-        DefaultTimeoutStopSec=30s
-      '';
-    };
   };
 
   # Optimize file system
