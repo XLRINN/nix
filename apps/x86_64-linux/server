@@ -481,7 +481,7 @@ install_nixos() {
   
   # Conservative installation for Hetzner
   _print "${BLUE}Trying conservative installation for Hetzner...${NC}"
-  if timeout 3600 sudo nixos-install --flake .#$FLAKE_TARGET --verbose; then
+  if timeout 3600 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
     return 0
@@ -489,15 +489,15 @@ install_nixos() {
     _print "${RED}${ERROR} Conservative installation failed, trying minimal...${NC}"
     
     # Ultra-minimal installation
-    if timeout 3600 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --verbose; then
+    if timeout 3600 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd --verbose; then
       _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
       sudo chmod -R 775 /mnt/etc/nixos
       return 0
     else
       _print "${RED}${ERROR} All installation strategies failed${NC}"
       _print "${YELLOW}Manual commands to try:${NC}"
-      _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET${NC}"
-      _print "${YELLOW}2. sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy${NC}"
+      _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd${NC}"
+      _print "${YELLOW}2. sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd${NC}"
       _print "${YELLOW}3. Check memory: free -h${NC}"
       _print "${YELLOW}4. Check disk space: df -h${NC}"
       return 1
@@ -508,20 +508,16 @@ install_nixos() {
 prompt_reboot() {
   _print "${CYAN}${INFO} Installation Complete!${NC}"
   _print "${YELLOW}${WARNING} Installation completed successfully!${NC}"
-  _print "${YELLOW}Would you like to reboot now? (Y/n): ${NC}"
-  read -r reboot_choice
   
-  case "$reboot_choice" in
-    [Nn] | [Nn][Oo] )
-      _print "${BLUE}${INFO} Skipping reboot. You can reboot manually when ready:${NC}"
-      _print "${YELLOW}sudo reboot${NC}"
-      ;;
-    *)
-      _print "${GREEN}${ROCKET} Rebooting in 5 seconds...${NC}"
-      sleep 5
-      sudo reboot
-      ;;
-  esac
+  # Drop into terminal for manual password setup
+  _print "${BLUE}${INFO} Dropping into terminal for manual password setup...${NC}"
+  _print "${YELLOW}You can now set passwords manually:${NC}"
+  _print "${YELLOW}1. Set root password: sudo chroot /mnt passwd root${NC}"
+  _print "${YELLOW}2. Set user password: sudo chroot /mnt passwd david${NC}"
+  _print "${YELLOW}3. Exit terminal when done: exit${NC}"
+  
+  # Start a new shell for manual password setup
+  exec /bin/bash
 }
 
 cleanup() {
