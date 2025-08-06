@@ -7,7 +7,6 @@ let
   zshrc = config/shell/.zshrc;
   nvim = ./config/nvim/init.lua;
   yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
-  alacritty = builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml);
   rifle = ./config/ranger/rifle.conf;
   ghost = ./config/ghostty/config;
   tmux = ./config/tmux/tmux.conf;
@@ -16,6 +15,9 @@ let
   isServer = let
     hostName = config.networking.hostName or "unknown";
   in hostName == "loki" || hostName == "server";
+  
+  # Only read alacritty config if not server
+  alacritty = if !isServer then builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml) else {};
 in
 {
   # Direnv configuration
@@ -91,7 +93,7 @@ in
   };
 
   # Desktop-specific configurations (GUI environments)
-  alacritty = lib.mkIf (!isServer) {
+  alacritty = lib.mkIf (!isServer && builtins.length (builtins.attrNames alacritty) > 0) {
     enable = true;
     settings = alacritty;
   };

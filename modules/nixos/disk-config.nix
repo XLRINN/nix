@@ -1,6 +1,5 @@
 _: {
-  # This formats the disk with the ext4 filesystem - optimized for space efficiency
-  # Other examples found here: https://github.com/nix-community/disko/tree/master/example
+  # This formats the disk with the ext4 filesystem - simple setup
   disko.devices = {
     disk = {
       vdb = {
@@ -11,18 +10,11 @@ _: {
           partitions = {
             ESP = {
               type = "EF00";
-              size = "256M";  # Reduced from 500M to save space
+              size = "256M";
               content = {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-              };
-            };
-            swap = {
-              size = "2G";  # Add swap for memory management
-              content = {
-                type = "swap";
-                resumeDevice = true;
               };
             };
             root = {
@@ -31,7 +23,7 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = ["noatime" "nodiratime"];  # Space optimization
+                mountOptions = ["noatime" "nodiratime"];
               };
             };
           };
