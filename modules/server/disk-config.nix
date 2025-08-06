@@ -1,5 +1,5 @@
 _: {
-  # Server disk configuration - BIOS compatible (MBR)
+  # Server disk configuration with bootloader
   disko.devices = {
     disk = {
       vdb = {
@@ -22,4 +22,8 @@ _: {
       };
     };
   };
+  
+  # Let disko handle the bootloader
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "/dev/%DISK%";
 }
