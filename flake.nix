@@ -88,7 +88,6 @@
         "install" = mkApp "install" system;
         "server" = mkApp "server" system;
         "sync-master" = mkApp "sync-master" system;
-        "cli-only" = mkApp "cli-only" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -150,8 +149,8 @@
 #          EDITOR = "nvim";
 #        };
      }) // {
-       # CLI-only configuration
-       "x86_64-linux-cli" = nixpkgs.lib.nixosSystem {
+       # Server configuration (consolidated CLI-only functionality)
+       "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "x86_64-linux";
          specialArgs = { inherit inputs claude-desktop; };
          modules = [
@@ -163,10 +162,10 @@
                users.${user} = import ./modules/nixos/home-manager.nix;
              };
            }
-           ./hosts/nixos/cli-only.nix
+           ./hosts/nixos/server.nix
          ];
        };
-       "aarch64-linux-cli" = nixpkgs.lib.nixosSystem {
+       "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "aarch64-linux";
          specialArgs = { inherit inputs claude-desktop; };
          modules = [
@@ -178,7 +177,7 @@
                users.${user} = import ./modules/nixos/home-manager.nix;
              };
            }
-           ./hosts/nixos/cli-only.nix
+           ./hosts/nixos/server.nix
          ];
        };
      };

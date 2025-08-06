@@ -6,10 +6,8 @@ let user = "david";
     ]; in
 {
   imports = [
-    ../../modules/nixos/secrets.nix
     ../../modules/nixos/disk-config.nix
     ../../modules/shared
-    agenix.nixosModules.default
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -105,7 +103,7 @@ let user = "david";
     }];
   };
 
-  # CLI-only services (no desktop)
+  # Server services (no desktop)
   services = { 
     openssh = {
       enable = true;
@@ -152,9 +150,8 @@ let user = "david";
     dconf.enable = true;
   };
 
-  # CLI-only packages (no desktop apps)
+  # Server packages (no desktop apps)
   environment.systemPackages = with pkgs; [
-    agenix.packages."${pkgs.system}".default
     gitAndTools.gitFull
     inetutils
     neovim
@@ -239,7 +236,7 @@ let user = "david";
         cd /home/${user}/nix
         sudo -u ${user} git init
         sudo -u ${user} git add .
-        sudo -u ${user} git commit -m "Initial commit from CLI installation"
+        sudo -u ${user} git commit -m "Initial commit from server installation"
         
         # Add remote with your actual repo URL
         sudo -u ${user} git remote add origin https://github.com/dmorgan/nix.git
