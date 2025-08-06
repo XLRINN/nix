@@ -27,8 +27,8 @@ in
     };
     # Use stable kernel for faster boot
     kernelPackages = pkgs.linuxPackages;
-    # Minimal kernel modules for Hetzner
-    initrd.availableKernelModules = [ "ahci" "sd_mod" "virtio_blk" "virtio_pci" "virtio_net" ];
+    # Essential kernel modules for disk access
+    initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "virtio_blk" "virtio_pci" "virtio_net" ];
     kernelModules = [ "virtio_blk" "virtio_pci" "virtio_net" ];
     # Faster boot options
     kernelParams = [ "quiet" "loglevel=3" "console=tty0" "console=ttyS0,115200" ];
