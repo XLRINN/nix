@@ -159,7 +159,7 @@
              home-manager = {
                useGlobalPkgs = true;
                useUserPackages = true;
-               users.${user} = import ./modules/nixos/home-manager.nix;
+               users.${user} = import ./modules/shared/home-manager.nix;
              };
            }
            ./hosts/nixos/server.nix
@@ -174,7 +174,7 @@
              home-manager = {
                useGlobalPkgs = true;
                useUserPackages = true;
-               users.${user} = import ./modules/nixos/home-manager.nix;
+               users.${user} = import ./modules/shared/home-manager.nix;
              };
            }
            ./hosts/nixos/server.nix
