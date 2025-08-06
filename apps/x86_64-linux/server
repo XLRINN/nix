@@ -167,27 +167,6 @@ confirm_configuration() {
   esac
 }
 
-apply_configuration() {
-  _print "${CYAN}${ROCKET} Applying Configuration${NC}"
-  
-  # Replace tokens in Nix files (non-interactive)
-  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%USER%/$USERNAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%EMAIL%/$GIT_EMAIL/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%NAME%/$GIT_NAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%HOST%/$HOST_NAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%DISK%/$BOOT_DISK/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%NETWORK_CONFIG%/$NETWORK_CONFIG/g" {} \;
-  
-  if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%STATIC_IP%/$STATIC_IP/g" {} \;
-    find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%SUBNET_MASK%/$SUBNET_MASK/g" {} \;
-    find . -type f -name "*.nix" -exec sed -i --non-interactive "s/%GATEWAY%/$GATEWAY/g" {} \;
-  fi
-  
-  echo "$USERNAME" > /tmp/username.txt
-  _print "${GREEN}${SUCCESS} Configuration applied!${NC}"
-}
-
 download_config() {
   _print "${CYAN}${SERVER} Downloading Configuration${NC}"
   curl -LJ0 https://github.com/xlrinn/nix/archive/server.zip -o nixos-config-main.zip
@@ -201,89 +180,40 @@ download_config() {
   _print "${GREEN}${SUCCESS} Configuration downloaded!${NC}"
 }
 
-# Function to debug disk detection
-debug_disk_detection() {
-  _print "${CYAN}${DISK} Disk Detection Debug${NC}"
+# Use the desktop's proven disk setup process
+setup_disk_with_desktop_method() {
+  _print "${CYAN}${DISK} Setting up disk using desktop method${NC}"
   
-  _print "${BLUE}All block devices:${NC}"
-  ls -la /dev/* | grep -E "(sd|vd|nvme)" || _print "${YELLOW}No standard disk devices found${NC}"
+  # Set environment variables for the apply script
+  export USERNAME="$USERNAME"
+  export GIT_EMAIL="$GIT_EMAIL"
+  export GIT_NAME="$GIT_NAME"
+  export HOST_NAME="$HOST_NAME"
+  export BOOT_DISK="$BOOT_DISK"
+  export NETWORK_CONFIG="$NETWORK_CONFIG"
   
-  _print "${BLUE}lsblk output:${NC}"
-  lsblk -a || _print "${YELLOW}lsblk failed${NC}"
-  
-  _print "${BLUE}fdisk -l output:${NC}"
-  sudo fdisk -l 2>/dev/null || _print "${YELLOW}fdisk failed${NC}"
-  
-  _print "${BLUE}Current BOOT_DISK variable: $BOOT_DISK${NC}"
-  if [ -n "$BOOT_DISK" ]; then
-    _print "${BLUE}Checking /dev/$BOOT_DISK:${NC}"
-    if [ -b "/dev/$BOOT_DISK" ]; then
-      _print "${GREEN}✓ /dev/$BOOT_DISK exists${NC}"
-      lsblk "/dev/$BOOT_DISK"
-    else
-      _print "${RED}✗ /dev/$BOOT_DISK does not exist${NC}"
-    fi
-  fi
-}
-
-# Function to check disk space comprehensively
-check_disk_space() {
-  _print "${CYAN}${DISK} Disk Space Analysis${NC}"
-  
-  # Debug disk detection if needed
-  if [ -z "$BOOT_DISK" ] || [ ! -b "/dev/$BOOT_DISK" ]; then
-    _print "${YELLOW}Disk detection issue detected. Running debug...${NC}"
-    debug_disk_detection
-    return 1
+  if [[ "$NETWORK_CONFIG" == "static" ]]; then
+    export STATIC_IP="$STATIC_IP"
+    export SUBNET_MASK="$SUBNET_MASK"
+    export GATEWAY="$GATEWAY"
   fi
   
-  # Get target disk size
-  local target_disk="/dev/$BOOT_DISK"
-  if [ -b "$target_disk" ]; then
-    local disk_size=$(lsblk -nd --output SIZE "$target_disk" | tail -1)
-    _print "${BLUE}Target disk ($target_disk) size: $disk_size${NC}"
-  else
-    _print "${RED}${ERROR} Target disk $target_disk not found${NC}"
-    debug_disk_detection
-    return 1
+  # Use the desktop apply script for reliable disk setup
+  _print "${BLUE}Running desktop apply script for disk configuration...${NC}"
+  ./apps/x86_64-linux/apply --non-interactive
+  
+  # Verify the disk replacement worked
+  if grep -q "%DISK%" modules/nixos/disk-config.nix; then
+    _print "${RED}${ERROR} Disk replacement failed! %DISK% still found in disk-config.nix${NC}"
+    _print "${YELLOW}Manual fix: sed -i 's/%DISK%/$BOOT_DISK/g' modules/nixos/disk-config.nix${NC}"
+    exit 1
   fi
   
-  # Check available space on installer environment
-  _print "${BLUE}Available space in installer environment:${NC}"
-  df -h
-  
-  # Check if we have enough space for installation
-  local available_space=$(df /mnt | awk 'NR==2 {print $4}')
-  local required_space=3000000  # 3GB in KB (reduced from 5GB)
-  
-  if [ "$available_space" -lt "$required_space" ]; then
-    _print "${RED}${ERROR} Insufficient disk space for installation${NC}"
-    _print "${YELLOW}Available: ${available_space}KB, Required: ${required_space}KB${NC}"
-    _print "${YELLOW}This could cause the installation to get stuck${NC}"
-    
-    # Provide suggestions
-    _print "${BLUE}Suggestions:${NC}"
-    _print "${YELLOW}1. Use a larger disk (at least 8GB recommended)${NC}"
-    _print "${YELLOW}2. Try with --no-channel-copy flag to reduce space usage${NC}"
-    _print "${YELLOW}3. Use a minimal configuration with fewer packages${NC}"
-    _print "${YELLOW}4. Consider using a different disk or expanding the current one${NC}"
-    
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-      _print "${RED}Installation aborted due to insufficient disk space${NC}"
-      exit 1
-    fi
-  else
-    _print "${GREEN}${SUCCESS} Sufficient disk space available${NC}"
-  fi
+  _print "${GREEN}${SUCCESS} Disk configuration applied successfully!${NC}"
 }
 
 run_disko() {
   _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
-  
-  # Check disk space before proceeding
-  check_disk_space
   
   # Clean up space before running Disko
   _print "${YELLOW}Cleaning up space...${NC}"
@@ -492,7 +422,7 @@ get_boot_disk
 get_network_config
 confirm_configuration
 download_config
-apply_configuration
+setup_disk_with_desktop_method
 run_disko
 setup_files
 install_nixos
