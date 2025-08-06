@@ -15,7 +15,6 @@ in
     loader = {
       grub = {
         enable = true;
-        version = 2;
         device = "/dev/%DISK%";
         forceInstall = true;
         efiSupport = false;
