@@ -157,7 +157,7 @@ in
     ripgrep
     fd
     bat
-    exa
+    eza
     fzf
     jq
     ncdu
