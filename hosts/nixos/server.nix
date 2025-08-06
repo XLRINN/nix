@@ -97,14 +97,6 @@ in
         PermitRootLogin = "prohibit-password";
       };
     };
-    # Disable services that slow down boot
-    avahi.enable = false;
-    bluetooth.enable = false;
-    printing.enable = false;
-    # Disable more unnecessary services
-    fwupd.enable = false;
-    thermald.enable = false;
-    upower.enable = false;
     # Optimize systemd
     systemd = {
       enableEmergencyMode = false;

@@ -245,11 +245,6 @@ setup_disk_with_desktop_method() {
 run_disko() {
   _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
   
-  # Clean up space before running Disko
-  _print "${YELLOW}Cleaning up space...${NC}"
-  sudo nix-collect-garbage -d || true
-  sudo rm -rf /tmp/* || true
-  
   # Use disko for BIOS-compatible disk setup
   _print "${YELLOW}Setting up disk with disko for BIOS compatibility...${NC}"
   
@@ -260,12 +255,6 @@ run_disko() {
 
 setup_files() {
   _print "${CYAN}${SERVER} Setting up NixOS files${NC}"
-  
-  # Clean up space before copying files
-  _print "${YELLOW}Cleaning up space...${NC}"
-  sudo nix-collect-garbage -d || true
-  sudo rm -rf /tmp/* || true
-  sudo rm -rf /var/tmp/* || true
   
   sudo mkdir -p /mnt/etc/nixos
   sudo cp -r * /mnt/etc/nixos
@@ -345,17 +334,6 @@ setup_files() {
 install_nixos() {
   _print "${CYAN}${ROCKET} Installing NixOS${NC}"
   
-  # Final cleanup before installation
-  _print "${YELLOW}Final cleanup...${NC}"
-  sudo nix-collect-garbage -d || true
-  sudo rm -rf /tmp/* || true
-  sudo rm -rf /var/tmp/* || true
-  
-  # Restart Nix daemon to ensure clean state
-  _print "${YELLOW}Restarting Nix daemon...${NC}"
-  sudo systemctl restart nix-daemon || true
-  sleep 2
-  
   ARCH=$(uname -m)
 
   case "$ARCH" in
@@ -393,7 +371,14 @@ prompt_reboot() {
 
 cleanup() {
   _print "${CYAN}${INFO} Cleaning up temporary files${NC}"
+  
+  # Final garbage collection and cleanup
+  _print "${YELLOW}Final cleanup and garbage collection...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
   rm -rf nixos-config-main.zip nixos-config-main nixos-config
+  
   _print "${GREEN}${SUCCESS} Cleanup complete!${NC}"
 }
 
