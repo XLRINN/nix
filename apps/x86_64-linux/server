@@ -505,9 +505,21 @@ install_nixos() {
 
 prompt_reboot() {
   _print "${CYAN}${INFO} Installation Complete!${NC}"
-  _print "${GREEN}${ROCKET} Rebooting in 5 seconds...${NC}"
-  sleep 5
-  sudo reboot
+  _print "${YELLOW}${WARNING} Installation completed successfully!${NC}"
+  _print "${YELLOW}Would you like to reboot now? (Y/n): ${NC}"
+  read -r reboot_choice
+  
+  case "$reboot_choice" in
+    [Nn] | [Nn][Oo] )
+      _print "${BLUE}${INFO} Skipping reboot. You can reboot manually when ready:${NC}"
+      _print "${YELLOW}sudo reboot${NC}"
+      ;;
+    *)
+      _print "${GREEN}${ROCKET} Rebooting in 5 seconds...${NC}"
+      sleep 5
+      sudo reboot
+      ;;
+  esac
 }
 
 cleanup() {

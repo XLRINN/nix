@@ -59,13 +59,13 @@ in
       isNormalUser = true;
       extraGroups = [ "wheel" "networkmanager" ];
       shell = pkgs.zsh;
-      openssh.authorizedKeys.keys = keys;
       createHome = true;
       home = "/home/${user}";
+      initialPassword = "nixos123";  # Set initial password
     };
 
     root = {
-      openssh.authorizedKeys.keys = keys;
+      initialPassword = "nixos123";  # Set initial password
     };
   };
 
@@ -91,9 +91,9 @@ in
     openssh = {
       enable = true;
       settings = {
-        PubkeyAuthentication = true;
-        PasswordAuthentication = false;
-        PermitRootLogin = "prohibit-password";
+        PubkeyAuthentication = false;  # Disable SSH keys
+        PasswordAuthentication = true;  # Enable password authentication
+        PermitRootLogin = "yes";  # Allow root login with password
       };
     };
   };
