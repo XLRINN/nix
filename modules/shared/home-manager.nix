@@ -21,11 +21,11 @@ let
 in
 {
   # Direnv configuration
-  direnv = {
-    enable = true;
-    enableZshIntegration = true;
-    nix-direnv.enable = true;
-  };
+  # direnv = {
+  #   enable = true;
+  #   enableZshIntegration = true;
+  #   nix-direnv.enable = true;
+  # };
 
   # Git configuration
   git = {
