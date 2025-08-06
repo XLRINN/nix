@@ -19,6 +19,8 @@ _: {
                 format = "ext4";
                 mountpoint = "/";
                 mountOptions = [ "noatime" "nodiratime" ];
+                # Explicitly set partition name to avoid label issues
+                extraArgs = [ "-n" "root" ];
               };
             };
           };

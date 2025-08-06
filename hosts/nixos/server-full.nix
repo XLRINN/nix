@@ -104,6 +104,13 @@ in
   # Disable emergency console to prevent "root account locked" prompt
   systemd.enableEmergencyMode = false;
 
+  # Explicit filesystem mount to avoid disko label issues
+  fileSystems."/" = {
+    device = "/dev/disk/by-partlabel/disk-main-root";
+    fsType = "ext4";
+    options = [ "noatime" "nodiratime" ];
+  };
+
   # Reduce swappiness for better performance
   boot.kernel.sysctl."vm.swappiness" = 10;
 
