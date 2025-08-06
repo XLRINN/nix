@@ -28,7 +28,7 @@ in
   # };
 
   # Git configuration
-  git = {
+  programs.git = {
     enable = true;
     ignores = [ "*.swp" ];
     userName = name;
@@ -51,7 +51,7 @@ in
 
 
   # Zsh configuration
-  zsh = {
+  programs.zsh = {
     enable = true;
     autocd = false;
     enableCompletion = true;
