@@ -1,5 +1,5 @@
 _: {
-  # This formats the disk with the ext4 filesystem - simple setup
+  # Server disk configuration - simple and direct
   disko.devices = {
     disk = {
       vdb = {

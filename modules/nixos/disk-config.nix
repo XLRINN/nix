@@ -1,5 +1,5 @@
 _: {
-  # This formats the disk with the ext4 filesystem - simple setup
+  # Disk configuration using device paths directly
   disko.devices = {
     disk = {
       vdb = {

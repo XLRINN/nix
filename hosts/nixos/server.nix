@@ -7,7 +7,7 @@ let user = "david";
 in
 {
   imports = [
-    ../../modules/nixos/disk-config.nix
+    ../../modules/server/disk-config.nix
   ];
 
   # Basic system configuration
