@@ -53,6 +53,10 @@ in
       createHome = true;
       home = "/home/${user}";
     };
+
+    root = {
+      openssh.authorizedKeys.keys = keys;
+    };
   };
 
   # Sudo configuration

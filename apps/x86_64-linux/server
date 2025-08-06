@@ -373,13 +373,13 @@ install_nixos() {
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
   
-  # Try installation with timeout
-  if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --verbose; then
+  # Try installation with timeout and skip root password
+  if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
   else
     _print "${RED}${ERROR} Installation failed or timed out${NC}"
-    _print "${YELLOW}Try manually: sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy${NC}"
+    _print "${YELLOW}Try manually: sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
     exit 1
   fi
 }
