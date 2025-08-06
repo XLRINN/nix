@@ -28,6 +28,7 @@ let user = "david";
   time.timeZone = "America/New_York";
 
   networking = {
+    hostName = "loki"; # Server hostname
     useDHCP = false;
     networkmanager.enable = true;
   };
@@ -113,7 +114,7 @@ let user = "david";
         PermitRootLogin = "prohibit-password";
         KexAlgorithms = [ "curve25519-sha256@libssh.org" "diffie-hellman-group16-sha512" ];
         Ciphers = [ "chacha20-poly1305@openssh.com" "aes256-gcm@openssh.com" ];
-        MACs = [ "hmac-sha2-256-etm@openssh.com" "hmac-sha2-512-etm@openssh.com" ];
+        MACs = "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com";
       };
     };
 
@@ -150,7 +151,7 @@ let user = "david";
     dconf.enable = true;
   };
 
-  # Server packages (no desktop apps)
+  # Server packages - only shared packages
   environment.systemPackages = with pkgs; [
     gitAndTools.gitFull
     inetutils
@@ -158,67 +159,11 @@ let user = "david";
     noto-fonts-emoji
     gh  # GitHub CLI
     inputs.claude-desktop.packages.${pkgs.system}.claude-desktop
-    # CLI tools
-    htop
-    tmux
-    ripgrep
-    fd
-    fzf
-    bat
-    exa
-    jq
-    curl
-    wget
-    tree
-    unzip
-    zip
-    rsync
-    ncdu
-    lsof
-    netcat
-    nmap
-    traceroute
-    mtr
-    iotop
-    iftop
-    nethogs
-    tcpdump
-    wireshark-cli
-    # Development tools
-    gcc
-    gnumake
-    cmake
-    pkg-config
-    python3
-    nodejs
-    rustc
-    cargo
   ];
 
   # GitHub CLI configuration
   environment.variables = {
     GH_CONFIG_DIR = "/home/${user}/.config/gh";
-  };
-
-  # Git configuration
-  programs.git = {
-    enable = true;
-    config = {
-      user.name = "david";
-      user.email = "xlrin.morgan@gmail.com";
-      init.defaultBranch = "main";
-    };
-  };
-
-  # Ensure GitHub CLI authentication persists
-  systemd.user.services.gh-auth = {
-    description = "GitHub CLI Authentication";
-    wantedBy = [ "default.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.github-cli}/bin/gh auth status";
-      RemainAfterExit = true;
-    };
   };
 
   # Set up nix directory and remote

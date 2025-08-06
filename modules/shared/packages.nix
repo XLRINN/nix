@@ -21,7 +21,6 @@ with pkgs; [
   wget
   zip
   kitty
-  oh-my-zsh 
   zsh
   lazygit
   fzf
@@ -37,20 +36,19 @@ with pkgs; [
   jq
   ripgrep
   tree
-  tmux
   unrar
   unzip
   zsh-powerlevel10k
-  oh-my-posh
-  synergy
+  #oh-my-posh
+  #synergy
   nodejs
   ripgrep   
   fd 
   lua
-  ranger
+  #ranger
   lynx
   ueberzug
-  tmux
+  #tmux
 
   powershell  
   # fonts
