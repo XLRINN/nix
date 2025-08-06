@@ -20,6 +20,12 @@ let
   # alacritty = if !isServer then builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml) else {};
 in
 {
+  # Home configuration (required by Home Manager)
+  home = {
+    enableNixpkgsReleaseCheck = false;
+    stateVersion = "23.11";
+  };
+
   # Direnv configuration
   # direnv = {
   #   enable = true;

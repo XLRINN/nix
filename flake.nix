@@ -140,7 +140,7 @@
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
-              users.${user} = import ./modules/shared/home-manager.nix;
+              users.${user} = import ./modules/nixos/home-manager.nix;
             };
           }
           ./hosts/nixos
@@ -150,36 +150,36 @@
 #        };
      }) // {
        # Server configuration (consolidated CLI-only functionality)
-       "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
-         system = "x86_64-linux";
-         specialArgs = { inherit inputs claude-desktop; };
-         modules = [
-           disko.nixosModules.disko
-           home-manager.nixosModules.home-manager {
-             home-manager = {
-               useGlobalPkgs = true;
-               useUserPackages = true;
-               users.${user} = import ./modules/shared/home-manager.nix;
-             };
-           }
-           ./hosts/nixos/server.nix
-         ];
-       };
-       "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
-         system = "aarch64-linux";
-         specialArgs = { inherit inputs claude-desktop; };
-         modules = [
-           disko.nixosModules.disko
-           home-manager.nixosModules.home-manager {
-             home-manager = {
-               useGlobalPkgs = true;
-               useUserPackages = true;
-               users.${user} = import ./modules/shared/home-manager.nix;
-             };
-           }
-           ./hosts/nixos/server.nix
-         ];
-       };
+               "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs claude-desktop; };
+          modules = [
+            disko.nixosModules.disko
+            home-manager.nixosModules.home-manager {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                users.${user} = import ./modules/server/home-manager.nix;
+              };
+            }
+            ./hosts/nixos/server.nix
+          ];
+        };
+               "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs claude-desktop; };
+          modules = [
+            disko.nixosModules.disko
+            home-manager.nixosModules.home-manager {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                users.${user} = import ./modules/server/home-manager.nix;
+              };
+            }
+            ./hosts/nixos/server.nix
+          ];
+        };
      };
   };
 }
