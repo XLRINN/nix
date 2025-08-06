@@ -28,13 +28,13 @@ _print() {
   echo -e "$1"
 }
 
-# Custom prompt function
-_prompt() {
-  local message="$1"
-  local variable="$2"
-  _print "$message"
-  read -r $variable
-}
+# Custom prompt function (commented out for testing)
+# _prompt() {
+#   local message="$1"
+#   local variable="$2"
+#   _print "$message"
+#   read -r $variable
+# }
 
 check_installer() {
   if [ -e /etc/NIXOS ]; then
@@ -45,45 +45,18 @@ check_installer() {
   fi
 }
 
-get_user_info() {
-  _print "${CYAN}${USER} User Setup${NC}"
-  _prompt "${YELLOW}Username (Enter for 'david'): ${NC}" USERNAME
+# Set all defaults for testing
+set_defaults() {
+  _print "${CYAN}${USER} Setting Defaults${NC}"
   
-  if [[ -z "$USERNAME" ]]; then
-    export USERNAME="david"
-  fi
-  
-  _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
-  
+  export USERNAME="david"
   export GIT_EMAIL="xlrin.morgan@gmail.com"
-  export GIT_NAME="$USERNAME"
-  _print "${GREEN}${SUCCESS} Name set to: $GIT_NAME${NC}"
-}
-
-get_hostname() {
-  _print "${CYAN}${HOSTNAME} Hostname${NC}"
-  _prompt "${YELLOW}Hostname: ${NC}" HOST_NAME
+  export GIT_NAME="david"
+  export HOST_NAME="loki"
+  export NETWORK_CONFIG="dhcp"
   
-  while [[ -z "$HOST_NAME" ]]; do
-    _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
-    _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
-  done
-  
-  _print "${GREEN}${SUCCESS} Hostname set to: $HOST_NAME${NC}"
-}
-
-get_boot_disk() {
-  _print "${CYAN}${DISK} Boot Disk${NC}"
-  
-  # Show available disks
-  _print "${BLUE}Available disks:${NC}"
-  disks=$(lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0)
-  echo "$disks"
-  
-  # Try to auto-detect the best disk
+  # Auto-detect disk
   local auto_detected_disk=""
-  
-  # Check for common VM disk names first
   for disk in vda sda nvme0n1; do
     if [ -b "/dev/$disk" ]; then
       auto_detected_disk="$disk"
@@ -91,81 +64,144 @@ get_boot_disk() {
     fi
   done
   
-  # If no VM disk found, check for any available disk
   if [ -z "$auto_detected_disk" ]; then
     auto_detected_disk=$(lsblk -nd --output NAME | grep -v loop | grep -v sr0 | head -1)
   fi
   
-  if [ -n "$auto_detected_disk" ]; then
-    _print "${GREEN}Auto-detected disk: $auto_detected_disk${NC}"
-    _prompt "${YELLOW}Use auto-detected disk ($auto_detected_disk)? (Y/n): ${NC}" use_auto
-    case "$use_auto" in
-      [Nn] | [Nn][Oo] )
-        _prompt "${YELLOW}Enter boot disk name (e.g., vda, sda, nvme0n1): ${NC}" BOOT_DISK
-        ;;
-      *)
-        export BOOT_DISK="$auto_detected_disk"
-        _print "${GREEN}${SUCCESS} Using auto-detected disk: $BOOT_DISK${NC}"
-        ;;
-    esac
-  else
-    _print "${YELLOW}Could not auto-detect disk. Please select manually.${NC}"
-    _prompt "${YELLOW}Enter boot disk name (e.g., vda, sda, nvme0n1): ${NC}" BOOT_DISK
-  fi
+  export BOOT_DISK="$auto_detected_disk"
   
-  # Validate the selected disk exists
-  if [ ! -b "/dev/$BOOT_DISK" ]; then
-    _print "${RED}${ERROR} Selected disk /dev/$BOOT_DISK does not exist!${NC}"
-    _print "${YELLOW}Available disks:${NC}"
-    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
-    exit 1
-  fi
-  
-  _print "${GREEN}${SUCCESS} Using disk: $BOOT_DISK${NC}"
+  _print "${GREEN}${SUCCESS} Username: $USERNAME${NC}"
+  _print "${GREEN}${SUCCESS} Hostname: $HOST_NAME${NC}"
+  _print "${GREEN}${SUCCESS} Disk: $BOOT_DISK${NC}"
+  _print "${GREEN}${SUCCESS} Network: DHCP${NC}"
 }
 
-get_network_config() {
-  _print "${CYAN}${NETWORK} Network${NC}"
-  _prompt "${YELLOW}Static IP (Enter for DHCP): ${NC}" STATIC_IP
-  
-  if [[ -z "$STATIC_IP" ]]; then
-    export NETWORK_CONFIG="dhcp"
-    _print "${GREEN}${SUCCESS} Using DHCP for automatic IP assignment${NC}"
-  else
-    export NETWORK_CONFIG="static"
-    _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
-    export GATEWAY="192.168.69.1"
-    _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
-  fi
-}
+# Original user info function (commented out for testing)
+# get_user_info() {
+#   _print "${CYAN}${USER} User Setup${NC}"
+#   _prompt "${YELLOW}Username (Enter for 'david'): ${NC}" USERNAME
+#   
+#   if [[ -z "$USERNAME" ]]; then
+#     export USERNAME="david"
+#   fi
+#   
+#   _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
+#   
+#   export GIT_EMAIL="xlrin.morgan@gmail.com"
+#   export GIT_NAME="$USERNAME"
+#   _print "${GREEN}${SUCCESS} Name set to: $GIT_NAME${NC}"
+# }
 
-confirm_configuration() {
-  _print "${CYAN}${INFO} Summary${NC}"
-  _print "${GREEN}Username: $USERNAME${NC}"
-  _print "${GREEN}Email: $GIT_EMAIL${NC}"
-  _print "${GREEN}Name: $GIT_NAME${NC}"
-  _print "${GREEN}Hostname: $HOST_NAME${NC}"
-  _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
-  _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
-  
-  if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    _print "${GREEN}Static IP: $STATIC_IP${NC}"
-    _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
-    _print "${GREEN}Gateway: $GATEWAY${NC}"
-  fi
-  
-  _prompt "${YELLOW}${WARNING} Continue? (Y/n): ${NC}" confirm
-  
-  case "$confirm" in
-    [Nn] | [Nn][Oo] )
-      _print "${RED}${ERROR} Cancelled.${NC}"
-      exit 1
-      ;;
-    *)
-      _print "${GREEN}${SUCCESS} Confirmed!${NC}"
-      ;;
-  esac
-}
+# Original hostname function (commented out for testing)
+# get_hostname() {
+#   _print "${CYAN}${HOSTNAME} Hostname${NC}"
+#   _prompt "${YELLOW}Hostname: ${NC}" HOST_NAME
+#   
+#   while [[ -z "$HOST_NAME" ]]; do
+#     _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
+#     _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
+#   done
+#   
+#   _print "${GREEN}${SUCCESS} Hostname set to: $HOST_NAME${NC}"
+# }
+
+# Original boot disk function (commented out for testing)
+# get_boot_disk() {
+#   _print "${CYAN}${DISK} Boot Disk${NC}"
+#   
+#   # Show available disks
+#   _print "${BLUE}Available disks:${NC}"
+#   disks=$(lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0)
+#   echo "$disks"
+#   
+#   # Try to auto-detect the best disk
+#   local auto_detected_disk=""
+#   
+#   # Check for common VM disk names first
+#   for disk in vda sda nvme0n1; do
+#     if [ -b "/dev/$disk" ]; then
+#       auto_detected_disk="$disk"
+#       break
+#     fi
+#   done
+#   
+#   # If no VM disk found, check for any available disk
+#   if [ -z "$auto_detected_disk" ]; then
+#     auto_detected_disk=$(lsblk -nd --output NAME | grep -v loop | grep -v sr0 | head -1)
+#   fi
+#   
+#   if [ -n "$auto_detected_disk" ]; then
+#     _print "${GREEN}Auto-detected disk: $auto_detected_disk${NC}"
+#     _prompt "${YELLOW}Use auto-detected disk ($auto_detected_disk)? (Y/n): ${NC}" use_auto
+#     case "$use_auto" in
+#       [Nn] | [Nn][Oo] )
+#         _prompt "${YELLOW}Enter boot disk name (e.g., vda, sda, nvme0n1): ${NC}" BOOT_DISK
+#         ;;
+#       *)
+#         export BOOT_DISK="$auto_detected_disk"
+#         _print "${GREEN}${SUCCESS} Using auto-detected disk: $BOOT_DISK${NC}"
+#         ;;
+#     esac
+#   else
+#     _print "${YELLOW}Could not auto-detect disk. Please select manually.${NC}"
+#     _prompt "${YELLOW}Enter boot disk name (e.g., vda, sda, nvme0n1): ${NC}" BOOT_DISK
+#   fi
+#   
+#   # Validate the selected disk exists
+#   if [ ! -b "/dev/$BOOT_DISK" ]; then
+#     _print "${RED}${ERROR} Selected disk /dev/$BOOT_DISK does not exist!${NC}"
+#     _print "${YELLOW}Available disks:${NC}"
+#     lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
+#     exit 1
+#   fi
+#   
+#   _print "${GREEN}${SUCCESS} Using disk: $BOOT_DISK${NC}"
+# }
+
+# Original network config function (commented out for testing)
+# get_network_config() {
+#   _print "${CYAN}${NETWORK} Network${NC}"
+#   _prompt "${YELLOW}Static IP (Enter for DHCP): ${NC}" STATIC_IP
+#   
+#   if [[ -z "$STATIC_IP" ]]; then
+#     export NETWORK_CONFIG="dhcp"
+#     _print "${GREEN}${SUCCESS} Using DHCP for automatic IP assignment${NC}"
+#   else
+#     export NETWORK_CONFIG="static"
+#     _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
+#     export GATEWAY="192.168.69.1"
+#     _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
+#   fi
+# }
+
+# Original confirmation function (commented out for testing)
+# confirm_configuration() {
+#   _print "${CYAN}${INFO} Summary${NC}"
+#   _print "${GREEN}Username: $USERNAME${NC}"
+#   _print "${GREEN}Email: $GIT_EMAIL${NC}"
+#   _print "${GREEN}Name: $GIT_NAME${NC}"
+#   _print "${GREEN}Hostname: $HOST_NAME${NC}"
+#   _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
+#   _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
+#   
+#   if [[ "$NETWORK_CONFIG" == "static" ]]; then
+#     _print "${GREEN}Static IP: $STATIC_IP${NC}"
+#     _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
+#     _print "${GREEN}Gateway: $GATEWAY${NC}"
+#   fi
+#   
+#   _prompt "${YELLOW}${WARNING} Continue? (Y/n): ${NC}" confirm
+#   
+#   case "$confirm" in
+#     [Nn] | [Nn][Oo] )
+#       _print "${RED}${ERROR} Cancelled.${NC}"
+#       exit 1
+#       ;;
+#     *)
+#       _print "${GREEN}${SUCCESS} Confirmed!${NC}"
+#       ;;
+#   esac
+# }
 
 download_config() {
   _print "${CYAN}${SERVER} Downloading Configuration${NC}"
@@ -191,12 +227,6 @@ setup_disk_with_desktop_method() {
   export HOST_NAME="$HOST_NAME"
   export BOOT_DISK="$BOOT_DISK"
   export NETWORK_CONFIG="$NETWORK_CONFIG"
-  
-  if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    export STATIC_IP="$STATIC_IP"
-    export SUBNET_MASK="$SUBNET_MASK"
-    export GATEWAY="$GATEWAY"
-  fi
   
   # Use the desktop apply script for reliable disk setup
   _print "${BLUE}Running desktop apply script for disk configuration...${NC}"
@@ -240,79 +270,76 @@ setup_files() {
   _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
 }
 
-# Function to troubleshoot installation issues
-troubleshoot_installation() {
-  _print "${CYAN}${INFO} Installation Troubleshooting${NC}"
-  
-  _print "${YELLOW}Checking system status...${NC}"
-  
-  # Check disk space
-  _print "${BLUE}Disk space:${NC}"
-  df -h /mnt
-  
-  # Check Nix daemon status
-  _print "${BLUE}Nix daemon status:${NC}"
-  sudo systemctl status nix-daemon --no-pager
-  
-  # Check network connectivity
-  _print "${BLUE}Network connectivity:${NC}"
-  ping -c 3 8.8.8.8
-  
-  # Check Nix store info
-  _print "${BLUE}Nix store info:${NC}"
-  nix-store --gc --print-dead
-  
-  _print "${YELLOW}If installation is stuck, try these commands manually:${NC}"
-  _print "${YELLOW}1. Restart Nix daemon: sudo systemctl restart nix-daemon${NC}"
-  _print "${YELLOW}2. Clear Nix store: sudo nix-collect-garbage -d${NC}"
-  _print "${YELLOW}3. Try installation with --no-channel-copy flag${NC}"
-  _print "${YELLOW}4. Check for network issues or firewall blocking downloads${NC}"
-}
+# Function to troubleshoot installation issues (commented out for testing)
+# troubleshoot_installation() {
+#   _print "${CYAN}${INFO} Installation Troubleshooting${NC}"
+#   
+#   _print "${YELLOW}Checking system status...${NC}"
+#   
+#   # Check disk space
+#   _print "${BLUE}Disk space:${NC}"
+#   df -h /mnt
+#   
+#   # Check Nix daemon status
+#   _print "${BLUE}Nix daemon status:${NC}"
+#   sudo systemctl status nix-daemon --no-pager
+#   
+#   # Check network connectivity
+#   _print "${BLUE}Network connectivity:${NC}"
+#   ping -c 3 8.8.8.8
+#   
+#   # Check Nix store info
+#   _print "${BLUE}Nix store info:${NC}"
+#   nix-store --gc --print-dead
+#   
+#   _print "${YELLOW}If installation is stuck, try these commands manually:${NC}"
+#   _print "${YELLOW}1. Restart Nix daemon: sudo systemctl restart nix-daemon${NC}"
+#   _print "${YELLOW}2. Clear Nix store: sudo nix-collect-garbage -d${NC}"
+#   _print "${YELLOW}3. Try installation with --no-channel-copy flag${NC}"
+#   _print "${YELLOW}4. Check for network issues or firewall blocking downloads${NC}"
+# }
 
-# Function to retry installation with different options
-retry_installation() {
-  local FLAKE_TARGET="$1"
-  local retry_count=0
-  local max_retries=3
-  
-  while [ $retry_count -lt $max_retries ]; do
-    retry_count=$((retry_count + 1))
-    _print "${YELLOW}Retry attempt $retry_count of $max_retries${NC}"
-    
-    case $retry_count in
-      1)
-        _print "${BLUE}Trying with --no-channel-copy flag...${NC}"
-        if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --verbose; then
-          return 0
-        fi
-        ;;
-      2)
-        _print "${BLUE}Trying with --no-root-passwd flag...${NC}"
-        if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
-          return 0
-        fi
-        ;;
-      3)
-        _print "${BLUE}Trying with minimal flags...${NC}"
-        if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd; then
-          return 0
-        fi
-        ;;
-    esac
-    
-    _print "${YELLOW}Retry $retry_count failed. Cleaning up and trying again...${NC}"
-    sudo nix-collect-garbage -d || true
-    sudo systemctl restart nix-daemon || true
-    sleep 5
-  done
-  
-  return 1
-}
+# Function to retry installation with different options (commented out for testing)
+# retry_installation() {
+#   local FLAKE_TARGET="$1"
+#   local retry_count=0
+#   local max_retries=3
+#   
+#   while [ $retry_count -lt $max_retries ]; do
+#     retry_count=$((retry_count + 1))
+#     _print "${YELLOW}Retry attempt $retry_count of $max_retries${NC}"
+#     
+#     case $retry_count in
+#       1)
+#         _print "${BLUE}Trying with --no-channel-copy flag...${NC}"
+#         if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --verbose; then
+#           return 0
+#         fi
+#         ;;
+#       2)
+#         _print "${BLUE}Trying with --no-root-passwd flag...${NC}"
+#         if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
+#           return 0
+#         fi
+#         ;;
+#       3)
+#         _print "${BLUE}Trying with minimal flags...${NC}"
+#         if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd; then
+#           return 0
+#         fi
+#         ;;
+#     esac
+#     
+#     _print "${YELLOW}Retry $retry_count failed. Cleaning up and trying again...${NC}"
+#     sudo nix-collect-garbage -d || true
+#     sudo systemctl restart nix-daemon || true
+#     sleep 5
+#   done
+#   
+#   return 1
+# }
 
 install_nixos() {
-  # Clear screen before installation
-  clear
-  
   _print "${CYAN}${ROCKET} Installing NixOS${NC}"
   
   # Final cleanup before installation
@@ -320,25 +347,6 @@ install_nixos() {
   sudo nix-collect-garbage -d || true
   sudo rm -rf /tmp/* || true
   sudo rm -rf /var/tmp/* || true
-  
-  # Check available disk space
-  _print "${YELLOW}Checking disk space...${NC}"
-  AVAILABLE_SPACE=$(df /mnt | awk 'NR==2 {print $4}')
-  REQUIRED_SPACE=5000000  # 5GB in KB
-  
-  if [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE" ]; then
-    _print "${RED}${ERROR} Insufficient disk space. Available: ${AVAILABLE_SPACE}KB, Required: ${REQUIRED_SPACE}KB${NC}"
-    _print "${YELLOW}Consider cleaning up more space or using a larger disk${NC}"
-    exit 1
-  fi
-  
-  # Check network connectivity
-  _print "${YELLOW}Checking network connectivity...${NC}"
-  if ! ping -c 1 8.8.8.8 > /dev/null 2>&1; then
-    _print "${RED}${ERROR} No internet connectivity detected${NC}"
-    _print "${YELLOW}Please check your network connection and try again${NC}"
-    exit 1
-  fi
   
   # Restart Nix daemon to ensure clean state
   _print "${YELLOW}Restarting Nix daemon...${NC}"
@@ -361,48 +369,23 @@ install_nixos() {
   esac
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
-  _print "${YELLOW}This may take a while. If it gets stuck, you can:${NC}"
-  _print "${YELLOW}1. Press Ctrl+C to cancel and try with --verbose flag${NC}"
-  _print "${YELLOW}2. Check network connectivity${NC}"
-  _print "${YELLOW}3. Try with --no-channel-copy flag${NC}"
   
-  # Try installation with timeout and better error handling
-  if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --verbose $@; then
+  # Try installation with timeout
+  if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --verbose; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
   else
     _print "${RED}${ERROR} Installation failed or timed out${NC}"
-    _print "${YELLOW}Attempting retry with different options...${NC}"
-    
-    if retry_installation "$FLAKE_TARGET"; then
-      _print "${GREEN}${SUCCESS} NixOS installation completed successfully on retry${NC}"
-      sudo chmod -R 775 /mnt/etc/nixos
-    else
-      _print "${RED}${ERROR} All installation attempts failed${NC}"
-      troubleshoot_installation
-      _print "${YELLOW}Troubleshooting options:${NC}"
-      _print "${YELLOW}1. Try with --no-channel-copy: sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy${NC}"
-      _print "${YELLOW}2. Try with --verbose: sudo nixos-install --flake .#$FLAKE_TARGET --verbose${NC}"
-      _print "${YELLOW}3. Check disk space: df -h /mnt${NC}"
-      _print "${YELLOW}4. Check Nix daemon: sudo systemctl status nix-daemon${NC}"
-      _print "${YELLOW}5. Restart Nix daemon: sudo systemctl restart nix-daemon${NC}"
-      exit 1
-    fi
+    _print "${YELLOW}Try manually: sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy${NC}"
+    exit 1
   fi
 }
 
 prompt_reboot() {
   _print "${CYAN}${INFO} Installation Complete!${NC}"
-  _prompt "${YELLOW}${WARNING} Do you want to reboot now? (y/N): ${NC}" choice
-  case "$choice" in
-  y|Y|yes|YES ) 
-    _print "${GREEN}${ROCKET} Rebooting...${NC}" 
-    sudo reboot
-    ;;
-  * ) 
-    _print "${YELLOW}${INFO} Reboot skipped. You can reboot manually later.${NC}"
-    ;;
-  esac
+  _print "${GREEN}${ROCKET} Rebooting in 5 seconds...${NC}"
+  sleep 5
+  sudo reboot
 }
 
 cleanup() {
@@ -412,15 +395,11 @@ cleanup() {
 }
 
 # Main execution
-_print "${PURPLE}${ROCKET} NixOS Server Installation${NC}"
-_print "${BLUE}This will install a CLI-only NixOS server configuration${NC}"
+_print "${PURPLE}${ROCKET} NixOS Server Installation (Test Mode)${NC}"
+_print "${BLUE}Installing CLI-only NixOS server with defaults${NC}"
 
 check_installer
-get_user_info
-get_hostname
-get_boot_disk
-get_network_config
-confirm_configuration
+set_defaults
 download_config
 setup_disk_with_desktop_method
 run_disko
