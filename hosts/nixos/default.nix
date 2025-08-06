@@ -203,21 +203,7 @@ let user = "david";
     GH_CONFIG_DIR = "/home/${user}/.config/gh";
   };
 
-  # Secret files (create these files and add your secrets)
-  environment.etc."secrets/github-token" = {
-    text = "your-github-token-here";
-    mode = "0600";
-  };
-  
-  environment.etc."secrets/api-keys" = {
-    text = ''
-      # Add your API keys here
-      GITHUB_TOKEN=your-github-token
-      DOCKER_API_KEY=your-docker-key
-      CUSTOM_API_KEY=your-api-key
-    '';
-    mode = "0600";
-  };
+
 
   # Set up nix directory and remote
   system.activationScripts = {
