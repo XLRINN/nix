@@ -104,9 +104,6 @@ in
   # Disable emergency console to prevent "root account locked" prompt
   systemd.enableEmergencyMode = false;
 
-  # Optimize file system
-  fileSystems."/".options = [ "noatime" "nodiratime" ];
-  
   # Reduce swappiness for better performance
   boot.kernel.sysctl."vm.swappiness" = 10;
 
