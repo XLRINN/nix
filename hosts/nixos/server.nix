@@ -153,6 +153,7 @@ let user = "david";
 
   # Server packages - only shared packages
   environment.systemPackages = with pkgs; [
+    (import ../../modules/shared/packages.nix { inherit pkgs config; })
     gitAndTools.gitFull
     inetutils
     neovim

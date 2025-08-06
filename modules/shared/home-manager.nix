@@ -11,6 +11,9 @@ let
   rifle = ./config/ranger/rifle.conf;
   ghost = ./config/ghostty/config;
   tmux = ./config/tmux/tmux.conf;
+  
+  # Detect if this is a server environment
+  isServer = config.networking.hostName == "loki" || config.networking.hostName == "server";
 in
 {
   # Direnv configuration
@@ -41,18 +44,7 @@ in
     };
   };
 
-  # Zellij configuration
-  zellij = {
-    enable = true;
-    settings = {
-      default_Layout = "compact";
-      pane_frames = false;
-      theme = "ansi";
-      simplified_ui = true;
-      hide_session_name = true;
-      rounded_corners = true;
-    };
-  };
+
 
   # Zsh configuration
   zsh = {
@@ -88,6 +80,7 @@ in
     };
 
     initExtra = ''
+      # Auto-start zellij if not already in a session
       if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
         export ZELLIJ_RUNNING=1
         zellij
@@ -95,16 +88,29 @@ in
     '';
   };
 
+  # Desktop-specific configurations (GUI environments)
+  alacritty = lib.mkIf (!isServer) {
+    enable = true;
+    settings = alacritty;
+  };
+
+  # Zellij configuration (works in both desktop and server environments)
+  zellij = {
+    enable = true;
+    settings = {
+      default_Layout = "compact";
+      pane_frames = false;
+      theme = "ansi";
+      simplified_ui = true;
+      hide_session_name = true;
+      rounded_corners = true;
+    };
+  };
+
   # Yazi file manager
   yazi = {
     enable = true;
     settings = yazi;
-  };
-
-  # Alacritty terminal
-  alacritty = {
-    enable = true;
-    settings = alacritty;
   };
 
   # Neovim editor - modular approach
