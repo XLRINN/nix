@@ -117,9 +117,6 @@ let user = "david";
         MACs = "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com";
       };
     };
-
-    gvfs.enable = true;
-    tumbler.enable = true;
   };
 
   # Turn on flag for proprietary software
@@ -157,7 +154,6 @@ let user = "david";
     gitAndTools.gitFull
     inetutils
     neovim
-    noto-fonts-emoji
     gh  # GitHub CLI
     inputs.claude-desktop.packages.${pkgs.system}.claude-desktop
   ];

@@ -74,7 +74,11 @@ let
     # Terminal multiplexer (shared)
     zellij
     # Development tools (shared)
+    direnv
     nix-direnv
+    # Neovim dependencies
+    stylua
+    curl
   ];
 in
   sharedPackages ++ (if isServer then [] else guiPackages)
