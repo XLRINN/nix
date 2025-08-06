@@ -70,6 +70,29 @@ get_user_input() {
   
   export BOOT_DISK="$auto_detected_disk"
   
+  # Ask for installation type
+  _print "${CYAN}${INFO} Installation Type${NC}"
+  _print "${YELLOW}Choose installation type:${NC}"
+  _print "${BLUE}1) Minimal (Hetzner-friendly, 2-step process)${NC}"
+  _print "${BLUE}2) Full (All features, single-step process)${NC}"
+  _print "${YELLOW}Enter choice (1 or 2): ${NC}"
+  read -r install_type
+  
+  case "$install_type" in
+    1)
+      export INSTALL_TYPE="minimal"
+      _print "${GREEN}${SUCCESS} Minimal installation selected${NC}"
+      ;;
+    2)
+      export INSTALL_TYPE="full"
+      _print "${GREEN}${SUCCESS} Full installation selected${NC}"
+      ;;
+    *)
+      export INSTALL_TYPE="minimal"
+      _print "${YELLOW}Defaulting to minimal installation${NC}"
+      ;;
+  esac
+  
   # Ask for hostname
   _print "${YELLOW}Enter hostname for the server: ${NC}"
   read -r HOST_NAME
@@ -201,6 +224,7 @@ get_user_input() {
 # Show configuration summary and confirm
 confirm_configuration() {
   _print "${CYAN}${INFO} Configuration Summary${NC}"
+  _print "${GREEN}Installation type: $INSTALL_TYPE${NC}"
   _print "${GREEN}Username: $USERNAME${NC}"
   _print "${GREEN}Email: $GIT_EMAIL${NC}"
   _print "${GREEN}Name: $GIT_NAME${NC}"
@@ -427,10 +451,18 @@ install_nixos() {
 
   case "$ARCH" in
     x86_64)
-      FLAKE_TARGET="x86_64-linux-server"
+      if [[ "$INSTALL_TYPE" == "full" ]]; then
+        FLAKE_TARGET="x86_64-linux-server-full"
+      else
+        FLAKE_TARGET="x86_64-linux-server"
+      fi
       ;;
     aarch64)
-      FLAKE_TARGET="aarch64-linux-server"
+      if [[ "$INSTALL_TYPE" == "full" ]]; then
+        FLAKE_TARGET="aarch64-linux-server-full"
+      else
+        FLAKE_TARGET="aarch64-linux-server"
+      fi
       ;;
     *)
       _print "${RED}${ERROR} Unsupported architecture: $ARCH${NC}"
@@ -439,6 +471,7 @@ install_nixos() {
   esac
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
+  _print "${BLUE}Installation type: $INSTALL_TYPE${NC}"
   
   # Pre-installation cleanup for low-resource systems
   _print "${YELLOW}Pre-installation cleanup for Hetzner...${NC}"
