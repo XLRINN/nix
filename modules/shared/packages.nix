@@ -73,6 +73,8 @@ let
     nodejs
     # Terminal multiplexer (shared)
     zellij
+    # Development tools (shared)
+    nix-direnv
   ];
 in
   sharedPackages ++ (if isServer then [] else guiPackages)
