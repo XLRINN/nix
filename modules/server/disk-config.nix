@@ -1,22 +1,13 @@
 _: {
-  # Server disk configuration - simple and direct
+  # Server disk configuration - BIOS compatible (MBR)
   disko.devices = {
     disk = {
       vdb = {
         device = "/dev/%DISK%";
         type = "disk";
         content = {
-          type = "gpt";
+          type = "mbr";
           partitions = {
-            ESP = {
-              type = "EF00";
-              size = "256M";
-              content = {
-                type = "filesystem";
-                format = "vfat";
-                mountpoint = "/boot";
-              };
-            };
             root = {
               size = "100%";
               content = {

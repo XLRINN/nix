@@ -10,14 +10,14 @@ in
     ../../modules/server/disk-config.nix
   ];
 
-  # Basic system configuration
+  # Basic system configuration - BIOS compatible
   boot = {
     loader = {
-      systemd-boot = {
+      grub = {
         enable = true;
-        configurationLimit = 42;
+        device = "/dev/%DISK%";
+        useOSProber = false;
       };
-      efi.canTouchEfiVariables = true;
     };
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
