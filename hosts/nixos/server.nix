@@ -10,7 +10,7 @@ in
     ../../modules/server/disk-config.nix
   ];
 
-  # Basic system configuration with GRUB bootloader for BIOS
+  # Basic system configuration with GRUB bootloader for BIOS - optimized
   boot = {
     loader = {
       grub = {
@@ -20,12 +20,23 @@ in
         forceInstall = true;
         efiSupport = false;
         useOSProber = false;
+        # Faster boot
+        splashImage = null;
+        gfxmodeBios = "text";
       };
       efi.canTouchEfiVariables = false;
     };
-    kernelPackages = pkgs.linuxPackages_latest;
+    # Use stable kernel for faster boot
+    kernelPackages = pkgs.linuxPackages;
+    # Optimized kernel modules
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
     kernelModules = [ "uinput" "iwlwifi" ];
+    # Faster boot options
+    kernelParams = [ "quiet" "loglevel=3" ];
+    # Disable unnecessary services during boot
+    initrd.systemd.enable = true;
+    # Clean tmp on boot
+    tmp.cleanOnBoot = true;
   };
 
   # Network configuration
@@ -73,26 +84,70 @@ in
     }];
   };
 
-  # Minimal SSH service
-  services.openssh = {
-    enable = true;
-    settings = {
-      PubkeyAuthentication = true;
-      PasswordAuthentication = false;
-      PermitRootLogin = "prohibit-password";
+  # System optimizations for faster performance
+  powerManagement.cpuFreqGovernor = "performance";
+  
+  # Disable unnecessary services for faster boot
+  services = {
+    openssh = {
+      enable = true;
+      settings = {
+        PubkeyAuthentication = true;
+        PasswordAuthentication = false;
+        PermitRootLogin = "prohibit-password";
+      };
+    };
+    # Disable services that slow down boot
+    avahi.enable = false;
+    bluetooth.enable = false;
+    printing.enable = false;
+    # Disable more unnecessary services
+    fwupd.enable = false;
+    thermald.enable = false;
+    upower.enable = false;
+    # Optimize systemd
+    systemd = {
+      enableEmergencyMode = false;
+      extraConfig = ''
+        DefaultTimeoutStartSec=30s
+        DefaultTimeoutStopSec=30s
+      '';
     };
   };
 
-  # Nix configuration
+  # Optimize file system
+  fileSystems."/".options = [ "noatime" "nodiratime" ];
+  
+  # Reduce swappiness for better performance
+  boot.kernel.sysctl."vm.swappiness" = 10;
+
+  # Nix configuration - optimized for faster builds
   nix = {
     settings = {
       allowed-users = [ "${user}" ];
       trusted-users = [ "@admin" "${user}" ];
-      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
-      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+      # Multiple substituters for faster downloads
+      substituters = [
+        "https://nix-community.cachix.org"
+        "https://cache.nixos.org"
+        "https://nixpkgs-wayland.cachix.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "nix-community.cachix.org-1:mB9FSh9qf7dCedXfElpDXJmpnNR7e1yR4a7e+jQppM="
+        "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
+      ];
+      # Parallel builds and downloads
+      max-jobs = "auto";
+      cores = 0;
+      # Faster evaluation
+      auto-optimise-store = true;
+      # Use binary caches more aggressively
+      builders-use-substitutes = true;
     };
     extraOptions = ''
       experimental-features = nix-command flakes
+      accept-flake-config = true
     '';
     gc = {
       automatic = true;
