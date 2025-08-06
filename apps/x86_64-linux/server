@@ -45,14 +45,14 @@ check_installer() {
   fi
 }
 
-# Set all defaults for testing
-set_defaults() {
-  _print "${CYAN}${USER} Setting Defaults${NC}"
+# Set defaults and get user input
+get_user_input() {
+  _print "${CYAN}${USER} Server Configuration${NC}"
   
+  # Set defaults
   export USERNAME="david"
   export GIT_EMAIL="xlrin.morgan@gmail.com"
   export GIT_NAME="david"
-  export HOST_NAME="loki"
   export NETWORK_CONFIG="dhcp"
   
   # Auto-detect disk
@@ -70,10 +70,34 @@ set_defaults() {
   
   export BOOT_DISK="$auto_detected_disk"
   
-  _print "${GREEN}${SUCCESS} Username: $USERNAME${NC}"
-  _print "${GREEN}${SUCCESS} Hostname: $HOST_NAME${NC}"
-  _print "${GREEN}${SUCCESS} Disk: $BOOT_DISK${NC}"
-  _print "${GREEN}${SUCCESS} Network: DHCP${NC}"
+  # Ask for hostname
+  _print "${YELLOW}Enter hostname for the server: ${NC}"
+  read -r HOST_NAME
+  
+  while [[ -z "$HOST_NAME" ]]; do
+    _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
+    _print "${YELLOW}Enter hostname for the server: ${NC}"
+    read -r HOST_NAME
+  done
+  
+  export HOST_NAME="$HOST_NAME"
+  
+  # Ask for IP (DHCP if left blank)
+  _print "${YELLOW}Enter static IP (or press Enter for DHCP): ${NC}"
+  read -r STATIC_IP
+  
+  if [[ -z "$STATIC_IP" ]]; then
+    export NETWORK_CONFIG="dhcp"
+    _print "${GREEN}${SUCCESS} Using DHCP${NC}"
+  else
+    export NETWORK_CONFIG="static"
+    export STATIC_IP="$STATIC_IP"
+    # Assume /24 subnet and gateway
+    export SUBNET_MASK="255.255.255.0"
+    export GATEWAY="192.168.69.1"
+    _print "${GREEN}${SUCCESS} Using /24 subnet (255.255.255.0)${NC}"
+    _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
+  fi
 }
 
 # Original user info function (commented out for testing)
@@ -174,34 +198,99 @@ set_defaults() {
 #   fi
 # }
 
-# Original confirmation function (commented out for testing)
-# confirm_configuration() {
-#   _print "${CYAN}${INFO} Summary${NC}"
-#   _print "${GREEN}Username: $USERNAME${NC}"
-#   _print "${GREEN}Email: $GIT_EMAIL${NC}"
-#   _print "${GREEN}Name: $GIT_NAME${NC}"
-#   _print "${GREEN}Hostname: $HOST_NAME${NC}"
-#   _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
-#   _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
-#   
-#   if [[ "$NETWORK_CONFIG" == "static" ]]; then
-#     _print "${GREEN}Static IP: $STATIC_IP${NC}"
-#     _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
-#     _print "${GREEN}Gateway: $GATEWAY${NC}"
-#   fi
-#   
-#   _prompt "${YELLOW}${WARNING} Continue? (Y/n): ${NC}" confirm
-#   
-#   case "$confirm" in
-#     [Nn] | [Nn][Oo] )
-#       _print "${RED}${ERROR} Cancelled.${NC}"
-#       exit 1
-#       ;;
-#     *)
-#       _print "${GREEN}${SUCCESS} Confirmed!${NC}"
-#       ;;
-#   esac
-# }
+# Show configuration summary and confirm
+confirm_configuration() {
+  _print "${CYAN}${INFO} Configuration Summary${NC}"
+  _print "${GREEN}Username: $USERNAME${NC}"
+  _print "${GREEN}Email: $GIT_EMAIL${NC}"
+  _print "${GREEN}Name: $GIT_NAME${NC}"
+  _print "${GREEN}Hostname: $HOST_NAME${NC}"
+  _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
+  _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
+  
+  if [[ "$NETWORK_CONFIG" == "static" ]]; then
+    _print "${GREEN}Static IP: $STATIC_IP${NC}"
+    _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
+    _print "${GREEN}Gateway: $GATEWAY${NC}"
+  fi
+  
+  _print "${YELLOW}${WARNING} Continue with these settings? (Y/n): ${NC}"
+  read -r confirm
+  
+  case "$confirm" in
+    [Nn] | [Nn][Oo] )
+      _print "${YELLOW}Let's adjust some settings...${NC}"
+      get_additional_settings
+      ;;
+    *)
+      _print "${GREEN}${SUCCESS} Confirmed!${NC}"
+      ;;
+  esac
+}
+
+# Get additional settings if user wants to change defaults
+get_additional_settings() {
+  _print "${CYAN}${DISK} Boot Disk${NC}"
+  
+  # Show available disks
+  _print "${BLUE}Available disks:${NC}"
+  disks=$(lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0)
+  echo "$disks"
+  
+  _print "${YELLOW}Current disk: $BOOT_DISK${NC}"
+  _print "${YELLOW}Enter boot disk name (or press Enter to keep current): ${NC}"
+  read -r new_disk
+  
+  if [[ -n "$new_disk" ]]; then
+    export BOOT_DISK="$new_disk"
+    _print "${GREEN}${SUCCESS} Disk set to: $BOOT_DISK${NC}"
+  fi
+  
+  _print "${CYAN}${USER} Username${NC}"
+  _print "${YELLOW}Current username: $USERNAME${NC}"
+  _print "${YELLOW}Enter username (or press Enter to keep current): ${NC}"
+  read -r new_username
+  
+  if [[ -n "$new_username" ]]; then
+    export USERNAME="$new_username"
+    export GIT_NAME="$new_username"
+    _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
+  fi
+  
+  # Ask for network settings if static IP is being used
+  if [[ "$NETWORK_CONFIG" == "static" ]]; then
+    _print "${CYAN}${NETWORK} Network Settings${NC}"
+    _print "${YELLOW}Current static IP: $STATIC_IP${NC}"
+    _print "${YELLOW}Enter static IP (or press Enter to keep current): ${NC}"
+    read -r new_ip
+    
+    if [[ -n "$new_ip" ]]; then
+      export STATIC_IP="$new_ip"
+      _print "${GREEN}${SUCCESS} IP set to: $STATIC_IP${NC}"
+    fi
+    
+    _print "${YELLOW}Current subnet mask: $SUBNET_MASK${NC}"
+    _print "${YELLOW}Enter subnet mask (or press Enter to keep current): ${NC}"
+    read -r new_subnet
+    
+    if [[ -n "$new_subnet" ]]; then
+      export SUBNET_MASK="$new_subnet"
+      _print "${GREEN}${SUCCESS} Subnet mask set to: $SUBNET_MASK${NC}"
+    fi
+    
+    _print "${YELLOW}Current gateway: $GATEWAY${NC}"
+    _print "${YELLOW}Enter gateway (or press Enter to keep current): ${NC}"
+    read -r new_gateway
+    
+    if [[ -n "$new_gateway" ]]; then
+      export GATEWAY="$new_gateway"
+      _print "${GREEN}${SUCCESS} Gateway set to: $GATEWAY${NC}"
+    fi
+  fi
+  
+  # Show final summary
+  confirm_configuration
+}
 
 download_config() {
   _print "${CYAN}${SERVER} Downloading Configuration${NC}"
@@ -383,11 +472,12 @@ cleanup() {
 }
 
 # Main execution
-_print "${PURPLE}${ROCKET} NixOS Server Installation (Test Mode)${NC}"
-_print "${BLUE}Installing CLI-only NixOS server with defaults${NC}"
+_print "${PURPLE}${ROCKET} NixOS Server Installation${NC}"
+_print "${BLUE}Installing CLI-only NixOS server${NC}"
 
 check_installer
-set_defaults
+get_user_input
+confirm_configuration
 download_config
 setup_disk_with_desktop_method
 run_disko
