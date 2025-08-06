@@ -17,7 +17,7 @@ let
   in hostName == "loki" || hostName == "server";
   
   # Only read alacritty config if not server
-  alacritty = if !isServer then builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml) else {};
+  # alacritty = if !isServer then builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml) else {};
 in
 {
   # Direnv configuration
@@ -93,10 +93,10 @@ in
   };
 
   # Desktop-specific configurations (GUI environments)
-  alacritty = lib.mkIf (!isServer && builtins.length (builtins.attrNames alacritty) > 0) {
-    enable = true;
-    settings = alacritty;
-  };
+  # alacritty = lib.mkIf (!isServer && builtins.length (builtins.attrNames alacritty) > 0) {
+  #   enable = true;
+  #   settings = alacritty;
+  # };
 
   # Zellij configuration (works in both desktop and server environments)
   zellij = {
