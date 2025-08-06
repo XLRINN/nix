@@ -99,35 +99,35 @@ in
   # };
 
   # Zellij configuration (works in both desktop and server environments)
-  zellij = {
-    enable = true;
-    settings = {
-      default_Layout = "compact";
-      pane_frames = false;
-      theme = "ansi";
-      simplified_ui = true;
-      hide_session_name = true;
-      rounded_corners = true;
-    };
-  };
+  # zellij = {
+  #   enable = true;
+  #   settings = {
+  #     default_Layout = "compact";
+  #     pane_frames = false;
+  #     theme = "ansi";
+  #     simplified_ui = true;
+  #     hide_session_name = true;
+  #     rounded_corners = true;
+  #   };
+  # };
 
   # Yazi file manager
-  yazi = {
-    enable = true;
-    settings = yazi;
-  };
+  # yazi = {
+  #   enable = true;
+  #   settings = yazi;
+  # };
 
   # Neovim editor - modular approach
-  neovim = {
-    enable = true;
-    defaultEditor = true;
-    extraPackages = with pkgs; [
-      stylua
-      ripgrep
-      curl
-    ];
-    # Load configuration from modular config
-    extraLuaConfig = builtins.readFile ./config/nvim/init.lua;
-  };
+  # neovim = {
+  #   enable = true;
+  #   defaultEditor = true;
+  #   extraPackages = with pkgs; [
+  #     stylua
+  #     ripgrep
+  #     curl
+  #   ];
+  #   # Load configuration from modular config
+  #   extraLuaConfig = builtins.readFile ./config/nvim/init.lua;
+  # };
 
 }

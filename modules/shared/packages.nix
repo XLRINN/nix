@@ -76,6 +76,7 @@ let
     # Development tools (shared)
     direnv
     nix-direnv
+    git
     # Neovim dependencies
     stylua
     curl
