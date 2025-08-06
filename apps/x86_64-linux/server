@@ -75,20 +75,53 @@ get_hostname() {
 get_boot_disk() {
   _print "${CYAN}${DISK} Boot Disk${NC}"
   
-  disks=$(lsblk -nd --output NAME,SIZE | grep -v loop)
+  # Show available disks
+  _print "${BLUE}Available disks:${NC}"
+  disks=$(lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0)
   echo "$disks"
   
-  _prompt "${YELLOW}Change boot disk? (y/N): ${NC}" change_disk
+  # Try to auto-detect the best disk
+  local auto_detected_disk=""
   
-  case "$change_disk" in
-    [Yy] | [Yy][Ee][Ss] )
-      _prompt "${YELLOW}Enter boot disk name (e.g., sda, nvme0n1): ${NC}" BOOT_DISK
-      ;;
-    *)
-      export BOOT_DISK="sda"
-      _print "${GREEN}${SUCCESS} Using default boot disk: sda${NC}"
-      ;;
-  esac
+  # Check for common VM disk names first
+  for disk in vda sda nvme0n1; do
+    if [ -b "/dev/$disk" ]; then
+      auto_detected_disk="$disk"
+      break
+    fi
+  done
+  
+  # If no VM disk found, check for any available disk
+  if [ -z "$auto_detected_disk" ]; then
+    auto_detected_disk=$(lsblk -nd --output NAME | grep -v loop | grep -v sr0 | head -1)
+  fi
+  
+  if [ -n "$auto_detected_disk" ]; then
+    _print "${GREEN}Auto-detected disk: $auto_detected_disk${NC}"
+    _prompt "${YELLOW}Use auto-detected disk ($auto_detected_disk)? (Y/n): ${NC}" use_auto
+    case "$use_auto" in
+      [Nn] | [Nn][Oo] )
+        _prompt "${YELLOW}Enter boot disk name (e.g., vda, sda, nvme0n1): ${NC}" BOOT_DISK
+        ;;
+      *)
+        export BOOT_DISK="$auto_detected_disk"
+        _print "${GREEN}${SUCCESS} Using auto-detected disk: $BOOT_DISK${NC}"
+        ;;
+    esac
+  else
+    _print "${YELLOW}Could not auto-detect disk. Please select manually.${NC}"
+    _prompt "${YELLOW}Enter boot disk name (e.g., vda, sda, nvme0n1): ${NC}" BOOT_DISK
+  fi
+  
+  # Validate the selected disk exists
+  if [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${RED}${ERROR} Selected disk /dev/$BOOT_DISK does not exist!${NC}"
+    _print "${YELLOW}Available disks:${NC}"
+    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
+    exit 1
+  fi
+  
+  _print "${GREEN}${SUCCESS} Using disk: $BOOT_DISK${NC}"
 }
 
 get_network_config() {
@@ -168,8 +201,89 @@ download_config() {
   _print "${GREEN}${SUCCESS} Configuration downloaded!${NC}"
 }
 
+# Function to debug disk detection
+debug_disk_detection() {
+  _print "${CYAN}${DISK} Disk Detection Debug${NC}"
+  
+  _print "${BLUE}All block devices:${NC}"
+  ls -la /dev/* | grep -E "(sd|vd|nvme)" || _print "${YELLOW}No standard disk devices found${NC}"
+  
+  _print "${BLUE}lsblk output:${NC}"
+  lsblk -a || _print "${YELLOW}lsblk failed${NC}"
+  
+  _print "${BLUE}fdisk -l output:${NC}"
+  sudo fdisk -l 2>/dev/null || _print "${YELLOW}fdisk failed${NC}"
+  
+  _print "${BLUE}Current BOOT_DISK variable: $BOOT_DISK${NC}"
+  if [ -n "$BOOT_DISK" ]; then
+    _print "${BLUE}Checking /dev/$BOOT_DISK:${NC}"
+    if [ -b "/dev/$BOOT_DISK" ]; then
+      _print "${GREEN}✓ /dev/$BOOT_DISK exists${NC}"
+      lsblk "/dev/$BOOT_DISK"
+    else
+      _print "${RED}✗ /dev/$BOOT_DISK does not exist${NC}"
+    fi
+  fi
+}
+
+# Function to check disk space comprehensively
+check_disk_space() {
+  _print "${CYAN}${DISK} Disk Space Analysis${NC}"
+  
+  # Debug disk detection if needed
+  if [ -z "$BOOT_DISK" ] || [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${YELLOW}Disk detection issue detected. Running debug...${NC}"
+    debug_disk_detection
+    return 1
+  fi
+  
+  # Get target disk size
+  local target_disk="/dev/$BOOT_DISK"
+  if [ -b "$target_disk" ]; then
+    local disk_size=$(lsblk -nd --output SIZE "$target_disk" | tail -1)
+    _print "${BLUE}Target disk ($target_disk) size: $disk_size${NC}"
+  else
+    _print "${RED}${ERROR} Target disk $target_disk not found${NC}"
+    debug_disk_detection
+    return 1
+  fi
+  
+  # Check available space on installer environment
+  _print "${BLUE}Available space in installer environment:${NC}"
+  df -h
+  
+  # Check if we have enough space for installation
+  local available_space=$(df /mnt | awk 'NR==2 {print $4}')
+  local required_space=3000000  # 3GB in KB (reduced from 5GB)
+  
+  if [ "$available_space" -lt "$required_space" ]; then
+    _print "${RED}${ERROR} Insufficient disk space for installation${NC}"
+    _print "${YELLOW}Available: ${available_space}KB, Required: ${required_space}KB${NC}"
+    _print "${YELLOW}This could cause the installation to get stuck${NC}"
+    
+    # Provide suggestions
+    _print "${BLUE}Suggestions:${NC}"
+    _print "${YELLOW}1. Use a larger disk (at least 8GB recommended)${NC}"
+    _print "${YELLOW}2. Try with --no-channel-copy flag to reduce space usage${NC}"
+    _print "${YELLOW}3. Use a minimal configuration with fewer packages${NC}"
+    _print "${YELLOW}4. Consider using a different disk or expanding the current one${NC}"
+    
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      _print "${RED}Installation aborted due to insufficient disk space${NC}"
+      exit 1
+    fi
+  else
+    _print "${GREEN}${SUCCESS} Sufficient disk space available${NC}"
+  fi
+}
+
 run_disko() {
   _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
+  
+  # Check disk space before proceeding
+  check_disk_space
   
   # Clean up space before running Disko
   _print "${YELLOW}Cleaning up space...${NC}"
@@ -196,6 +310,75 @@ setup_files() {
   _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
 }
 
+# Function to troubleshoot installation issues
+troubleshoot_installation() {
+  _print "${CYAN}${INFO} Installation Troubleshooting${NC}"
+  
+  _print "${YELLOW}Checking system status...${NC}"
+  
+  # Check disk space
+  _print "${BLUE}Disk space:${NC}"
+  df -h /mnt
+  
+  # Check Nix daemon status
+  _print "${BLUE}Nix daemon status:${NC}"
+  sudo systemctl status nix-daemon --no-pager
+  
+  # Check network connectivity
+  _print "${BLUE}Network connectivity:${NC}"
+  ping -c 3 8.8.8.8
+  
+  # Check Nix store info
+  _print "${BLUE}Nix store info:${NC}"
+  nix-store --gc --print-dead
+  
+  _print "${YELLOW}If installation is stuck, try these commands manually:${NC}"
+  _print "${YELLOW}1. Restart Nix daemon: sudo systemctl restart nix-daemon${NC}"
+  _print "${YELLOW}2. Clear Nix store: sudo nix-collect-garbage -d${NC}"
+  _print "${YELLOW}3. Try installation with --no-channel-copy flag${NC}"
+  _print "${YELLOW}4. Check for network issues or firewall blocking downloads${NC}"
+}
+
+# Function to retry installation with different options
+retry_installation() {
+  local FLAKE_TARGET="$1"
+  local retry_count=0
+  local max_retries=3
+  
+  while [ $retry_count -lt $max_retries ]; do
+    retry_count=$((retry_count + 1))
+    _print "${YELLOW}Retry attempt $retry_count of $max_retries${NC}"
+    
+    case $retry_count in
+      1)
+        _print "${BLUE}Trying with --no-channel-copy flag...${NC}"
+        if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --verbose; then
+          return 0
+        fi
+        ;;
+      2)
+        _print "${BLUE}Trying with --no-root-passwd flag...${NC}"
+        if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
+          return 0
+        fi
+        ;;
+      3)
+        _print "${BLUE}Trying with minimal flags...${NC}"
+        if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd; then
+          return 0
+        fi
+        ;;
+    esac
+    
+    _print "${YELLOW}Retry $retry_count failed. Cleaning up and trying again...${NC}"
+    sudo nix-collect-garbage -d || true
+    sudo systemctl restart nix-daemon || true
+    sleep 5
+  done
+  
+  return 1
+}
+
 install_nixos() {
   # Clear screen before installation
   clear
@@ -207,6 +390,30 @@ install_nixos() {
   sudo nix-collect-garbage -d || true
   sudo rm -rf /tmp/* || true
   sudo rm -rf /var/tmp/* || true
+  
+  # Check available disk space
+  _print "${YELLOW}Checking disk space...${NC}"
+  AVAILABLE_SPACE=$(df /mnt | awk 'NR==2 {print $4}')
+  REQUIRED_SPACE=5000000  # 5GB in KB
+  
+  if [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE" ]; then
+    _print "${RED}${ERROR} Insufficient disk space. Available: ${AVAILABLE_SPACE}KB, Required: ${REQUIRED_SPACE}KB${NC}"
+    _print "${YELLOW}Consider cleaning up more space or using a larger disk${NC}"
+    exit 1
+  fi
+  
+  # Check network connectivity
+  _print "${YELLOW}Checking network connectivity...${NC}"
+  if ! ping -c 1 8.8.8.8 > /dev/null 2>&1; then
+    _print "${RED}${ERROR} No internet connectivity detected${NC}"
+    _print "${YELLOW}Please check your network connection and try again${NC}"
+    exit 1
+  fi
+  
+  # Restart Nix daemon to ensure clean state
+  _print "${YELLOW}Restarting Nix daemon...${NC}"
+  sudo systemctl restart nix-daemon || true
+  sleep 2
   
   ARCH=$(uname -m)
 
@@ -223,9 +430,35 @@ install_nixos() {
       ;;
   esac
 
-  sudo nixos-install --flake .#$FLAKE_TARGET $@
-  sudo chmod -R 775 /mnt/etc/nixos
-  _print "${GREEN}${SUCCESS} NixOS installation complete!${NC}"
+  _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
+  _print "${YELLOW}This may take a while. If it gets stuck, you can:${NC}"
+  _print "${YELLOW}1. Press Ctrl+C to cancel and try with --verbose flag${NC}"
+  _print "${YELLOW}2. Check network connectivity${NC}"
+  _print "${YELLOW}3. Try with --no-channel-copy flag${NC}"
+  
+  # Try installation with timeout and better error handling
+  if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --verbose $@; then
+    _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
+    sudo chmod -R 775 /mnt/etc/nixos
+  else
+    _print "${RED}${ERROR} Installation failed or timed out${NC}"
+    _print "${YELLOW}Attempting retry with different options...${NC}"
+    
+    if retry_installation "$FLAKE_TARGET"; then
+      _print "${GREEN}${SUCCESS} NixOS installation completed successfully on retry${NC}"
+      sudo chmod -R 775 /mnt/etc/nixos
+    else
+      _print "${RED}${ERROR} All installation attempts failed${NC}"
+      troubleshoot_installation
+      _print "${YELLOW}Troubleshooting options:${NC}"
+      _print "${YELLOW}1. Try with --no-channel-copy: sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy${NC}"
+      _print "${YELLOW}2. Try with --verbose: sudo nixos-install --flake .#$FLAKE_TARGET --verbose${NC}"
+      _print "${YELLOW}3. Check disk space: df -h /mnt${NC}"
+      _print "${YELLOW}4. Check Nix daemon: sudo systemctl status nix-daemon${NC}"
+      _print "${YELLOW}5. Restart Nix daemon: sudo systemctl restart nix-daemon${NC}"
+      exit 1
+    fi
+  fi
 }
 
 prompt_reboot() {

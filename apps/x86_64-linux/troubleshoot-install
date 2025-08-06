@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+set -eu
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+_print() {
+  echo -e "$1"
+}
+
+_success() {
+  _print "${GREEN}✅ $1${NC}"
+}
+
+_error() {
+  _print "${RED}❌ $1${NC}"
+}
+
+_warning() {
+  _print "${YELLOW}⚠️  $1${NC}"
+}
+
+_info() {
+  _print "${BLUE}ℹ️  $1${NC}"
+}
+
+echo "🔧 NixOS Installation Troubleshooter"
+echo "====================================="
+echo
+
+# Check if we're in the installer environment
+if [ ! -e /etc/NIXOS ]; then
+  _error "Not running in NixOS installer environment"
+  exit 1
+fi
+
+_info "Checking system status..."
+
+# Check disk space
+echo
+_info "Disk space:"
+df -h /mnt
+
+# Check available memory
+echo
+_info "Memory usage:"
+free -h
+
+# Check Nix daemon status
+echo
+_info "Nix daemon status:"
+sudo systemctl status nix-daemon --no-pager || _warning "Could not check Nix daemon status"
+
+# Check network connectivity
+echo
+_info "Network connectivity:"
+if ping -c 3 8.8.8.8 > /dev/null 2>&1; then
+  _success "Internet connectivity OK"
+else
+  _error "No internet connectivity"
+fi
+
+# Check Nix store
+echo
+_info "Nix store status:"
+nix-store --gc --print-dead || _warning "Could not check Nix store"
+
+# Check for stuck processes
+echo
+_info "Checking for stuck Nix processes:"
+ps aux | grep -E "(nix|nixos-install)" | grep -v grep || _info "No Nix processes found"
+
+# Provide manual commands
+echo
+_warning "If installation is stuck, try these commands manually:"
+echo
+echo "1. Restart Nix daemon:"
+echo "   sudo systemctl restart nix-daemon"
+echo
+echo "2. Clear Nix store:"
+echo "   sudo nix-collect-garbage -d"
+echo
+echo "3. Try installation with different flags:"
+echo "   sudo nixos-install --flake .#x86_64-linux-cli --no-channel-copy --verbose"
+echo
+echo "4. Check for network issues:"
+echo "   ping -c 5 8.8.8.8"
+echo
+echo "5. Check disk space:"
+echo "   df -h /mnt"
+echo
+echo "6. Kill any stuck processes:"
+echo "   sudo pkill -f nixos-install"
+echo "   sudo pkill -f nix"
+echo
+
+# Ask if user wants to try automatic fixes
+echo
+read -p "Do you want to try automatic fixes? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  _info "Attempting automatic fixes..."
+  
+  # Restart Nix daemon
+  _info "Restarting Nix daemon..."
+  sudo systemctl restart nix-daemon || _warning "Failed to restart Nix daemon"
+  
+  # Clear Nix store
+  _info "Clearing Nix store..."
+  sudo nix-collect-garbage -d || _warning "Failed to clear Nix store"
+  
+  # Clean temp files
+  _info "Cleaning temporary files..."
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
+  
+  _success "Automatic fixes completed"
+  echo
+  _info "You can now try the installation again"
+else
+  _info "Skipping automatic fixes"
+fi 
