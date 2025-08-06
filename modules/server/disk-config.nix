@@ -1,16 +1,16 @@
 _: {
-  # Server disk configuration with BIOS Boot Partition for GRUB
+  # Server disk configuration - BIOS compatible with GRUB on GPT
   disko.devices = {
     disk = {
-      vdb = {
-        device = "/dev/%DISK%";
+      main = {
         type = "disk";
+        device = "/dev/%DISK%";
         content = {
           type = "gpt";
           partitions = {
-            bios = {
-              type = "EF02";
+            grub = {
               size = "1M";
+              type = "ef02";
             };
             root = {
               size = "100%";
@@ -18,7 +18,6 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = ["noatime" "nodiratime"];
               };
             };
           };

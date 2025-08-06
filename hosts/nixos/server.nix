@@ -6,14 +6,18 @@ let user = "david";
     ]; 
 in
 {
-  # Basic system configuration with GRUB bootloader
+  # Basic system configuration with GRUB bootloader for BIOS
   boot = {
     loader = {
       grub = {
         enable = true;
+        version = 2;
         device = "/dev/%DISK%";
+        forceInstall = true;
+        efiSupport = false;
         useOSProber = false;
       };
+      efi.canTouchEfiVariables = false;
     };
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
