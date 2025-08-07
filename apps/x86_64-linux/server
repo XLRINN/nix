@@ -378,20 +378,26 @@ run_disko() {
   
   _print "${BLUE}${INFO} Using disk config: $(pwd)/modules/server/disk-config.nix${NC}"
   
-  # Simple direct approach - run disko from current directory
-  _print "${BLUE}${INFO} Running disko...${NC}"
+  # Try using nix-shell instead of nix run to avoid filesystem issues
+  _print "${BLUE}${INFO} Using nix-shell approach...${NC}"
   
-  # Use absolute path and run from current directory
-  DISK_CONFIG_PATH="$(pwd)/modules/server/disk-config.nix"
-  
-  # Try the simplest possible disko invocation
-  if sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    github:nix-community/disko -- --mode zap_create_mount "$DISK_CONFIG_PATH"; then
+  # Create a temporary nix-shell environment
+  if nix-shell -p disko --run "disko --mode zap_create_mount $(pwd)/modules/server/disk-config.nix"; then
     _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
   else
-    _print "${RED}${ERROR} Disko failed!${NC}"
-    _print "${YELLOW}${WARNING} Check the error messages above${NC}"
-    exit 1
+    _print "${RED}${ERROR} Disko failed with nix-shell approach${NC}"
+    _print "${YELLOW}${WARNING} Trying alternative approach...${NC}"
+    
+    # Try with explicit environment
+    export NIX_PATH="nixpkgs=https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz"
+    
+    if nix-shell -p disko --run "disko --mode zap_create_mount $(pwd)/modules/server/disk-config.nix"; then
+      _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
+    else
+      _print "${RED}${ERROR} Disko failed with all approaches${NC}"
+      _print "${YELLOW}${WARNING} Check the error messages above${NC}"
+      exit 1
+    fi
   fi
 }
 
