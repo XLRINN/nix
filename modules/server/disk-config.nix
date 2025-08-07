@@ -6,7 +6,7 @@
         type = "disk";
         content = {
           type = "table";
-          format = "gpt";  # GPT for UEFI
+          format = "msdos";  # MBR for legacy BIOS
           partitions = [
             {
               name = "boot";
@@ -15,7 +15,7 @@
               bootable = true;
               content = {
                 type = "filesystem";
-                format = "vfat";  # FAT32 for UEFI boot
+                format = "ext4";  # ext4 for legacy boot
                 mountpoint = "/boot";
               };
             }

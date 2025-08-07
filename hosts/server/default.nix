@@ -12,16 +12,12 @@ let user = "david";
     ../../modules/shared
   ];
 
-  # Use systemd-boot for UEFI
+  # Use GRUB boot loader for legacy BIOS
   boot = {
     loader = {
-      systemd-boot = {
+      grub = {
         enable = true;
-        configurationLimit = 10;
-      };
-      efi = {
-        canTouchEfiVariables = true;
-        efiSysMountPoint = "/boot/efi";
+        device = "/dev/sda";
       };
     };
     kernelPackages = pkgs.linuxPackages_latest;
