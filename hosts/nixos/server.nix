@@ -30,9 +30,9 @@ in
     };
     # Use stable kernel for faster boot
     kernelPackages = pkgs.linuxPackages;
-    # Full kernel modules for maximum compatibility
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" "virtio_blk" "virtio_pci" "virtio_net" ];
-    kernelModules = [ "uinput" "iwlwifi" "virtio_blk" "virtio_pci" "virtio_net" ];
+    # Minimal kernel modules for server-only
+    initrd.availableKernelModules = [ "ahci" "nvme" "sd_mod" "virtio_blk" "virtio_pci" "virtio_net" ];
+    kernelModules = [ "virtio_blk" "virtio_pci" "virtio_net" ];
     # Faster boot options
     kernelParams = [ "quiet" "loglevel=3" "console=tty0" "console=ttyS0,115200" ];
     # Disable unnecessary services during boot
@@ -104,34 +104,40 @@ in
   # Disable emergency console to prevent "root account locked" prompt
   systemd.enableEmergencyMode = false;
 
+  # Server-specific optimizations
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 10;
+    "net.core.rmem_max" = 134217728;
+    "net.core.wmem_max" = 134217728;
+    "net.ipv4.tcp_rmem" = "4096 87380 134217728";
+    "net.ipv4.tcp_wmem" = "4096 65536 134217728";
+    "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.default_qdisc" = "fq";
+  };
 
-
-  # Reduce swappiness for better performance
-  boot.kernel.sysctl."vm.swappiness" = 10;
-
-  # Nix configuration - optimized for faster builds
+  # Nix configuration - optimized for low-resource Hetzner
   nix = {
     settings = {
       allowed-users = [ "${user}" ];
       trusted-users = [ "@admin" "${user}" ];
-      # Multiple substituters for faster downloads
+      # Conservative settings for 4GB RAM
+      max-jobs = 1;
+      cores = 1;
+      # Use binary caches aggressively to avoid builds
       substituters = [
-        "https://nix-community.cachix.org"
         "https://cache.nixos.org"
-        "https://nixpkgs-wayland.cachix.org"
+        "https://nix-community.cachix.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-community.cachix.org-1:mB9FSh9qf7dCedXfElpDXJmpnNR7e1yR4a7e+jQppM="
-        "nixpkgs-wayland.cachix.org-1:3lwxaILxMRkVhehr5StQprHdEo4IrE8sRho9R9HOLYA="
       ];
-      # Parallel builds and downloads
-      max-jobs = "auto";
-      cores = 0;
-      # Faster evaluation
-      auto-optimise-store = true;
-      # Use binary caches more aggressively
+      # Conservative memory settings
       builders-use-substitutes = true;
+      auto-optimise-store = true;
+      # Reduce memory usage
+      max-silent-time = 3600;
+      build-timeout = 7200;
     };
     extraOptions = ''
       experimental-features = nix-command flakes
@@ -139,15 +145,15 @@ in
     '';
     gc = {
       automatic = true;
-      dates = "14d";
-      options = "--delete-older-than 30d";
+      dates = "7d";
+      options = "--delete-older-than 14d";
     };
   };
 
   # Enable zsh at system level
   programs.zsh.enable = true;
 
-  # Full packages - all essentials
+  # Minimal CLI packages for server-only Hetzner
   environment.systemPackages = with pkgs; [
     git
     vim
@@ -159,13 +165,17 @@ in
     ripgrep
     fd
     bat
-    eza
     fzf
     jq
     ncdu
     rsync
     unzip
-    zip
+    # CLI-only tools - no GUI dependencies
+    micro  # Lightweight editor
+    neofetch  # System info
+    glances  # System monitoring
+    iftop  # Network monitoring
+    iotop  # I/O monitoring
   ];
 
   system.stateVersion = "21.05";

@@ -8,16 +8,19 @@ _: {
         content = {
           type = "gpt";
           partitions = {
-            grub = {
+            # BIOS boot partition
+            "disk-my-disk-grub" = {
               size = "1M";
               type = "ef02";
             };
-            root = {
+            # Root filesystem
+            "disk-my-disk-root" = {
               size = "100%";
               content = {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
+                mountOptions = [ "defaults" "noatime" ];
               };
             };
           };

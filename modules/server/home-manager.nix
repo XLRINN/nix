@@ -19,7 +19,7 @@ in
     userEmail = "xlrin.morgan@gmail.com";
   };
 
-  # Enhanced zsh configuration with aliases
+  # Enhanced zsh configuration with all aliases
   programs.zsh = {
     enable = true;
     enableCompletion = true;
