@@ -1,8 +1,8 @@
 _: {
-  # Server disk configuration - BIOS boot for maximum compatibility
+  # Server disk configuration - BIOS boot following official Disko pattern
   disko.devices = {
     disk = {
-      vdb = {
+      my-disk = {
         device = "/dev/%DISK%";
         type = "disk";
         content = {
@@ -18,7 +18,6 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = ["noatime" "nodiratime"];
               };
             };
           };
