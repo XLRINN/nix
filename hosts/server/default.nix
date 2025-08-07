@@ -20,6 +20,7 @@ let user = "david";
         device = "/dev/sda";
         useOSProber = false;
         forceInstall = true;
+        mirroredBoots = false;
       };
     };
     kernelPackages = pkgs.linuxPackages_latest;
