@@ -18,7 +18,9 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = [ "noatime" "nodiratime" ];
+                mountOptions = [ "noatime" "nodiratime" "defaults" ];
+                # Add partition label to match system expectations
+                extraFormatArgs = [ "-L" "disk-main-root" ];
               };
             };
           };

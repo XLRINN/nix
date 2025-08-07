@@ -8,119 +8,77 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Emojis
+ERROR="❌"
+SUCCESS="✅"
+WARNING="⚠️"
+INFO="ℹ️"
+
 _print() {
   echo -e "$1"
 }
 
-_success() {
-  _print "${GREEN}✅ $1${NC}"
-}
-
-_error() {
-  _print "${RED}❌ $1${NC}"
-}
-
-_warning() {
-  _print "${YELLOW}⚠️  $1${NC}"
-}
-
-_info() {
-  _print "${BLUE}ℹ️  $1${NC}"
-}
-
-echo "🔧 NixOS Installation Troubleshooter"
-echo "====================================="
-echo
+_print "${BLUE}${INFO} NixOS Installation Troubleshooting${NC}"
+_print "${YELLOW}${WARNING} This script will help diagnose partition mounting issues${NC}"
 
 # Check if we're in the installer environment
 if [ ! -e /etc/NIXOS ]; then
-  _error "Not running in NixOS installer environment"
+  _print "${RED}${ERROR} Not running in the NixOS installer environment.${NC}"
+  _print "${YELLOW}Please run this from the NixOS installer.${NC}"
   exit 1
 fi
 
-_info "Checking system status..."
+_print "${GREEN}${SUCCESS} Running in NixOS installer environment${NC}"
 
-# Check disk space
-echo
-_info "Disk space:"
-df -h /mnt
+# Check available disks
+_print "${BLUE}${INFO} Available disks:${NC}"
+lsblk -f
 
-# Check available memory
-echo
-_info "Memory usage:"
-free -h
-
-# Check Nix daemon status
-echo
-_info "Nix daemon status:"
-sudo systemctl status nix-daemon --no-pager || _warning "Could not check Nix daemon status"
-
-# Check network connectivity
-echo
-_info "Network connectivity:"
-if ping -c 3 8.8.8.8 > /dev/null 2>&1; then
-  _success "Internet connectivity OK"
+# Check if /mnt is mounted
+if mountpoint -q /mnt; then
+  _print "${GREEN}${SUCCESS} /mnt is mounted${NC}"
+  _print "${BLUE}${INFO} Mounted filesystems:${NC}"
+  mount | grep /mnt
 else
-  _error "No internet connectivity"
+  _print "${RED}${ERROR} /mnt is not mounted${NC}"
+  _print "${YELLOW}${WARNING} You need to mount the root filesystem first${NC}"
 fi
 
-# Check Nix store
-echo
-_info "Nix store status:"
-nix-store --gc --print-dead || _warning "Could not check Nix store"
-
-# Check for stuck processes
-echo
-_info "Checking for stuck Nix processes:"
-ps aux | grep -E "(nix|nixos-install)" | grep -v grep || _info "No Nix processes found"
-
-# Provide manual commands
-echo
-_warning "If installation is stuck, try these commands manually:"
-echo
-echo "1. Restart Nix daemon:"
-echo "   sudo systemctl restart nix-daemon"
-echo
-echo "2. Clear Nix store:"
-echo "   sudo nix-collect-garbage -d"
-echo
-echo "3. Try installation with different flags:"
-echo "   sudo nixos-install --flake .#x86_64-linux-cli --no-channel-copy --verbose"
-echo
-echo "4. Check for network issues:"
-echo "   ping -c 5 8.8.8.8"
-echo
-echo "5. Check disk space:"
-echo "   df -h /mnt"
-echo
-echo "6. Kill any stuck processes:"
-echo "   sudo pkill -f nixos-install"
-echo "   sudo pkill -f nix"
-echo
-
-# Ask if user wants to try automatic fixes
-echo
-read -p "Do you want to try automatic fixes? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  _info "Attempting automatic fixes..."
-  
-  # Restart Nix daemon
-  _info "Restarting Nix daemon..."
-  sudo systemctl restart nix-daemon || _warning "Failed to restart Nix daemon"
-  
-  # Clear Nix store
-  _info "Clearing Nix store..."
-  sudo nix-collect-garbage -d || _warning "Failed to clear Nix store"
-  
-  # Clean temp files
-  _info "Cleaning temporary files..."
-  sudo rm -rf /tmp/* || true
-  sudo rm -rf /var/tmp/* || true
-  
-  _success "Automatic fixes completed"
-  echo
-  _info "You can now try the installation again"
+# Check for partition labels
+_print "${BLUE}${INFO} Checking for partition labels:${NC}"
+if command -v blkid >/dev/null 2>&1; then
+  blkid | grep -E "(disk-main-root|ESP)" || _print "${YELLOW}${WARNING} No expected partition labels found${NC}"
 else
-  _info "Skipping automatic fixes"
-fi 
+  _print "${YELLOW}${WARNING} blkid not available${NC}"
+fi
+
+# Check for device paths
+_print "${BLUE}${INFO} Checking for device paths:${NC}"
+ls -la /dev/disk/by-partlabel/ 2>/dev/null || _print "${YELLOW}${WARNING} No partition labels directory found${NC}"
+ls -la /dev/disk/by-label/ 2>/dev/null || _print "${YELLOW}${WARNING} No label directory found${NC}"
+
+# Check if disko is available
+if command -v disko >/dev/null 2>&1; then
+  _print "${GREEN}${SUCCESS} Disko is available${NC}"
+else
+  _print "${YELLOW}${WARNING} Disko not available, using nix run${NC}"
+fi
+
+# Provide fix suggestions
+_print "${BLUE}${INFO} Suggested fixes:${NC}"
+_print "${YELLOW}1. If partitions exist but labels are wrong:${NC}"
+_print "${YELLOW}   - Recreate partitions with correct labels${NC}"
+_print "${YELLOW}2. If partitions don't exist:${NC}"
+_print "${YELLOW}   - Run the disk setup process again${NC}"
+_print "${YELLOW}3. If labels exist but mounting fails:${NC}"
+_print "${YELLOW}   - Check filesystem integrity${NC}"
+
+# Check if we can access the configuration
+if [ -f /mnt/etc/nixos/flake.nix ]; then
+  _print "${GREEN}${SUCCESS} Configuration found at /mnt/etc/nixos${NC}"
+else
+  _print "${RED}${ERROR} Configuration not found at /mnt/etc/nixos${NC}"
+  _print "${YELLOW}${WARNING} Make sure you've copied the configuration files${NC}"
+fi
+
+_print "${BLUE}${INFO} Troubleshooting complete${NC}" 
