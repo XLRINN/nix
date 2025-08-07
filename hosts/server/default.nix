@@ -90,7 +90,7 @@ let user = "david";
       trusted-users = [ "@admin" "${user}" ];
       substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
       trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
-      download-buffer-size = 1048576; # 1MB buffer size
+      download-buffer-size = 16777216; # 16MB buffer size
     };
 
     package = pkgs.nix;
@@ -140,16 +140,16 @@ let user = "david";
         chown -R ${user}:users /home/${user}/nix
         
         cd /home/${user}/nix
-        sudo -u ${user} git init
-        sudo -u ${user} git add .
-        sudo -u ${user} git commit -m "Initial commit from installation"
+        git init
+        git add .
+        git commit -m "Initial commit from installation"
         
         # Add remote with your actual repo URL
-        sudo -u ${user} git remote add origin https://github.com/xlrinn/nix.git
+        git remote add origin https://github.com/xlrinn/nix.git
         
         # Set up git configuration for the user
-        sudo -u ${user} git config --global user.name "david"
-        sudo -u ${user} git config --global user.email "xlrin.morgan@gmail.com"
+        git config --global user.name "david"
+        git config --global user.email "xlrin.morgan@gmail.com"
         
         # Note: GitHub CLI will handle authentication automatically
         # No manual SSH key setup needed!

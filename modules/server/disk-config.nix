@@ -6,7 +6,7 @@
         type = "disk";
         content = {
           type = "table";
-          format = "msdos";  # MBR (for BIOS boot)
+          format = "gpt";  # Use GPT instead of MBR
           partitions = [
             {
               name = "boot";
@@ -15,7 +15,7 @@
               bootable = true;
               content = {
                 type = "filesystem";
-                format = "ext4";
+                format = "vfat";  # FAT32 for EFI
                 mountpoint = "/boot";
               };
             }
