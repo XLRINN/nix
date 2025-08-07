@@ -359,46 +359,7 @@ setup_disk_with_desktop_method() {
   _print "${GREEN}${SUCCESS} Disk configuration applied successfully!${NC}"
 }
 
-# Alternative disk setup using traditional tools
-setup_disk_traditional() {
-  _print "${CYAN}${DISK} Setting up disk with traditional tools${NC}"
-  
-  local disk="/dev/$BOOT_DISK"
-  _print "${YELLOW}Setting up disk $disk with traditional partitioning...${NC}"
-  
-  # Unmount any existing mounts
-  umount /mnt/boot 2>/dev/null || true
-  umount /mnt 2>/dev/null || true
-  
-  # Create GPT partition table
-  _print "${BLUE}${INFO} Creating GPT partition table...${NC}"
-  parted "$disk" mklabel gpt
-  
-  # Create partitions
-  _print "${BLUE}${INFO} Creating partitions...${NC}"
-  
-  # BIOS boot partition (1MB)
-  parted "$disk" mkpart primary 1MiB 2MiB
-  parted "$disk" set 1 bios_grub on
-  
-  # Root partition (rest of disk)
-  parted "$disk" mkpart primary 2MiB 100%
-  
-  # Format partitions
-  _print "${BLUE}${INFO} Formatting partitions...${NC}"
-  
-  # Format root partition with label
-  mkfs.ext4 -L disk-main-root "${disk}2"
-  
-  # Mount root partition
-  _print "${BLUE}${INFO} Mounting partitions...${NC}"
-  mount -L disk-main-root /mnt
-  
-  # Create boot directory
-  mkdir -p /mnt/boot
-  
-  _print "${GREEN}${SUCCESS} Traditional disk setup complete!${NC}"
-}
+
 
 run_disko() {
   _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
@@ -415,59 +376,22 @@ run_disko() {
     exit 1
   fi
   
-  # Test the disk configuration first
-  _print "${BLUE}${INFO} Testing disk configuration...${NC}"
-  if ! nix eval --file "./modules/server/disk-config.nix" --show-trace >/dev/null 2>&1; then
-    _print "${RED}${ERROR} Disk configuration has syntax errors!${NC}"
-    exit 1
-  fi
-  
   _print "${BLUE}${INFO} Using disk config: $(pwd)/modules/server/disk-config.nix${NC}"
   
-  # Try a simpler approach - run disko directly without nix run
-  _print "${BLUE}${INFO} Attempting direct disko execution...${NC}"
+  # Simple direct approach - run disko from current directory
+  _print "${BLUE}${INFO} Running disko...${NC}"
   
-  # First, try to install disko if it's not available
-  if ! command -v disko >/dev/null 2>&1; then
-    _print "${YELLOW}${WARNING} Disko not found, installing...${NC}"
-    nix-env -iA nixpkgs.disko || true
-  fi
+  # Use absolute path and run from current directory
+  DISK_CONFIG_PATH="$(pwd)/modules/server/disk-config.nix"
   
-  # Try running disko directly
-  if command -v disko >/dev/null 2>&1; then
-    _print "${BLUE}${INFO} Using installed disko...${NC}"
-    if sudo disko --mode zap_create_mount "./modules/server/disk-config.nix"; then
-      _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
-      return 0
-    fi
-  fi
-  
-  # Fallback to nix run with different approach
-  _print "${BLUE}${INFO} Trying nix run approach...${NC}"
-  
-  # Create a minimal working environment
-  WORK_DIR=$(mktemp -d)
-  cd "$WORK_DIR"
-  
-  # Copy the config and create a simple wrapper
-  cp "../modules/server/disk-config.nix" "./disk-config.nix"
-  
-  # Try with explicit working directory
+  # Try the simplest possible disko invocation
   if sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    github:nix-community/disko -- --mode zap_create_mount "./disk-config.nix"; then
+    github:nix-community/disko -- --mode zap_create_mount "$DISK_CONFIG_PATH"; then
     _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
-    cd - > /dev/null
-    rm -rf "$WORK_DIR"
-    return 0
   else
-    _print "${RED}${ERROR} Disko failed with both approaches${NC}"
-    cd - > /dev/null
-    rm -rf "$WORK_DIR"
-    
-    # Try traditional approach as fallback
-    _print "${YELLOW}${WARNING} Trying traditional disk setup as fallback...${NC}"
-    setup_disk_traditional
-    return 0
+    _print "${RED}${ERROR} Disko failed!${NC}"
+    _print "${YELLOW}${WARNING} Check the error messages above${NC}"
+    exit 1
   fi
 }
 

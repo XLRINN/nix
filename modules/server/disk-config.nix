@@ -1,5 +1,5 @@
 _: {
-  # Server disk configuration - BIOS compatible with GRUB on GPT
+  # Simple BIOS disk configuration with ext4
   disko.devices = {
     disk = {
       main = {
@@ -18,8 +18,6 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = [ "noatime" "nodiratime" ];
-                extraFormatArgs = [ "-L" "disk-main-root" ];
               };
             };
           };
