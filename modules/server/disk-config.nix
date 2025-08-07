@@ -1,16 +1,20 @@
 {
-  disko.devices.disk.main = {
-    device = "/dev/sda";
-    type = "disk";
-    content = {
-      type = "gpt";
-      partitions = {
-        root = {
-          size = "100%";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/";
+  disko.devices = {
+    disk = {
+      sda = {
+        device = "/dev/sda";
+        type = "disk";
+        content = {
+          type = "msdos";
+          partitions = {
+            root = {
+              size = "100%";
+              content = {
+                type = "filesystem";
+                format = "ext4";
+                mountpoint = "/";
+              };
+            };
           };
         };
       };
