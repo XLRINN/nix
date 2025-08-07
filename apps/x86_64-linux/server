@@ -344,11 +344,18 @@ install_nixos() {
     
     # Verify installation was successful
     _print "${BLUE}Verifying installation...${NC}"
-    if [ -f "/mnt/etc/nixos/configuration.nix" ] && [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
-      _print "${GREEN}${SUCCESS} Installation verification passed${NC}"
-      return 0
+    if [ -f "/mnt/etc/nixos/configuration.nix" ] || [ -f "/mnt/etc/nixos/default.nix" ] || [ -f "/mnt/etc/nixos/flake.nix" ]; then
+      if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
+        _print "${GREEN}${SUCCESS} Installation verification passed${NC}"
+        return 0
+      else
+        _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
+        _print "${YELLOW}Checking what was installed:${NC}"
+        ls -la /mnt/
+        return 1
+      fi
     else
-      _print "${RED}${ERROR} Installation verification failed - system may not be properly installed${NC}"
+      _print "${RED}${ERROR} Installation verification failed - configuration files not found${NC}"
       _print "${YELLOW}Checking what was installed:${NC}"
       ls -la /mnt/
       return 1
@@ -367,30 +374,44 @@ prompt_reboot() {
   _print "${CYAN}${INFO} Installation Complete!${NC}"
   
   # Check if installation was actually successful
-  if [ -f "/mnt/etc/nixos/configuration.nix" ] && [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
-    _print "${GREEN}${SUCCESS} Installation verification passed - system is ready for password setup${NC}"
-    
-    # Drop into the installed system for manual password setup
-    _print "${BLUE}${INFO} Dropping into installed system for password setup...${NC}"
-    _print "${YELLOW}You are now in your installed NixOS system.${NC}"
-    _print "${YELLOW}You can now set passwords directly:${NC}"
-    _print "${YELLOW}1. Set root password: passwd root${NC}"
-    _print "${YELLOW}2. Set user password: passwd david${NC}"
-    _print "${YELLOW}3. Exit when done: exit${NC}"
-    
-    # Chroot into the installed system
-    exec sudo chroot /mnt /bin/bash
+  if [ -f "/mnt/etc/nixos/configuration.nix" ] || [ -f "/mnt/etc/nixos/default.nix" ] || [ -f "/mnt/etc/nixos/flake.nix" ]; then
+    if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
+      _print "${GREEN}${SUCCESS} Installation verification passed - system is ready for password setup${NC}"
+      
+      # Drop into the installed system for manual password setup
+      _print "${BLUE}${INFO} Dropping into installed system for password setup...${NC}"
+      _print "${YELLOW}You are now in your installed NixOS system.${NC}"
+      _print "${YELLOW}You can now set passwords directly:${NC}"
+      _print "${YELLOW}1. Set root password: passwd root${NC}"
+      _print "${YELLOW}2. Set user password: passwd david${NC}"
+      _print "${YELLOW}3. Exit when done: exit${NC}"
+      
+      # Chroot into the installed system
+      exec sudo chroot /mnt /bin/bash
+    else
+      _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
+      _print "${YELLOW}The system may not be properly installed.${NC}"
+      _print "${YELLOW}Checking what was installed:${NC}"
+      ls -la /mnt/
+      
+      _print "${YELLOW}${WARNING} Manual troubleshooting required:${NC}"
+      _print "${YELLOW}1. Check if /mnt/boot and /mnt/nix directories exist${NC}"
+      _print "${YELLOW}2. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
+      _print "${YELLOW}3. Check disk space and memory${NC}"
+      
+      # Drop into shell for manual troubleshooting
+      exec /bin/bash
+    fi
   else
-    _print "${RED}${ERROR} Installation verification failed!${NC}"
+    _print "${RED}${ERROR} Installation verification failed - configuration files not found${NC}"
     _print "${YELLOW}The system may not be properly installed.${NC}"
     _print "${YELLOW}Checking what was installed:${NC}"
     ls -la /mnt/
     
     _print "${YELLOW}${WARNING} Manual troubleshooting required:${NC}"
-    _print "${YELLOW}1. Check if /mnt/etc/nixos/configuration.nix exists${NC}"
-    _print "${YELLOW}2. Check if /mnt/boot and /mnt/nix directories exist${NC}"
-    _print "${YELLOW}3. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
-    _print "${YELLOW}4. Check disk space and memory${NC}"
+    _print "${YELLOW}1. Check if /mnt/etc/nixos/configuration.nix, default.nix, or flake.nix exists${NC}"
+    _print "${YELLOW}2. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
+    _print "${YELLOW}3. Check disk space and memory${NC}"
     
     # Drop into shell for manual troubleshooting
     exec /bin/bash
