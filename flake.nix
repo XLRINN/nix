@@ -162,7 +162,7 @@
                 users.${user} = import ./modules/server/home-manager.nix;
               };
             }
-            ./hosts/nixos/server.nix
+            ./hosts/server
           ];
         };
                "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
@@ -177,7 +177,7 @@
                 users.${user} = import ./modules/server/home-manager.nix;
               };
             }
-            ./hosts/nixos/server.nix
+            ./hosts/server
           ];
         };
 
