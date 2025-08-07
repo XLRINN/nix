@@ -83,25 +83,9 @@ let user = "david";
     dbus.enable = true;
     # System utilities
     udev.enable = true;
-    # System logging
-    journald.enable = true;
-    # Time synchronization
-    timesyncd.enable = true;
-    # System monitoring
-    prometheus.enable = false; # Disabled by default, enable if needed
-    # Security services
-    auditd.enable = true;
-    # Hardware monitoring
-    lm_sensors.enable = true;
-    # System administration
-    cron.enable = true;
-    # File system services
-    fstrim.enable = true;
-    # System update services
-    fwupd.enable = true;
-    # CUPS (disabled for server)
-    avahi.enable = false;
   };
+
+
 
   # Turn on flag for proprietary software
   nix = {
@@ -136,15 +120,6 @@ let user = "david";
     inetutils
     neovim
     gh  # GitHub CLI
-    # Standard NixOS tools
-    bash
-    coreutils
-    findutils
-    gnugrep
-    gnused
-    gnutar
-    gzip
-    less
     # Network tools
     iproute2
     openssh
@@ -174,6 +149,8 @@ let user = "david";
     # GitHub CLI configuration
     GH_CONFIG_DIR = "/home/${user}/.config/gh";
   };
+
+
 
   # Set up nix directory and remote
   system.activationScripts = {
