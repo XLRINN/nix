@@ -6,7 +6,7 @@
         type = "disk";
         content = {
           type = "table";
-          format = "gpt";  # GPT for UEFI (Hetzner requirement)
+          format = "msdos";  # MBR for legacy BIOS (SeaBIOS)
           partitions = [
             {
               name = "boot";
@@ -15,7 +15,7 @@
               bootable = true;
               content = {
                 type = "filesystem";
-                format = "vfat";  # FAT32 for EFI (Hetzner requirement)
+                format = "ext4";  # ext4 for legacy boot
                 mountpoint = "/boot";
               };
             }

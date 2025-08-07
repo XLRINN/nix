@@ -12,14 +12,13 @@ let user = "david";
     ../../modules/shared
   ];
 
-  # Use the systemd-boot EFI boot loader for Hetzner servers
+  # Use GRUB boot loader for legacy BIOS (SeaBIOS detected)
   boot = {
     loader = {
-      systemd-boot = {
+      grub = {
         enable = true;
-        configurationLimit = 42;
+        device = "/dev/sda";
       };
-      efi.canTouchEfiVariables = true;
     };
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
@@ -80,6 +79,28 @@ let user = "david";
 
   services = { 
     openssh.enable = true;
+    # Essential system services
+    dbus.enable = true;
+    # System utilities
+    udev.enable = true;
+    # System logging
+    journald.enable = true;
+    # Time synchronization
+    timesyncd.enable = true;
+    # System monitoring
+    prometheus.enable = false; # Disabled by default, enable if needed
+    # Security services
+    auditd.enable = true;
+    # Hardware monitoring
+    lm_sensors.enable = true;
+    # System administration
+    cron.enable = true;
+    # File system services
+    fstrim.enable = true;
+    # System update services
+    fwupd.enable = true;
+    # CUPS (disabled for server)
+    avahi.enable = false;
   };
 
   # Turn on flag for proprietary software
@@ -115,6 +136,33 @@ let user = "david";
     inetutils
     neovim
     gh  # GitHub CLI
+    # Standard NixOS tools
+    bash
+    coreutils
+    findutils
+    gnugrep
+    gnused
+    gnutar
+    gzip
+    less
+    # Network tools
+    iproute2
+    openssh
+    # System monitoring
+    htop
+    procps
+    # File management
+    tree
+    rsync
+    # Text processing
+    jq
+    ripgrep
+    # Additional utilities
+    curl
+    wget
+    # Shell and terminal
+    zsh
+    tmux
   ];
 
   # Environment variables for API keys
