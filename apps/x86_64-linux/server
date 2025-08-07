@@ -494,22 +494,24 @@ install_nixos() {
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
   
-  # Create swap file for 4GB RAM Hetzner
-  _print "${YELLOW}Creating swap file for 4GB RAM Hetzner...${NC}"
-  sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-  sudo chmod 600 /swapfile
-  sudo mkswap /swapfile
-  sudo swapon /swapfile
-  _print "${GREEN}${SUCCESS} Swap file created and activated${NC}"
+  # Check available disk space
+  _print "${YELLOW}Checking available disk space...${NC}"
+  df -h /
   
-  # Pre-installation cleanup for low-resource Hetzner
-  _print "${YELLOW}Pre-installation cleanup for 4GB RAM Hetzner...${NC}"
+  # Aggressive cleanup for Hetzner installer environment
+  _print "${YELLOW}Aggressive cleanup for Hetzner installer environment...${NC}"
   sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
   sudo systemctl restart nix-daemon || true
   sleep 10
   
-  # Ultra-conservative installation for 4GB RAM
-  _print "${BLUE}Trying ultra-conservative installation for 4GB RAM...${NC}"
+  # Check space again
+  _print "${YELLOW}Disk space after cleanup:${NC}"
+  df -h /
+  
+  # Ultra-conservative installation for Hetzner
+  _print "${BLUE}Trying ultra-conservative installation for Hetzner...${NC}"
   if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
@@ -517,7 +519,7 @@ install_nixos() {
   else
     _print "${RED}${ERROR} Ultra-conservative installation failed, trying minimal...${NC}"
     
-    # Minimal installation with memory constraints
+    # Minimal installation with space constraints
     if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd --verbose --option max-jobs 1 --option cores 1; then
       _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
       sudo chmod -R 775 /mnt/etc/nixos
@@ -529,7 +531,6 @@ install_nixos() {
       _print "${YELLOW}2. sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd --option max-jobs 1${NC}"
       _print "${YELLOW}3. Check memory: free -h${NC}"
       _print "${YELLOW}4. Check disk space: df -h${NC}"
-      _print "${YELLOW}5. Try with swap: sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile${NC}"
       return 1
     fi
   fi
