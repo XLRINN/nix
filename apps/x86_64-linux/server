@@ -494,6 +494,14 @@ install_nixos() {
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
   
+  # Create swap file for 4GB RAM Hetzner
+  _print "${YELLOW}Creating swap file for 4GB RAM Hetzner...${NC}"
+  sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  _print "${GREEN}${SUCCESS} Swap file created and activated${NC}"
+  
   # Pre-installation cleanup for low-resource Hetzner
   _print "${YELLOW}Pre-installation cleanup for 4GB RAM Hetzner...${NC}"
   sudo nix-collect-garbage -d || true
