@@ -405,74 +405,7 @@ setup_files() {
   _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
 }
 
-# Function to troubleshoot installation issues (commented out for testing)
-# troubleshoot_installation() {
-#   _print "${CYAN}${INFO} Installation Troubleshooting${NC}"
-#   
-#   _print "${YELLOW}Checking system status...${NC}"
-#   
-#   # Check disk space
-#   _print "${BLUE}Disk space:${NC}"
-#   df -h /mnt
-#   
-#   # Check Nix daemon status
-#   _print "${BLUE}Nix daemon status:${NC}"
-#   sudo systemctl status nix-daemon --no-pager
-#   
-#   # Check network connectivity
-#   _print "${BLUE}Network connectivity:${NC}"
-#   ping -c 3 8.8.8.8
-#   
-#   # Check Nix store info
-#   _print "${BLUE}Nix store info:${NC}"
-#   nix-store --gc --print-dead
-#   
-#   _print "${YELLOW}If installation is stuck, try these commands manually:${NC}"
-#   _print "${YELLOW}1. Restart Nix daemon: sudo systemctl restart nix-daemon${NC}"
-#   _print "${YELLOW}2. Clear Nix store: sudo nix-collect-garbage -d${NC}"
-#   _print "${YELLOW}3. Try installation with --no-channel-copy flag${NC}"
-#   _print "${YELLOW}4. Check for network issues or firewall blocking downloads${NC}"
-# }
 
-# Function to retry installation with different options (commented out for testing)
-# retry_installation() {
-#   local FLAKE_TARGET="$1"
-#   local retry_count=0
-#   local max_retries=3
-#   
-#   while [ $retry_count -lt $max_retries ]; do
-#     retry_count=$((retry_count + 1))
-#     _print "${YELLOW}Retry attempt $retry_count of $max_retries${NC}"
-#     
-#     case $retry_count in
-#       1)
-#         _print "${BLUE}Trying with --no-channel-copy flag...${NC}"
-#         if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --verbose; then
-#           return 0
-#         fi
-#         ;;
-#       2)
-#         _print "${BLUE}Trying with --no-root-passwd flag...${NC}"
-#         if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --verbose; then
-#           return 0
-#         fi
-#         ;;
-#       3)
-#         _print "${BLUE}Trying with minimal flags...${NC}"
-#         if timeout 1800 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd; then
-#           return 0
-#         fi
-#         ;;
-#     esac
-#     
-#     _print "${YELLOW}Retry $retry_count failed. Cleaning up and trying again...${NC}"
-#     sudo nix-collect-garbage -d || true
-#     sudo systemctl restart nix-daemon || true
-#     sleep 5
-#   done
-#   
-#   return 1
-# }
 
 install_nixos() {
   _print "${CYAN}${ROCKET} Installing NixOS${NC}"
