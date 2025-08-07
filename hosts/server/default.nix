@@ -12,12 +12,16 @@ let user = "david";
     ../../modules/shared
   ];
 
-  # Use GRUB boot loader for legacy BIOS (SeaBIOS detected)
+  # Use systemd-boot for UEFI
   boot = {
     loader = {
-      grub = {
+      systemd-boot = {
         enable = true;
-        device = "/dev/sda";
+        configurationLimit = 10;
+      };
+      efi = {
+        canTouchEfiVariables = true;
+        efiSysMountPoint = "/boot/efi";
       };
     };
     kernelPackages = pkgs.linuxPackages_latest;

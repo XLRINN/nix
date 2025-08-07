@@ -1,32 +1,35 @@
-_: {
-  # Disk configuration using device paths directly
+{
   disko.devices = {
     disk = {
-      vdb = {
-        device = "/dev/%DISK%";
+      sda = {
+        device = "/dev/sda";
         type = "disk";
         content = {
-          type = "gpt";
-          partitions = {
-            ESP = {
-              type = "EF00";
-              size = "256M";
+          type = "table";
+          format = "gpt";  # GPT for UEFI
+          partitions = [
+            {
+              name = "boot";
+              start = "1MiB";
+              end = "512MiB";
+              bootable = true;
               content = {
                 type = "filesystem";
-                format = "vfat";
+                format = "vfat";  # FAT32 for UEFI boot
                 mountpoint = "/boot";
               };
-            };
-            root = {
-              size = "100%";
+            }
+            {
+              name = "root";
+              start = "512MiB";
+              end = "100%";
               content = {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = ["noatime" "nodiratime"];
               };
-            };
-          };
+            }
+          ];
         };
       };
     };
