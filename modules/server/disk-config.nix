@@ -1,10 +1,10 @@
 _: {
-  # Simple BIOS disk configuration with ext4
+  # Server disk configuration - BIOS boot for maximum compatibility
   disko.devices = {
     disk = {
-      main = {
-        type = "disk";
+      vdb = {
         device = "/dev/%DISK%";
+        type = "disk";
         content = {
           type = "gpt";
           partitions = {
@@ -18,6 +18,7 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
+                mountOptions = ["noatime" "nodiratime"];
               };
             };
           };
