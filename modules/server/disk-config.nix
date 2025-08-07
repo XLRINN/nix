@@ -1,35 +1,32 @@
-{
+_: {
+  # Disk configuration using device paths directly
   disko.devices = {
     disk = {
-      sda = {
-        device = "/dev/sda";
+      vdb = {
+        device = "/dev/%DISK%";
         type = "disk";
         content = {
-          type = "table";
-          format = "gpt";  # MBR for legacy BIOS (SeaBIOS)
-          partitions = [
-            {
-              name = "boot";
-              start = "1MiB";
-              end = "512MiB";
-              bootable = true;
+          type = "gpt";
+          partitions = {
+            ESP = {
+              type = "EF00";
+              size = "256M";
               content = {
                 type = "filesystem";
-                format = "ext4";  # ext4 for legacy boot
+                format = "vfat";
                 mountpoint = "/boot";
               };
-            }
-            {
-              name = "root";
-              start = "512MiB";
-              end = "100%";
+            };
+            root = {
+              size = "100%";
               content = {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
+                mountOptions = ["noatime" "nodiratime"];
               };
-            }
-          ];
+            };
+          };
         };
       };
     };
