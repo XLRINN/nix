@@ -6,7 +6,7 @@
         type = "disk";
         content = {
           type = "table";
-          format = "gpt";  # Use GPT instead of MBR
+          format = "gpt";  # GPT for UEFI (Hetzner requirement)
           partitions = [
             {
               name = "boot";
@@ -15,7 +15,7 @@
               bootable = true;
               content = {
                 type = "filesystem";
-                format = "vfat";  # FAT32 for EFI
+                format = "vfat";  # FAT32 for EFI (Hetzner requirement)
                 mountpoint = "/boot";
               };
             }

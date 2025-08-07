@@ -12,7 +12,7 @@ let user = "david";
     ../../modules/shared
   ];
 
-  # Use the systemd-boot EFI boot loader.
+  # Use the systemd-boot EFI boot loader for Hetzner servers
   boot = {
     loader = {
       systemd-boot = {
