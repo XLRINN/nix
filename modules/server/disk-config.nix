@@ -6,7 +6,7 @@
         type = "disk";
         content = {
           type = "table";
-          format = "msdos";  # MBR for legacy BIOS
+          format = "gpt";  # GPT instead of legacy MBR
           partitions = [
             {
               name = "boot";
