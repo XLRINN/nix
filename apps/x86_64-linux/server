@@ -443,29 +443,19 @@ install_nixos() {
   _print "${YELLOW}Disk space after cleanup:${NC}"
   df -h /
   
-  # Ultra-conservative installation for Hetzner
-  _print "${BLUE}Trying ultra-conservative installation for Hetzner...${NC}"
+  # Install NixOS
+  _print "${BLUE}Installing NixOS...${NC}"
   if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
     return 0
   else
-    _print "${RED}${ERROR} Ultra-conservative installation failed, trying minimal...${NC}"
-    
-    # Minimal installation with space constraints
-    if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd --verbose --option max-jobs 1 --option cores 1; then
-      _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
-      sudo chmod -R 775 /mnt/etc/nixos
-      return 0
-    else
-      _print "${RED}${ERROR} All installation strategies failed${NC}"
-      _print "${YELLOW}Manual commands to try:${NC}"
-      _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
-      _print "${YELLOW}2. sudo nixos-install --flake .#$FLAKE_TARGET --no-channel-copy --no-root-passwd --option max-jobs 1${NC}"
-      _print "${YELLOW}3. Check memory: free -h${NC}"
-      _print "${YELLOW}4. Check disk space: df -h${NC}"
-      return 1
-    fi
+    _print "${RED}${ERROR} Installation failed${NC}"
+    _print "${YELLOW}Manual commands to try:${NC}"
+    _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
+    _print "${YELLOW}2. Check memory: free -h${NC}"
+    _print "${YELLOW}3. Check disk space: df -h${NC}"
+    return 1
   fi
 }
 
