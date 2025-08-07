@@ -49,11 +49,12 @@ check_installer() {
 get_user_input() {
   _print "${CYAN}${USER} Server Configuration${NC}"
   
-  # Set defaults
+  # Set defaults for faster testing
   export USERNAME="david"
   export GIT_EMAIL="xlrin.morgan@gmail.com"
   export GIT_NAME="david"
   export NETWORK_CONFIG="dhcp"
+  export HOST_NAME="loki"
   
   # Auto-detect disk
   local auto_detected_disk=""
@@ -70,38 +71,40 @@ get_user_input() {
   
   export BOOT_DISK="$auto_detected_disk"
   
-  # Set installation type to full
-  export INSTALL_TYPE="full"
-  _print "${GREEN}${SUCCESS} Full installation selected${NC}"
+  _print "${GREEN}${SUCCESS} Using defaults for faster testing:${NC}"
+  _print "${GREEN}Hostname: $HOST_NAME${NC}"
+  _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
+  _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
   
-  # Ask for hostname
-  _print "${YELLOW}Enter hostname for the server: ${NC}"
-  read -r HOST_NAME
-  
-  while [[ -z "$HOST_NAME" ]]; do
-    _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
-    _print "${YELLOW}Enter hostname for the server: ${NC}"
-    read -r HOST_NAME
-  done
-  
-  export HOST_NAME="$HOST_NAME"
-  
-  # Ask for IP (DHCP if left blank)
-  _print "${YELLOW}Enter static IP (or press Enter for DHCP): ${NC}"
-  read -r STATIC_IP
-  
-  if [[ -z "$STATIC_IP" ]]; then
-    export NETWORK_CONFIG="dhcp"
-    _print "${GREEN}${SUCCESS} Using DHCP${NC}"
-  else
-    export NETWORK_CONFIG="static"
-    export STATIC_IP="$STATIC_IP"
-    # Assume /24 subnet and gateway
-    export SUBNET_MASK="255.255.255.0"
-    export GATEWAY="192.168.69.1"
-    _print "${GREEN}${SUCCESS} Using /24 subnet (255.255.255.0)${NC}"
-    _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
-  fi
+  # Commented out for faster testing
+  # # Ask for hostname
+  # _print "${YELLOW}Enter hostname for the server: ${NC}"
+  # read -r HOST_NAME
+  # 
+  # while [[ -z "$HOST_NAME" ]]; do
+  #   _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
+  #   _print "${YELLOW}Enter hostname for the server: ${NC}"
+  #   read -r HOST_NAME
+  # done
+  # 
+  # export HOST_NAME="$HOST_NAME"
+  # 
+  # # Ask for IP (DHCP if left blank)
+  # _print "${YELLOW}Enter static IP (or press Enter for DHCP): ${NC}"
+  # read -r STATIC_IP
+  # 
+  # if [[ -z "$STATIC_IP" ]]; then
+  #   export NETWORK_CONFIG="dhcp"
+  #   _print "${GREEN}${SUCCESS} Using DHCP${NC}"
+  # else
+  #   export NETWORK_CONFIG="static"
+  #   export STATIC_IP="$STATIC_IP"
+  #   # Assume /24 subnet and gateway
+  #   export SUBNET_MASK="255.255.255.0"
+  #   export GATEWAY="192.168.69.1"
+  #   _print "${GREEN}${SUCCESS} Using /24 subnet (255.255.255.0)${NC}"
+  #   _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
+  # fi
 }
 
 # Original user info function (commented out for testing)
@@ -205,7 +208,6 @@ get_user_input() {
 # Show configuration summary and confirm
 confirm_configuration() {
   _print "${CYAN}${INFO} Configuration Summary${NC}"
-  _print "${GREEN}Installation type: $INSTALL_TYPE${NC}"
   _print "${GREEN}Username: $USERNAME${NC}"
   _print "${GREEN}Email: $GIT_EMAIL${NC}"
   _print "${GREEN}Name: $GIT_NAME${NC}"
@@ -219,83 +221,86 @@ confirm_configuration() {
     _print "${GREEN}Gateway: $GATEWAY${NC}"
   fi
   
-  _print "${YELLOW}${WARNING} Continue with these settings? (Y/n): ${NC}"
-  read -r confirm
+  _print "${GREEN}${SUCCESS} Using defaults for faster testing!${NC}"
   
-  case "$confirm" in
-    [Nn] | [Nn][Oo] )
-      _print "${YELLOW}Let's adjust some settings...${NC}"
-      get_additional_settings
-      ;;
-    *)
-      _print "${GREEN}${SUCCESS} Confirmed!${NC}"
-      ;;
-  esac
+  # Commented out for faster testing
+  # _print "${YELLOW}${WARNING} Continue with these settings? (Y/n): ${NC}"
+  # read -r confirm
+  # 
+  # case "$confirm" in
+  #   [Nn] | [Nn][Oo] )
+  #     _print "${YELLOW}Let's adjust some settings...${NC}"
+  #     get_additional_settings
+  #     ;;
+  #   *)
+  #     _print "${GREEN}${SUCCESS} Confirmed!${NC}"
+  #     ;;
+  # esac
 }
 
-# Get additional settings if user wants to change defaults
-get_additional_settings() {
-  _print "${CYAN}${DISK} Boot Disk${NC}"
-  
-  # Show available disks
-  _print "${BLUE}Available disks:${NC}"
-  disks=$(lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0)
-  echo "$disks"
-  
-  _print "${YELLOW}Current disk: $BOOT_DISK${NC}"
-  _print "${YELLOW}Enter boot disk name (or press Enter to keep current): ${NC}"
-  read -r new_disk
-  
-  if [[ -n "$new_disk" ]]; then
-    export BOOT_DISK="$new_disk"
-    _print "${GREEN}${SUCCESS} Disk set to: $BOOT_DISK${NC}"
-  fi
-  
-  _print "${CYAN}${USER} Username${NC}"
-  _print "${YELLOW}Current username: $USERNAME${NC}"
-  _print "${YELLOW}Enter username (or press Enter to keep current): ${NC}"
-  read -r new_username
-  
-  if [[ -n "$new_username" ]]; then
-    export USERNAME="$new_username"
-    export GIT_NAME="$new_username"
-    _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
-  fi
-  
-  # Ask for network settings if static IP is being used
-  if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    _print "${CYAN}${NETWORK} Network Settings${NC}"
-    _print "${YELLOW}Current static IP: $STATIC_IP${NC}"
-    _print "${YELLOW}Enter static IP (or press Enter to keep current): ${NC}"
-    read -r new_ip
-    
-    if [[ -n "$new_ip" ]]; then
-      export STATIC_IP="$new_ip"
-      _print "${GREEN}${SUCCESS} IP set to: $STATIC_IP${NC}"
-    fi
-    
-    _print "${YELLOW}Current subnet mask: $SUBNET_MASK${NC}"
-    _print "${YELLOW}Enter subnet mask (or press Enter to keep current): ${NC}"
-    read -r new_subnet
-    
-    if [[ -n "$new_subnet" ]]; then
-      export SUBNET_MASK="$new_subnet"
-      _print "${GREEN}${SUCCESS} Subnet mask set to: $SUBNET_MASK${NC}"
-    fi
-    
-    _print "${YELLOW}Current gateway: $GATEWAY${NC}"
-    _print "${YELLOW}Enter gateway (or press Enter to keep current): ${NC}"
-    read -r new_gateway
-    
-    if [[ -n "$new_gateway" ]]; then
-      export GATEWAY="$new_gateway"
-      _print "${GREEN}${SUCCESS} Gateway set to: $GATEWAY${NC}"
-    fi
-  fi
-  
-  # Show final summary
-  confirm_configuration
-}
+# Get additional settings if user wants to change defaults (commented out for faster testing)
+# get_additional_settings() {
+#   _print "${CYAN}${DISK} Boot Disk${NC}"
+#   
+#   # Show available disks
+#   _print "${BLUE}Available disks:${NC}"
+#   disks=$(lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0)
+#   echo "$disks"
+#   
+#   _print "${YELLOW}Current disk: $BOOT_DISK${NC}"
+#   _print "${YELLOW}Enter boot disk name (or press Enter to keep current): ${NC}"
+#   read -r new_disk
+#   
+#   if [[ -n "$new_disk" ]]; then
+#     export BOOT_DISK="$new_disk"
+#     _print "${GREEN}${SUCCESS} Disk set to: $BOOT_DISK${NC}"
+#   fi
+#   
+#   _print "${CYAN}${USER} Username${NC}"
+#   _print "${YELLOW}Current username: $USERNAME${NC}"
+#   _print "${YELLOW}Enter username (or press Enter to keep current): ${NC}"
+#   read -r new_username
+#   
+#   if [[ -n "$new_username" ]]; then
+#     export USERNAME="$new_username"
+#     export GIT_NAME="$new_username"
+#     _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
+#   fi
+#   
+#   # Ask for network settings if static IP is being used
+#   if [[ "$NETWORK_CONFIG" == "static" ]]; then
+#     _print "${CYAN}${NETWORK} Network Settings${NC}"
+#     _print "${YELLOW}Current static IP: $STATIC_IP${NC}"
+#     _print "${YELLOW}Enter static IP (or press Enter to keep current): ${NC}"
+#     read -r new_ip
+#     
+#     if [[ -n "$new_ip" ]]; then
+#       export STATIC_IP="$new_ip"
+#       _print "${GREEN}${SUCCESS} IP set to: $STATIC_IP${NC}"
+#     fi
+#     
+#     _print "${YELLOW}Current subnet mask: $SUBNET_MASK${NC}"
+#     _print "${YELLOW}Enter subnet mask (or press Enter to keep current): ${NC}"
+#     read -r new_subnet
+#     
+#     if [[ -n "$new_subnet" ]]; then
+#       export SUBNET_MASK="$new_subnet"
+#       _print "${GREEN}${SUCCESS} Subnet mask set to: $SUBNET_MASK${NC}"
+#     fi
+#     
+#     _print "${YELLOW}Current gateway: $GATEWAY${NC}"
+#     _print "${YELLOW}Enter gateway (or press Enter to keep current): ${NC}"
+#     read -r new_gateway
+#     
+#     if [[ -n "$new_gateway" ]]; then
+#       export GATEWAY="$new_gateway"
+#       _print "${GREEN}${SUCCESS} Gateway set to: $GATEWAY${NC}"
+#     fi
+#   fi
+#   
+#   # Show final summary
+#   confirm_configuration
+# }
 
 download_config() {
   _print "${CYAN}${SERVER} Downloading Configuration${NC}"
@@ -381,7 +386,8 @@ run_disko() {
   # Use the official Disko command pattern from documentation
   _print "${BLUE}${INFO} Running disko with official pattern...${NC}"
   
-  if sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode destroy,format,mount "./modules/server/disk-config.nix"; then
+  # Run disko without confirmation for faster testing
+  if sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode zap_create_mount "./modules/server/disk-config.nix"; then
     _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
   else
     _print "${RED}${ERROR} Disko failed!${NC}"
@@ -475,18 +481,10 @@ install_nixos() {
 
   case "$ARCH" in
     x86_64)
-      if [[ "$INSTALL_TYPE" == "full" ]]; then
-        FLAKE_TARGET="x86_64-linux-server-full"
-      else
-        FLAKE_TARGET="x86_64-linux-server"
-      fi
+      FLAKE_TARGET="x86_64-linux-server"
       ;;
     aarch64)
-      if [[ "$INSTALL_TYPE" == "full" ]]; then
-        FLAKE_TARGET="aarch64-linux-server-full"
-      else
-        FLAKE_TARGET="aarch64-linux-server"
-      fi
+      FLAKE_TARGET="aarch64-linux-server"
       ;;
     *)
       _print "${RED}${ERROR} Unsupported architecture: $ARCH${NC}"
@@ -495,7 +493,6 @@ install_nixos() {
   esac
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
-  _print "${BLUE}Installation type: $INSTALL_TYPE${NC}"
   
   # Pre-installation cleanup for low-resource systems
   _print "${YELLOW}Pre-installation cleanup for Hetzner...${NC}"
