@@ -1,35 +1,21 @@
 {
-  disko.devices = {
-    disk = {
-      sda = {
-        device = "/dev/sda";
-        type = "disk";
-        content = {
-          type = "table";
-          format = "gpt";  # GPT instead of legacy MBR
-          partitions = [
-            {
-              name = "boot";
-              start = "1MiB";
-              end = "512MiB";
-              bootable = true;
-              content = {
-                type = "filesystem";
-                format = "ext4";  # ext4 for legacy boot
-                mountpoint = "/boot";
-              };
-            }
-            {
-              name = "root";
-              start = "512MiB";
-              end = "100%";
-              content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/";
-              };
-            }
-          ];
+  disko.devices.disk.main = {
+    device = "/dev/sda";
+    type = "disk";
+    content = {
+      type = "gpt";
+      partitions = {
+        grub = {
+          size = "1M";
+          type = "EF02";
+        };
+        root = {
+          size = "100%";
+          content = {
+            type = "filesystem";
+            format = "ext4";
+            mountpoint = "/";
+          };
         };
       };
     };
