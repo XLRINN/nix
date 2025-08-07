@@ -30,6 +30,22 @@ fi
 
 _print "${GREEN}${SUCCESS} Running in NixOS installer environment${NC}"
 
+# Check EFI vs BIOS boot mode
+_print "${BLUE}${INFO} Checking boot mode:${NC}"
+if [ -d /sys/firmware/efi ]; then
+  _print "${RED}${ERROR} System is booted in EFI mode${NC}"
+  _print "${YELLOW}${WARNING} Your server configuration is set up for BIOS boot${NC}"
+  _print "${YELLOW}${WARNING} You need to boot in BIOS/Legacy mode instead${NC}"
+  _print "${BLUE}${INFO} Solutions:${NC}"
+  _print "${YELLOW}1. Reboot and enter BIOS/UEFI settings${NC}"
+  _print "${YELLOW}2. Change boot mode from 'UEFI' to 'Legacy' or 'CSM'${NC}"
+  _print "${YELLOW}3. Disable 'Secure Boot' if enabled${NC}"
+  _print "${YELLOW}4. Save and exit BIOS, then boot from USB again${NC}"
+else
+  _print "${GREEN}${SUCCESS} System is booted in BIOS/Legacy mode${NC}"
+  _print "${GREEN}${SUCCESS} This is correct for server installation${NC}"
+fi
+
 # Check available disks
 _print "${BLUE}${INFO} Available disks:${NC}"
 lsblk -f
@@ -86,8 +102,17 @@ _print "${YELLOW}2. If partitions exist but mounting fails:${NC}"
 _print "${YELLOW}   - Check if the server disk config is being used${NC}"
 _print "${YELLOW}3. If configuration is wrong:${NC}"
 _print "${YELLOW}   - Ensure you're using the server template, not desktop${NC}"
+_print "${YELLOW}4. If booting in EFI mode:${NC}"
+_print "${YELLOW}   - Reboot and change BIOS to Legacy/CSM mode${NC}"
 
 _print "${BLUE}${INFO} To fix the partition issue, run:${NC}"
 _print "${YELLOW}./apps/x86_64-linux/fix-partitions${NC}"
+
+_print "${BLUE}${INFO} To fix EFI boot issue:${NC}"
+_print "${YELLOW}1. Reboot and enter BIOS (usually F2, F10, or Del)${NC}"
+_print "${YELLOW}2. Find 'Boot Mode' or 'UEFI/BIOS Boot Mode'${NC}"
+_print "${YELLOW}3. Change from 'UEFI' to 'Legacy' or 'CSM'${NC}"
+_print "${YELLOW}4. Disable 'Secure Boot' if present${NC}"
+_print "${YELLOW}5. Save and exit, then boot from USB again${NC}"
 
 _print "${BLUE}${INFO} Diagnostic complete${NC}" 

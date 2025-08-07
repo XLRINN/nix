@@ -180,37 +180,7 @@
             ./hosts/nixos/server.nix
           ];
         };
-        # Full server configuration (post-installation)
-               "x86_64-linux-server-full" = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs claude-desktop; };
-          modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/server/home-manager.nix;
-              };
-            }
-            ./hosts/nixos/server-full.nix
-          ];
-        };
-               "aarch64-linux-server-full" = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          specialArgs = { inherit inputs claude-desktop; };
-          modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/server/home-manager.nix;
-              };
-            }
-            ./hosts/nixos/server-full.nix
-          ];
-        };
+
      };
   };
 }
