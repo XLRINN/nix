@@ -17,7 +17,9 @@ let user = "david";
     loader = {
       grub = {
         enable = true;
-        device = "/dev/sda";
+        device = "/dev/vda";
+        useOSProber = false;
+        forceInstall = true;
       };
     };
     kernelPackages = pkgs.linuxPackages_latest;
