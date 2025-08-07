@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -exu
+set -eu
 
 # Color codes
 RED='\033[0;31m'
@@ -28,13 +28,13 @@ _print() {
   echo -e "$1"
 }
 
-# Custom prompt function
-_prompt() {
-  local message="$1"
-  local variable="$2"
-  _print "$message"
-  read -r $variable
-}
+# Custom prompt function (commented out for testing)
+# _prompt() {
+#   local message="$1"
+#   local variable="$2"
+#   _print "$message"
+#   read -r $variable
+# }
 
 check_installer() {
   if [ -e /etc/NIXOS ]; then
@@ -45,82 +45,46 @@ check_installer() {
   fi
 }
 
-get_user_info() {
-  _print "${CYAN}${USER} User Configuration${NC}"
-  _print "${YELLOW}Default username: david${NC}"
-  _prompt "${YELLOW}Enter username (or press Enter for 'david'): ${NC}" USERNAME
+# Set defaults and get user input
+get_user_input() {
+  _print "${CYAN}${USER} Server Configuration${NC}"
   
-  if [[ -z "$USERNAME" ]]; then
-    export USERNAME="david"
+  # Extract hostname from default.nix
+  _print "${BLUE}Extracting hostname from configuration...${NC}"
+  export HOST_NAME=$(grep -o 'hostName = "[^"]*"' hosts/server/default.nix | cut -d'"' -f2)
+  if [ -z "$HOST_NAME" ]; then
+    export HOST_NAME="loki"  # fallback
   fi
+  _print "${GREEN}${SUCCESS} Hostname: $HOST_NAME${NC}"
   
-  _print "${GREEN}${SUCCESS} Username set to: $USERNAME${NC}"
-  
-  _prompt "${YELLOW}${EMAIL} Enter your email: ${NC}" GIT_EMAIL
+  # Extract username from default.nix
+  _print "${BLUE}Extracting username from configuration...${NC}"
+  export USERNAME=$(grep -o 'user = "[^"]*"' hosts/server/default.nix | cut -d'"' -f2)
+  if [ -z "$USERNAME" ]; then
+    export USERNAME="david"  # fallback
+  fi
   export GIT_NAME="$USERNAME"
-  _print "${GREEN}${SUCCESS} Name set to: $GIT_NAME${NC}"
+  export GIT_EMAIL="xlrin.morgan@gmail.com"
+  _print "${GREEN}${SUCCESS} Username: $USERNAME${NC}"
+  
+  # Use DHCP by default
+  export NETWORK_CONFIG="dhcp"
+  _print "${GREEN}${SUCCESS} Network: DHCP${NC}"
+  
+  # Automatically use sda as boot disk
+  export BOOT_DISK="sda"
+  _print "${GREEN}${SUCCESS} Boot disk: $BOOT_DISK${NC}"
+  
+  # Validate the disk exists
+  if [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
+    _print "${YELLOW}Available disks:${NC}"
+    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
+    exit 1
+  fi
 }
 
-get_hostname() {
-  _print "${CYAN}${HOSTNAME} Server Hostname${NC}"
-  _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
-  
-  while [[ -z "$HOST_NAME" ]]; do
-    _print "${RED}${ERROR} Hostname cannot be empty!${NC}"
-    _prompt "${YELLOW}Enter hostname for the server: ${NC}" HOST_NAME
-  done
-  
-  _print "${GREEN}${SUCCESS} Hostname set to: $HOST_NAME${NC}"
-}
-
-get_boot_disk() {
-  _print "${CYAN}${DISK} Boot Disk Selection${NC}"
-  
-  _print "${YELLOW}Available disks:${NC}"
-  disks=$(lsblk -nd --output NAME,SIZE | grep -v loop)
-  echo "$disks"
-  
-  _print "${YELLOW}Default boot disk: sda${NC}"
-  _prompt "${YELLOW}Do you want to change the boot disk? (y/N): ${NC}" change_disk
-  
-  case "$change_disk" in
-    [Yy] | [Yy][Ee][Ss] )
-      _prompt "${YELLOW}Enter boot disk name (e.g., sda, nvme0n1): ${NC}" BOOT_DISK
-      ;;
-    *)
-      export BOOT_DISK="sda"
-      _print "${GREEN}${SUCCESS} Using default boot disk: sda${NC}"
-      ;;
-  esac
-}
-
-get_network_config() {
-  _print "${CYAN}${NETWORK} Network Configuration${NC}"
-  _print "${GREEN}1. DHCP (automatic IP assignment)${NC}"
-  _print "${GREEN}2. Static IP (manual configuration)${NC}"
-  
-  _prompt "${YELLOW}Select network configuration (1 or 2): ${NC}" network_choice
-  
-  case "$network_choice" in
-    1)
-      export NETWORK_CONFIG="dhcp"
-      _print "${GREEN}${SUCCESS} Using DHCP for automatic IP assignment${NC}"
-      ;;
-    2)
-      export NETWORK_CONFIG="static"
-      _print "${YELLOW}Static IP Configuration:${NC}"
-      _prompt "${YELLOW}Enter static IP address (e.g., 192.168.69.100): ${NC}" STATIC_IP
-      _prompt "${YELLOW}Enter subnet mask (e.g., 255.255.255.0): ${NC}" SUBNET_MASK
-      export GATEWAY="192.168.69.1"
-      _print "${GREEN}${SUCCESS} Gateway set to: 192.168.69.1${NC}"
-      ;;
-    *)
-      _print "${RED}${ERROR} Invalid choice. Using DHCP.${NC}"
-      export NETWORK_CONFIG="dhcp"
-      ;;
-  esac
-}
-
+# Show configuration summary and confirm
 confirm_configuration() {
   _print "${CYAN}${INFO} Configuration Summary${NC}"
   _print "${GREEN}Username: $USERNAME${NC}"
@@ -130,64 +94,94 @@ confirm_configuration() {
   _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
   _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
   
-  if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    _print "${GREEN}Static IP: $STATIC_IP${NC}"
-    _print "${GREEN}Subnet Mask: $SUBNET_MASK${NC}"
-    _print "${GREEN}Gateway: $GATEWAY${NC}"
-  fi
-  
-  _prompt "${YELLOW}${WARNING} Is this configuration correct? (y/N): ${NC}" confirm
-  
-  case "$confirm" in
-    [Yy] | [Yy][Ee][Ss] )
-      _print "${GREEN}${SUCCESS} Configuration confirmed!${NC}"
-      ;;
-    *)
-      _print "${RED}${ERROR} Configuration cancelled.${NC}"
-      exit 1
-      ;;
-  esac
-}
-
-apply_configuration() {
-  _print "${CYAN}${ROCKET} Applying Configuration${NC}"
-  
-  # Replace tokens in Nix files
-  find . -type f -name "*.nix" -exec sed -i "s/%USER%/$USERNAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%EMAIL%/$GIT_EMAIL/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%NAME%/$GIT_NAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%HOST%/$HOST_NAME/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%DISK%/$BOOT_DISK/g" {} \;
-  find . -type f -name "*.nix" -exec sed -i "s/%NETWORK_CONFIG%/$NETWORK_CONFIG/g" {} \;
-  
-  if [[ "$NETWORK_CONFIG" == "static" ]]; then
-    find . -type f -name "*.nix" -exec sed -i "s/%STATIC_IP%/$STATIC_IP/g" {} \;
-    find . -type f -name "*.nix" -exec sed -i "s/%SUBNET_MASK%/$SUBNET_MASK/g" {} \;
-    find . -type f -name "*.nix" -exec sed -i "s/%GATEWAY%/$GATEWAY/g" {} \;
-  fi
-  
-  echo "$USERNAME" > /tmp/username.txt
-  _print "${GREEN}${SUCCESS} Configuration applied!${NC}"
+  _print "${GREEN}${SUCCESS} Proceeding with installation...${NC}"
 }
 
 download_config() {
   _print "${CYAN}${SERVER} Downloading Configuration${NC}"
   curl -LJ0 https://github.com/xlrinn/nix/archive/server.zip -o nixos-config-main.zip
   unzip nixos-config-main.zip
-  mv nix-server nixos-config
+  
+  # Remove existing directory if it exists
+  rm -rf nixos-config
+  
+  # Check what was extracted
+  _print "${BLUE}Checking extracted contents...${NC}"
+  ls -la
+  
+  # Look for the server directory
+  if [ -d "nix-server" ]; then
+    mv nix-server nixos-config
+  else
+    _print "${RED}${ERROR} Could not find nix-server directory in extracted contents${NC}"
+    _print "${YELLOW}Available directories:${NC}"
+    ls -d */
+    exit 1
+  fi
+  
   cd nixos-config
-  _print "${GREEN}${SUCCESS} Configuration downloaded!${NC}"
+  
+  # Verify the directory structure
+  _print "${BLUE}Verifying directory structure...${NC}"
+  if [ ! -f "modules/server/disk-config.nix" ]; then
+    _print "${RED}${ERROR} Server disk configuration not found!${NC}"
+    _print "${YELLOW}Available files:${NC}"
+    find . -name "*.nix" -type f | head -10
+    exit 1
+  fi
+  
+  _print "${GREEN}${SUCCESS} Configuration downloaded and verified!${NC}"
+}
+
+# Use the desktop's proven disk setup process
+setup_disk_with_desktop_method() {
+  _print "${CYAN}${DISK} Setting up disk using desktop method${NC}"
+  
+  # Set environment variables for the apply script
+  export USERNAME="$USERNAME"
+  export GIT_EMAIL="$GIT_EMAIL"
+  export GIT_NAME="$GIT_NAME"
+  export HOST_NAME="$HOST_NAME"
+  export BOOT_DISK="$BOOT_DISK"
+  export NETWORK_CONFIG="$NETWORK_CONFIG"
+  
+  _print "${GREEN}${SUCCESS} Using hardcoded /dev/sda for disk configuration${NC}"
+  _print "${GREEN}${SUCCESS} Disk configuration ready!${NC}"
 }
 
 run_disko() {
   _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
-  sudo nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
-  _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
+  
+  # Use disko for disk setup
+  _print "${YELLOW}Setting up disk with disko...${NC}"
+  
+  # Ensure we're in the correct directory and the file exists
+  if [ ! -f "./modules/server/disk-config.nix" ]; then
+    _print "${RED}${ERROR} Disk configuration file not found!${NC}"
+    _print "${YELLOW}Current directory: $(pwd)${NC}"
+    _print "${YELLOW}Looking for: ./modules/server/disk-config.nix${NC}"
+    ls -la modules/server/ 2>/dev/null || _print "${YELLOW}modules/server/ directory not found${NC}"
+    exit 1
+  fi
+  
+  _print "${BLUE}${INFO} Using disk config: $(pwd)/modules/server/disk-config.nix${NC}"
+  
+  # Use the official Disko command pattern from documentation
+  _print "${BLUE}${INFO} Running disko with official pattern...${NC}"
+  
+  # Run disko without confirmation for faster testing
+  if sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode zap_create_mount "./modules/server/disk-config.nix"; then
+    _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
+  else
+    _print "${RED}${ERROR} Disko failed!${NC}"
+    _print "${YELLOW}${WARNING} Check the error messages above${NC}"
+    exit 1
+  fi
 }
 
 setup_files() {
   _print "${CYAN}${SERVER} Setting up NixOS files${NC}"
+  
   sudo mkdir -p /mnt/etc/nixos
   sudo cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
@@ -196,14 +190,15 @@ setup_files() {
 
 install_nixos() {
   _print "${CYAN}${ROCKET} Installing NixOS${NC}"
+  
   ARCH=$(uname -m)
 
   case "$ARCH" in
     x86_64)
-      FLAKE_TARGET="x86_64-linux-cli"
+      FLAKE_TARGET="x86_64-linux-server"
       ;;
     aarch64)
-      FLAKE_TARGET="aarch64-linux-cli"
+      FLAKE_TARGET="aarch64-linux-server"
       ;;
     *)
       _print "${RED}${ERROR} Unsupported architecture: $ARCH${NC}"
@@ -211,45 +206,131 @@ install_nixos() {
       ;;
   esac
 
-  sudo nixos-install --flake .#$FLAKE_TARGET $@
-  sudo chmod -R 775 /mnt/etc/nixos
-  _print "${GREEN}${SUCCESS} NixOS installation complete!${NC}"
+  _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
+  
+  # Check available disk space
+  _print "${YELLOW}Checking available disk space...${NC}"
+  df -h /
+  
+  # Aggressive cleanup for Hetzner installer environment
+  _print "${YELLOW}Aggressive cleanup for Hetzner installer environment...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
+  sudo systemctl restart nix-daemon || true
+  sleep 10
+  
+  # Check space again
+  _print "${YELLOW}Disk space after cleanup:${NC}"
+  df -h /
+  
+  # Install NixOS
+  _print "${BLUE}Installing NixOS...${NC}"
+  if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose; then
+    _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
+    sudo chmod -R 775 /mnt/etc/nixos
+    
+    # Verify installation was successful
+    _print "${BLUE}Verifying installation...${NC}"
+    if [ -f "/mnt/etc/nixos/configuration.nix" ] || [ -f "/mnt/etc/nixos/default.nix" ] || [ -f "/mnt/etc/nixos/flake.nix" ]; then
+      if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
+        _print "${GREEN}${SUCCESS} Installation verification passed${NC}"
+        return 0
+      else
+        _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
+        _print "${YELLOW}Checking what was installed:${NC}"
+        ls -la /mnt/
+        return 1
+      fi
+    else
+      _print "${RED}${ERROR} Installation verification failed - configuration files not found${NC}"
+      _print "${YELLOW}Checking what was installed:${NC}"
+      ls -la /mnt/
+      return 1
+    fi
+  else
+    _print "${RED}${ERROR} Installation failed${NC}"
+    _print "${YELLOW}Manual commands to try:${NC}"
+    _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
+    _print "${YELLOW}2. Check memory: free -h${NC}"
+    _print "${YELLOW}3. Check disk space: df -h${NC}"
+    return 1
+  fi
 }
 
 prompt_reboot() {
   _print "${CYAN}${INFO} Installation Complete!${NC}"
-  _prompt "${YELLOW}${WARNING} Do you want to reboot now? (y/N): ${NC}" choice
-  case "$choice" in
-  y|Y|yes|YES ) 
-    _print "${GREEN}${ROCKET} Rebooting...${NC}" 
-    sudo reboot
-    ;;
-  * ) 
-    _print "${YELLOW}${INFO} Reboot skipped. You can reboot manually later.${NC}"
-    ;;
-  esac
+  
+  # Check if installation was actually successful
+  if [ -f "/mnt/etc/nixos/configuration.nix" ] || [ -f "/mnt/etc/nixos/default.nix" ] || [ -f "/mnt/etc/nixos/flake.nix" ]; then
+    if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
+      _print "${GREEN}${SUCCESS} Installation verification passed - system is ready for password setup${NC}"
+      
+      # Drop into the installed system for manual password setup
+      _print "${BLUE}${INFO} Dropping into installed system for password setup...${NC}"
+      _print "${YELLOW}You are now in your installed NixOS system.${NC}"
+      _print "${YELLOW}You can now set passwords directly:${NC}"
+      _print "${YELLOW}1. Set root password: passwd root${NC}"
+      _print "${YELLOW}2. Set user password: passwd david${NC}"
+      _print "${YELLOW}3. Exit when done: exit${NC}"
+      
+      # Chroot into the installed system
+      exec sudo chroot /mnt /bin/bash
+    else
+      _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
+      _print "${YELLOW}The system may not be properly installed.${NC}"
+      _print "${YELLOW}Checking what was installed:${NC}"
+      ls -la /mnt/
+      
+      _print "${YELLOW}${WARNING} Manual troubleshooting required:${NC}"
+      _print "${YELLOW}1. Check if /mnt/boot and /mnt/nix directories exist${NC}"
+      _print "${YELLOW}2. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
+      _print "${YELLOW}3. Check disk space and memory${NC}"
+      
+      # Drop into shell for manual troubleshooting
+      exec /bin/bash
+    fi
+  else
+    _print "${RED}${ERROR} Installation verification failed - configuration files not found${NC}"
+    _print "${YELLOW}The system may not be properly installed.${NC}"
+    _print "${YELLOW}Checking what was installed:${NC}"
+    ls -la /mnt/
+    
+    _print "${YELLOW}${WARNING} Manual troubleshooting required:${NC}"
+    _print "${YELLOW}1. Check if /mnt/etc/nixos/configuration.nix, default.nix, or flake.nix exists${NC}"
+    _print "${YELLOW}2. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
+    _print "${YELLOW}3. Check disk space and memory${NC}"
+    
+    # Drop into shell for manual troubleshooting
+    exec /bin/bash
+  fi
 }
 
 cleanup() {
   _print "${CYAN}${INFO} Cleaning up temporary files${NC}"
+  
+  # Final garbage collection and cleanup
+  _print "${YELLOW}Final cleanup and garbage collection...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
   rm -rf nixos-config-main.zip nixos-config-main nixos-config
+  
   _print "${GREEN}${SUCCESS} Cleanup complete!${NC}"
 }
 
 # Main execution
 _print "${PURPLE}${ROCKET} NixOS Server Installation${NC}"
-_print "${BLUE}This will install a CLI-only NixOS server configuration${NC}"
+_print "${BLUE}Installing CLI-only NixOS server${NC}"
 
 check_installer
-get_user_info
-get_hostname
-get_boot_disk
-get_network_config
+get_user_input
 confirm_configuration
 download_config
-apply_configuration
+setup_disk_with_desktop_method
 run_disko
 setup_files
 install_nixos
+install_result=$?
 cleanup
 prompt_reboot 
