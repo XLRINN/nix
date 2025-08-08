@@ -53,9 +53,20 @@ export USERNAME="david"
 export GIT_EMAIL="xlrin.morgan@gmail.com"
 export GIT_NAME="david"
 
-# Welcome message
-_print "${CYAN}${ROCKET} Welcome to NixOS Desktop Installer!${NC}"
-_print "${BLUE}${GEAR} Setting up your system with minimal questions...${NC}"
+# Clear screen and show ASCII art
+clear
+echo
+echo "    ███╗   ██╗██╗██╗  ██╗███████╗ ██████╗ ███████╗"
+echo "    ████╗  ██║██║╚██╗██╔╝██╔════╝██╔═══██╗██╔════╝"
+echo "    ██╔██╗ ██║██║ ╚███╔╝ ███████╗██║   ██║███████╗"
+echo "    ██║╚██╗██║██║ ██╔██╗ ╚════██║██║   ██║╚════██║"
+echo "    ██║ ╚████║██║██╔╝ ██╗███████║╚██████╔╝███████║"
+echo "    ╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚══════╝"
+echo "                    Desktop Installer"
+echo
+echo "    🚀 Fast • 🎨 Beautiful • ⚡ Optimized"
+echo
+echo "═══════════════════════════════════════════════════════════"
 echo
 
 # Smart disk detection
@@ -69,20 +80,9 @@ smart_disk_detection() {
   # Check if sda exists and is the main disk
   if echo "$available_disks" | grep -q "^sda"; then
     main_disk="sda"
-    _print "${GREEN}${CHECK} Found main disk: sda${NC}"
-    _print "${CYAN}${DISK} Available disks:${NC}"
-    echo "$available_disks"
-    _print "${YELLOW}${QUESTION} Use sda as boot disk? (Y/n): ${NC}"
-    read -r use_sda
-    if [[ "$use_sda" =~ ^[Nn]$ ]]; then
-      _print "${YELLOW}${WARNING} Please select a different disk:${NC}"
-      echo "$available_disks"
-      _prompt "${YELLOW}${QUESTION} Enter disk name (e.g., nvme0n1): ${NC}" main_disk
-    else
-      _print "${GREEN}${CHECK} Using sda as boot disk${NC}"
-    fi
+    _print "${GREEN}${CHECK} Using sda as boot disk${NC}"
   else
-    _print "${YELLOW}${WARNING} sda not found. Please select a disk:${NC}"
+    _print "${YELLOW}${WARNING} sda not found. Available disks:${NC}"
     echo "$available_disks"
     _prompt "${YELLOW}${QUESTION} Enter disk name: ${NC}" main_disk
   fi
@@ -93,44 +93,16 @@ smart_disk_detection() {
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
-  export HOST_NAME="loki"
-  
-  _print "${CYAN}${COMPUTER} Default hostname: $HOST_NAME${NC}"
-  _prompt "${YELLOW}${QUESTION} Change hostname? (y/N): ${NC}" change_hostname
-  
-  if [[ "$change_hostname" =~ ^[Yy]$ ]]; then
-    _prompt "${YELLOW}${QUESTION} Enter new hostname: ${NC}" HOST_NAME
-    _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
-  else
-    _print "${GREEN}${CHECK} Using default hostname: $HOST_NAME${NC}"
-  fi
+  _print "${CYAN}${COMPUTER} Please enter a hostname for your system:${NC}"
+  _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
+  _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
   
   smart_disk_detection
 fi
 
-# Quick confirmation
-_print "${CYAN}${INFO} Configuration Summary:${NC}"
-_print "${GREEN}${CHECK} Username: $USERNAME${NC}"
-_print "${GREEN}${CHECK} Email: $GIT_EMAIL${NC}"
-_print "${GREEN}${CHECK} Name: $GIT_NAME${NC}"
-
-if [[ "$OS" != "Darwin" ]]; then
-  _print "${GREEN}${CHECK} Interface: $PRIMARY_IFACE${NC}"
-  _print "${GREEN}${CHECK} Boot disk: $BOOT_DISK${NC}"
-  _print "${GREEN}${CHECK} Hostname: $HOST_NAME${NC}"
-fi
-
-_prompt "${YELLOW}${QUESTION} Proceed with installation? (Y/n): ${NC}" proceed
-
-case "$proceed" in
-  [Nn] ) 
-    _print "${RED}${ERROR} Installation cancelled.${NC}" 
-    exit 1
-    ;;
-  * ) 
-    _print "${GREEN}${CHECK} Proceeding with installation...${NC}"
-    ;;
-esac
+# Show installation starting
+echo
+_print "${CYAN}${INFO} Starting installation...${NC}"
 
 # Function to replace tokens in each file
 replace_tokens() {
@@ -159,4 +131,4 @@ export -f replace_tokens
 find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
 
 echo "$USERNAME" > /tmp/username.txt
-_print "${GREEN}${PARTY} Configuration applied successfully!${NC}"
+_print "${GREEN}${PARTY} Ready!${NC}"

@@ -124,11 +124,8 @@ let user = "david";
       max-jobs = "auto";
       cores = 0;
       builders-use-substitutes = true;
-      use-substitutes = true;
       # Increase download buffer for faster downloads
-      download-buffer-size = 16777216;
-      # Parallel builds
-      parallel-build = true;
+      download-buffer-size = 33554432;
     };
 
     package = pkgs.nix;
