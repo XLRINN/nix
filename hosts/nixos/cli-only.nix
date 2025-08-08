@@ -6,10 +6,8 @@ let user = "david";
     ]; in
 {
   imports = [
-    ../../modules/nixos/secrets.nix
     ../../modules/nixos/disk-config.nix
     ../../modules/shared
-    agenix.nixosModules.default
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -154,7 +152,6 @@ let user = "david";
 
   # CLI-only packages (no desktop apps)
   environment.systemPackages = with pkgs; [
-    agenix.packages."${pkgs.system}".default
     gitAndTools.gitFull
     inetutils
     neovim

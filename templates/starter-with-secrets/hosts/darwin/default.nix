@@ -1,15 +1,13 @@
-{ agenix, config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 let user = "%USER%"; in
 
 {
 
   imports = [
-    ../../modules/darwin/secrets.nix
     ../../modules/darwin/home-manager.nix
     ../../modules/shared
     ../../modules/shared/cachix
-     agenix.darwinModules.default
   ];
 
   # Auto upgrade nix package and the daemon service.
@@ -39,7 +37,6 @@ let user = "%USER%"; in
   # Load configuration that is shared across systems
   environment.systemPackages = with pkgs; [
     emacs-unstable
-    agenix.packages."${pkgs.system}".default
   ] ++ (import ../../modules/shared/packages.nix { inherit pkgs; });
 
   launchd.user.agents.emacs.path = [ config.environment.systemPath ];

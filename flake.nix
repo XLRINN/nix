@@ -141,7 +141,6 @@
         specialArgs = { inherit inputs claude-desktop; };
         modules = [
           disko.nixosModules.disko
-          agenix.nixosModules.default
           home-manager.nixosModules.home-manager {
             home-manager = {
               useGlobalPkgs = true;
@@ -161,7 +160,6 @@
          specialArgs = { inherit inputs claude-desktop; };
          modules = [
            disko.nixosModules.disko
-           agenix.nixosModules.default
            home-manager.nixosModules.home-manager {
              home-manager = {
                useGlobalPkgs = true;
