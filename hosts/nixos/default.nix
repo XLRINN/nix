@@ -83,6 +83,8 @@ let user = "david";
     }];
   };
 
+  # Enable Hyprland
+  programs.hyprland.enable = true;
 
   services = { 
     xserver = {

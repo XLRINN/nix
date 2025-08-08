@@ -1,16 +1,8 @@
 { config, pkgs, lib, ... }:
 
 {
-  # Hyprland configuration for NixOS
-  programs.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-    nvidiaPatches = false;
-  };
-
-  # Create the config file in the system location
-  environment.etc."hypr/hyprland.conf" = {
-    text = ''
+  home.file = {
+    ".config/hypr/hyprland.conf" = {
       text = ''
         # Custom Hyprland Configuration for XLIN
         # =====================================
@@ -188,5 +180,6 @@
         # Reload Hyprland
         bind = $mainMod SHIFT, R, exec, hyprctl reload
       '';
+    };
   };
 }
