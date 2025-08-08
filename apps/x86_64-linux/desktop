@@ -78,10 +78,12 @@ install_nixos() {
   export USERNAME=$(cat /tmp/username.txt)
   mkdir -p /mnt/home/$USERNAME/.local/share/src
   cp -r /mnt/etc/nixos /mnt/home/$USERNAME/.local/share/src/
-  chown -R $USERNAME:users /mnt/home/$USERNAME/.local/share/src/nixos
   
   # Set up git remote for the user's config
   chroot /mnt bash -c "cd /home/$USERNAME/.local/share/src/nixos && git init && git remote add origin https://github.com/xlrinn/nix.git"
+  
+  # Fix ownership after user is created
+  chroot /mnt bash -c "chown -R $USERNAME:users /home/$USERNAME/.local/share/src/nixos" || echo "Note: Ownership will be set correctly after first boot"
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
   echo -e "${GREEN}✓ Configuration copied to /home/$USERNAME/.local/share/src/nixos${NC}"

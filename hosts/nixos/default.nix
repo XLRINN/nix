@@ -23,7 +23,7 @@ let user = "david";
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
     kernelModules = [ "uinput" "iwlwifi" ];
     # Speed optimizations
-    kernelParams = [ "quiet" "loglevel=3" ];
+    kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
   };
 
   # Set your time zone.
@@ -56,18 +56,18 @@ let user = "david";
       ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;
-      # Set initial password (change this after first login)
-      initialPassword = "nixos123";
+                # Set initial password (change this after first login)
+          initialPassword = "6!y2c87T";
       # Create user directories with proper permissions
       createHome = true;
       home = "/home/${user}";
     };
 
-    root = {
-      openssh.authorizedKeys.keys = keys;
-      # Set initial root password (change this after first login)
-      initialPassword = "nixos123";
-    };
+            root = {
+          openssh.authorizedKeys.keys = keys;
+          # Set initial root password (change this after first login)
+          initialPassword = "6!y2c87T";
+        };
   };
 
   security.sudo = {

@@ -17,7 +17,6 @@ _: {
                 format = "vfat";
                 mountpoint = "/boot";
                 mountOptions = [ "defaults" ];
-                extraArgs = [ "-n" "ESP" ];
               };
             };
             root = {
@@ -27,7 +26,6 @@ _: {
                 format = "ext4";
                 mountpoint = "/";
                 mountOptions = [ "defaults" ];
-                extraArgs = [ "-L" "nixos-root" ];
               };
             };
           };
