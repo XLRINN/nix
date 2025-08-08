@@ -52,10 +52,17 @@ let user = "david";
       ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;
+      # Set initial password (change this after first login)
+      initialPassword = "nixos123";
+      # Create user directories with proper permissions
+      createHome = true;
+      home = "/home/${user}";
     };
 
     root = {
       openssh.authorizedKeys.keys = keys;
+      # Set initial root password (change this after first login)
+      initialPassword = "nixos123";
     };
   };
 
