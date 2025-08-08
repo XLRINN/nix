@@ -5,7 +5,7 @@
         device = "/dev/sda";
         type = "disk";
         content = {
-          type = "msdos";  # Use msdos for legacy BIOS systems
+          type = "gpt";  # Use gpt for modern compatibility
           partitions = {
             # Boot partition for GRUB
             boot = {

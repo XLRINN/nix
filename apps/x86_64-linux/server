@@ -170,7 +170,7 @@ run_disko() {
   _print "${BLUE}${INFO} Running disko with official pattern...${NC}"
   
   # Run disko without confirmation for faster testing
-  if sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode zap_create_mount "./modules/server/disk-config.nix"; then
+  if sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode zap_create_mount "./modules/server/disk-config.nix" 2>/dev/null; then
     _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
   else
     _print "${RED}${ERROR} Disko failed!${NC}"
