@@ -24,6 +24,13 @@ esac
 
 echo -e "${YELLOW}Starting...${NC}"
 
+# Find the flake directory (where flake.nix is located)
+FLAKE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+echo -e "${YELLOW}Flake directory: $FLAKE_DIR${NC}"
+
+# Change to the flake directory and run nixos-rebuild
+cd "$FLAKE_DIR"
+
 # We pass SSH from user to root so root can download secrets from our private Github
 sudo SSH_AUTH_SOCK=$SSH_AUTH_SOCK /run/current-system/sw/bin/nixos-rebuild switch --flake .#$FLAKE_TARGET $@
 
