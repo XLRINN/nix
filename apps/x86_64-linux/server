@@ -149,6 +149,78 @@ setup_disk_with_desktop_method() {
   _print "${GREEN}${SUCCESS} Disk configuration ready!${NC}"
 }
 
+# Manual disk partitioning alternative to Disko
+setup_disk_manual() {
+  _print "${CYAN}${DISK} Setting up disk manually${NC}"
+  
+  # Check if disk exists
+  if [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
+    _print "${YELLOW}Available disks:${NC}"
+    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
+    return 1
+  fi
+  
+  _print "${YELLOW}Wiping disk /dev/$BOOT_DISK...${NC}"
+  sudo wipefs -a "/dev/$BOOT_DISK"
+  
+  _print "${YELLOW}Creating MBR partition table...${NC}"
+  sudo parted "/dev/$BOOT_DISK" mklabel msdos
+  
+  _print "${YELLOW}Creating boot partition (512MB)...${NC}"
+  sudo parted "/dev/$BOOT_DISK" mkpart primary ext4 1MiB 513MiB
+  
+  _print "${YELLOW}Creating root partition (remaining space)...${NC}"
+  sudo parted "/dev/$BOOT_DISK" mkpart primary ext4 513MiB 100%
+  
+  _print "${YELLOW}Setting boot flag...${NC}"
+  sudo parted "/dev/$BOOT_DISK" set 1 boot on
+  
+  _print "${YELLOW}Formatting partitions...${NC}"
+  sudo mkfs.ext4 "/dev/${BOOT_DISK}1"  # Boot partition
+  sudo mkfs.ext4 "/dev/${BOOT_DISK}2"  # Root partition
+  
+  _print "${YELLOW}Mounting partitions...${NC}"
+  sudo mkdir -p /mnt/boot
+  sudo mount "/dev/${BOOT_DISK}2" /mnt
+  sudo mount "/dev/${BOOT_DISK}1" /mnt/boot
+  
+  _print "${GREEN}${SUCCESS} Manual disk setup complete!${NC}"
+}
+
+# Simple single partition setup
+setup_disk_simple() {
+  _print "${CYAN}${DISK} Setting up disk with single partition${NC}"
+  
+  # Check if disk exists
+  if [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
+    _print "${YELLOW}Available disks:${NC}"
+    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
+    return 1
+  fi
+  
+  _print "${YELLOW}Wiping disk /dev/$BOOT_DISK...${NC}"
+  sudo wipefs -a "/dev/$BOOT_DISK"
+  
+  _print "${YELLOW}Creating MBR partition table...${NC}"
+  sudo parted "/dev/$BOOT_DISK" mklabel msdos
+  
+  _print "${YELLOW}Creating single root partition...${NC}"
+  sudo parted "/dev/$BOOT_DISK" mkpart primary ext4 1MiB 100%
+  
+  _print "${YELLOW}Setting boot flag...${NC}"
+  sudo parted "/dev/$BOOT_DISK" set 1 boot on
+  
+  _print "${YELLOW}Formatting partition...${NC}"
+  sudo mkfs.ext4 "/dev/${BOOT_DISK}1"
+  
+  _print "${YELLOW}Mounting partition...${NC}"
+  sudo mount "/dev/${BOOT_DISK}1" /mnt
+  
+  _print "${GREEN}${SUCCESS} Simple disk setup complete!${NC}"
+}
+
 run_disko() {
   _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
   
@@ -368,6 +440,8 @@ get_user_input
 confirm_configuration
 download_config
 setup_disk_with_desktop_method
+setup_disk_manual
+setup_disk_simple
 run_disko
 setup_files
 install_nixos
