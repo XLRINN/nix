@@ -20,6 +20,10 @@ let user = "david";
         device = "/dev/sda";
         useOSProber = false;
         forceInstall = true;
+        # BIOS-specific settings
+        efiSupport = false;
+        gfxmodeBios = "text";
+        splashImage = null;
         };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest
