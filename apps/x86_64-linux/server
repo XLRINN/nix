@@ -28,14 +28,6 @@ _print() {
   echo -e "$1"
 }
 
-# Custom prompt function (commented out for testing)
-# _prompt() {
-#   local message="$1"
-#   local variable="$2"
-#   _print "$message"
-#   read -r $variable
-# }
-
 check_installer() {
   if [ -e /etc/NIXOS ]; then
     _print "${GREEN}${SUCCESS} Running in the NixOS installer environment.${NC}"
@@ -133,11 +125,11 @@ download_config() {
   _print "${GREEN}${SUCCESS} Configuration downloaded and verified!${NC}"
 }
 
-# Use the desktop's proven disk setup process
-setup_disk_with_desktop_method() {
-  _print "${CYAN}${DISK} Setting up disk using desktop method${NC}"
+# Simple disk setup using NixOS configuration
+setup_disk() {
+  _print "${CYAN}${DISK} Setting up disk using NixOS configuration${NC}"
   
-  # Set environment variables for the apply script
+  # Set environment variables for the installation
   export USERNAME="$USERNAME"
   export GIT_EMAIL="$GIT_EMAIL"
   export GIT_NAME="$GIT_NAME"
@@ -145,204 +137,8 @@ setup_disk_with_desktop_method() {
   export BOOT_DISK="$BOOT_DISK"
   export NETWORK_CONFIG="$NETWORK_CONFIG"
   
-  _print "${GREEN}${SUCCESS} Using hardcoded /dev/sda for disk configuration${NC}"
+  _print "${GREEN}${SUCCESS} Using NixOS disk configuration from modules/server/disk-config.nix${NC}"
   _print "${GREEN}${SUCCESS} Disk configuration ready!${NC}"
-}
-
-# Manual disk partitioning alternative to Disko
-setup_disk_manual() {
-  _print "${CYAN}${DISK} Setting up disk manually${NC}"
-  
-  # Check if disk exists
-  if [ ! -b "/dev/$BOOT_DISK" ]; then
-    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
-    _print "${YELLOW}Available disks:${NC}"
-    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
-    return 1
-  fi
-  
-  _print "${YELLOW}Unmounting any existing mounts...${NC}"
-  sudo umount /mnt/boot 2>/dev/null || true
-  sudo umount /mnt 2>/dev/null || true
-  
-  _print "${YELLOW}Wiping disk /dev/$BOOT_DISK...${NC}"
-  sudo wipefs -a "/dev/$BOOT_DISK" 2>/dev/null || true
-  
-  _print "${YELLOW}Creating MBR partition table...${NC}"
-  sudo parted "/dev/$BOOT_DISK" mklabel msdos
-  
-  _print "${YELLOW}Creating boot partition (512MB)...${NC}"
-  echo "mkpart primary ext4 1MiB 513MiB" | sudo parted "/dev/$BOOT_DISK"
-  
-  _print "${YELLOW}Creating root partition (remaining space)...${NC}"
-  echo "mkpart primary ext4 513MiB 100%" | sudo parted "/dev/$BOOT_DISK"
-  
-  _print "${YELLOW}Setting boot flag...${NC}"
-  echo "set 1 boot on" | sudo parted "/dev/$BOOT_DISK"
-  
-  _print "${YELLOW}Formatting partitions...${NC}"
-  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"  # Boot partition (force)
-  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}2"  # Root partition (force)
-  
-  _print "${YELLOW}Mounting partitions...${NC}"
-  
-  # Create mount points with debugging
-  _print "${YELLOW}Creating mount points...${NC}"
-  sudo mkdir -p /mnt
-  sudo mkdir -p /mnt/boot
-  
-  # Debug: Show what was created
-  _print "${YELLOW}Checking mount points...${NC}"
-  ls -la /mnt/ 2>/dev/null || echo "No /mnt directory"
-  ls -la /mnt/boot/ 2>/dev/null || echo "No /mnt/boot directory"
-  
-  # Verify mount points exist
-  if [ ! -d "/mnt" ]; then
-    _print "${RED}${ERROR} Failed to create /mnt directory${NC}"
-    return 1
-  fi
-  
-  if [ ! -d "/mnt/boot" ]; then
-    _print "${RED}${ERROR} Failed to create /mnt/boot directory${NC}"
-    return 1
-  fi
-  
-  _print "${YELLOW}Mounting root partition...${NC}"
-  
-  # Check if partitions exist
-  if [ ! -b "/dev/${BOOT_DISK}1" ]; then
-    _print "${RED}${ERROR} Boot partition /dev/${BOOT_DISK}1 does not exist${NC}"
-    return 1
-  fi
-  
-  if [ ! -b "/dev/${BOOT_DISK}2" ]; then
-    _print "${RED}${ERROR} Root partition /dev/${BOOT_DISK}2 does not exist${NC}"
-    return 1
-  fi
-  
-  # Try mounting with explicit mount point creation
-  # Create mount point right before mounting
-  sudo mkdir -p /mnt
-  sudo mount "/dev/${BOOT_DISK}2" /mnt || {
-    _print "${RED}${ERROR} Failed to mount root partition${NC}"
-    return 1
-  }
-  
-  _print "${YELLOW}Mounting boot partition...${NC}"
-  # Create boot mount point right before mounting
-  sudo mkdir -p /mnt/boot
-  sudo mount "/dev/${BOOT_DISK}1" /mnt/boot || {
-    _print "${RED}${ERROR} Failed to mount boot partition${NC}"
-    return 1
-  }
-  
-  _print "${GREEN}${SUCCESS} Manual disk setup complete!${NC}"
-}
-
-# Simple single partition setup
-setup_disk_simple() {
-  _print "${CYAN}${DISK} Setting up disk with single partition${NC}"
-  
-  # Check if disk exists
-  if [ ! -b "/dev/$BOOT_DISK" ]; then
-    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
-    _print "${YELLOW}Available disks:${NC}"
-    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
-    return 1
-  fi
-  
-  _print "${YELLOW}Unmounting any existing mounts...${NC}"
-  sudo umount /mnt/boot 2>/dev/null || true
-  sudo umount /mnt 2>/dev/null || true
-  
-  _print "${YELLOW}Wiping disk /dev/$BOOT_DISK...${NC}"
-  sudo wipefs -a "/dev/$BOOT_DISK" 2>/dev/null || true
-  
-  _print "${YELLOW}Creating MBR partition table...${NC}"
-  sudo parted "/dev/$BOOT_DISK" mklabel msdos
-  
-  _print "${YELLOW}Creating single root partition...${NC}"
-  echo "mkpart primary ext4 1MiB 100%" | sudo parted "/dev/$BOOT_DISK"
-  
-  _print "${YELLOW}Setting boot flag...${NC}"
-  echo "set 1 boot on" | sudo parted "/dev/$BOOT_DISK"
-  
-  _print "${YELLOW}Formatting partition...${NC}"
-  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"
-  
-  _print "${YELLOW}Mounting partition...${NC}"
-  
-  # Create mount point
-  _print "${YELLOW}Creating mount point...${NC}"
-  sudo mkdir -p /mnt
-  
-  # Verify mount point exists
-  if [ ! -d "/mnt" ]; then
-    _print "${RED}${ERROR} Failed to create /mnt directory${NC}"
-    return 1
-  fi
-  
-  sudo mount "/dev/${BOOT_DISK}1" /mnt || {
-    _print "${RED}${ERROR} Failed to mount root partition${NC}"
-    return 1
-  }
-  
-  _print "${GREEN}${SUCCESS} Simple disk setup complete!${NC}"
-}
-
-run_disko() {
-  _print "${CYAN}${DISK} Setting up disk with Disko${NC}"
-  
-  # Use disko for disk setup
-  _print "${YELLOW}Setting up disk with disko...${NC}"
-  
-  # Ensure we're in the correct directory and the file exists
-  if [ ! -f "./modules/server/disk-config.nix" ]; then
-    _print "${RED}${ERROR} Disk configuration file not found!${NC}"
-    _print "${YELLOW}Current directory: $(pwd)${NC}"
-    _print "${YELLOW}Looking for: ./modules/server/disk-config.nix${NC}"
-    ls -la modules/server/ 2>/dev/null || _print "${YELLOW}modules/server/ directory not found${NC}"
-    exit 1
-  fi
-  
-  _print "${BLUE}${INFO} Using disk config: $(pwd)/modules/server/disk-config.nix${NC}"
-  
-  # Use the official Disko command pattern from documentation
-  _print "${BLUE}${INFO} Running disko with official pattern...${NC}"
-  
-  # Run disko without confirmation for faster testing
-  if sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode zap_create_mount "./modules/server/disk-config.nix" 2>/dev/null; then
-    _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
-  else
-    _print "${RED}${ERROR} Disko failed!${NC}"
-    _print "${YELLOW}${WARNING} Trying fallback method...${NC}"
-    setup_disk_fallback
-  fi
-}
-
-# Simple fallback disk setup (if Disko fails)
-setup_disk_fallback() {
-  _print "${CYAN}${DISK} Setting up disk with fallback method${NC}"
-  
-  # Check if disk exists
-  if [ ! -b "/dev/$BOOT_DISK" ]; then
-    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
-    return 1
-  fi
-  
-  _print "${YELLOW}Wiping disk...${NC}"
-  sudo dd if=/dev/zero of="/dev/$BOOT_DISK" bs=1M count=100
-  
-  _print "${YELLOW}Creating partition table...${NC}"
-  printf "o\nn\np\n1\n\n\nw\n" | sudo fdisk "/dev/$BOOT_DISK"
-  
-  _print "${YELLOW}Formatting partition...${NC}"
-  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"
-  
-  _print "${YELLOW}Mounting partition...${NC}"
-  sudo mount "/dev/${BOOT_DISK}1" /mnt
-  
-  _print "${GREEN}${SUCCESS} Fallback disk setup complete!${NC}"
 }
 
 setup_files() {
@@ -373,44 +169,6 @@ install_nixos() {
   esac
 
   _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
-  
-  # Check available disk space
-  _print "${YELLOW}Checking available disk space...${NC}"
-  df -h /
-  _print "${YELLOW}Memory usage:${NC}"
-  free -h
-  _print "${YELLOW}Current processes:${NC}"
-  ps aux | head -5
-  
-  # Aggressive cleanup for Hetzner installer environment
-  _print "${YELLOW}Aggressive cleanup for Hetzner installer environment...${NC}"
-  sudo nix-collect-garbage -d || true
-  sudo rm -rf /tmp/* || true
-  sudo rm -rf /var/tmp/* || true
-  sudo systemctl restart nix-daemon || true
-  
-  # Kill unnecessary processes to free memory
-  _print "${YELLOW}Killing unnecessary processes...${NC}"
-  sudo pkill -f "nix-daemon" || true
-  sudo pkill -f "nix-store" || true
-  sudo pkill -f "nix-build" || true
-  sleep 5
-  
-  # Restart nix-daemon with limited resources
-  sudo systemctl restart nix-daemon || true
-  sleep 10
-  
-  # Clear Nix store cache
-  _print "${YELLOW}Clearing Nix store cache...${NC}"
-  sudo nix-collect-garbage -d || true
-  sudo rm -rf /nix/var/nix/gcroots/* || true
-  
-  # Check space again
-  _print "${YELLOW}Disk space after cleanup:${NC}"
-  df -h /
-  
-  # Install NixOS
-  _print "${BLUE}Installing NixOS...${NC}"
   _print "${YELLOW}Target: $FLAKE_TARGET${NC}"
   _print "${YELLOW}Current directory: $(pwd)${NC}"
   _print "${YELLOW}Available flake targets:${NC}"
@@ -469,15 +227,7 @@ prompt_reboot() {
     if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
       _print "${GREEN}${SUCCESS} Installation verification passed - system is ready for password setup${NC}"
       
-      # Drop into the installed system for manual password setup
-      _print "${BLUE}${INFO} Dropping into installed system for password setup...${NC}"
-      _print "${YELLOW}You are now in your installed NixOS system.${NC}"
-      _print "${YELLOW}You can now set passwords directly:${NC}"
-      _print "${YELLOW}1. Set root password: passwd root${NC}"
-      _print "${YELLOW}2. Set user password: passwd david${NC}"
-      _print "${YELLOW}3. Exit when done: exit${NC}"
-      
-      # Chroot into the installed system
+      # Skip chroot since system binaries aren't available yet
       _print "${YELLOW}System binaries not yet created - skipping chroot${NC}"
       _print "${YELLOW}You can set passwords after first boot${NC}"
       _print "${GREEN}${SUCCESS} Installation complete! Reboot to finish setup.${NC}"
@@ -533,9 +283,7 @@ check_installer
 get_user_input
 confirm_configuration
 download_config
-setup_disk_with_desktop_method
-run_disko
-setup_disk_fallback
+setup_disk
 setup_files
 install_nixos
 install_result=$?
