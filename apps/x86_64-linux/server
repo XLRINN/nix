@@ -181,13 +181,19 @@ setup_disk_manual() {
   echo "set 1 boot on" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Formatting partitions...${NC}"
-  sudo mkfs.ext4 "/dev/${BOOT_DISK}1"  # Boot partition
-  sudo mkfs.ext4 "/dev/${BOOT_DISK}2"  # Root partition
+  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"  # Boot partition (force)
+  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}2"  # Root partition (force)
   
   _print "${YELLOW}Mounting partitions...${NC}"
   sudo mkdir -p /mnt/boot
-  sudo mount "/dev/${BOOT_DISK}2" /mnt
-  sudo mount "/dev/${BOOT_DISK}1" /mnt/boot
+  sudo mount "/dev/${BOOT_DISK}2" /mnt || {
+    _print "${RED}${ERROR} Failed to mount root partition${NC}"
+    return 1
+  }
+  sudo mount "/dev/${BOOT_DISK}1" /mnt/boot || {
+    _print "${RED}${ERROR} Failed to mount boot partition${NC}"
+    return 1
+  }
   
   _print "${GREEN}${SUCCESS} Manual disk setup complete!${NC}"
 }
@@ -221,10 +227,13 @@ setup_disk_simple() {
   echo "set 1 boot on" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Formatting partition...${NC}"
-  sudo mkfs.ext4 "/dev/${BOOT_DISK}1"
+  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"
   
   _print "${YELLOW}Mounting partition...${NC}"
-  sudo mount "/dev/${BOOT_DISK}1" /mnt
+  sudo mount "/dev/${BOOT_DISK}1" /mnt || {
+    _print "${RED}${ERROR} Failed to mount root partition${NC}"
+    return 1
+  }
   
   _print "${GREEN}${SUCCESS} Simple disk setup complete!${NC}"
 }
