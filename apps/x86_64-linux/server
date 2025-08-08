@@ -185,11 +185,42 @@ setup_disk_manual() {
   sudo mkfs.ext4 -F "/dev/${BOOT_DISK}2"  # Root partition (force)
   
   _print "${YELLOW}Mounting partitions...${NC}"
+  
+  # Create mount points
+  _print "${YELLOW}Creating mount points...${NC}"
+  sudo mkdir -p /mnt
   sudo mkdir -p /mnt/boot
+  
+  # Verify mount points exist
+  if [ ! -d "/mnt" ]; then
+    _print "${RED}${ERROR} Failed to create /mnt directory${NC}"
+    return 1
+  fi
+  
+  if [ ! -d "/mnt/boot" ]; then
+    _print "${RED}${ERROR} Failed to create /mnt/boot directory${NC}"
+    return 1
+  fi
+  
+  _print "${YELLOW}Mounting root partition...${NC}"
+  
+  # Check if partitions exist
+  if [ ! -b "/dev/${BOOT_DISK}1" ]; then
+    _print "${RED}${ERROR} Boot partition /dev/${BOOT_DISK}1 does not exist${NC}"
+    return 1
+  fi
+  
+  if [ ! -b "/dev/${BOOT_DISK}2" ]; then
+    _print "${RED}${ERROR} Root partition /dev/${BOOT_DISK}2 does not exist${NC}"
+    return 1
+  fi
+  
   sudo mount "/dev/${BOOT_DISK}2" /mnt || {
     _print "${RED}${ERROR} Failed to mount root partition${NC}"
     return 1
   }
+  
+  _print "${YELLOW}Mounting boot partition...${NC}"
   sudo mount "/dev/${BOOT_DISK}1" /mnt/boot || {
     _print "${RED}${ERROR} Failed to mount boot partition${NC}"
     return 1
@@ -230,6 +261,17 @@ setup_disk_simple() {
   sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"
   
   _print "${YELLOW}Mounting partition...${NC}"
+  
+  # Create mount point
+  _print "${YELLOW}Creating mount point...${NC}"
+  sudo mkdir -p /mnt
+  
+  # Verify mount point exists
+  if [ ! -d "/mnt" ]; then
+    _print "${RED}${ERROR} Failed to create /mnt directory${NC}"
+    return 1
+  fi
+  
   sudo mount "/dev/${BOOT_DISK}1" /mnt || {
     _print "${RED}${ERROR} Failed to mount root partition${NC}"
     return 1
