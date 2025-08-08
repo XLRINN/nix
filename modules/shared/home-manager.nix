@@ -41,6 +41,14 @@ in
       pull.rebase = true;
       rebase.autoStash = true;
     };
+    # Configure remote for the nixos config
+    delta = {
+      enable = true;
+      options = {
+        line-numbers = true;
+        side-by-side = true;
+      };
+    };
   };
 
   

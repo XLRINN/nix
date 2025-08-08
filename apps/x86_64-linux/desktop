@@ -73,7 +73,19 @@ install_nixos() {
 
   nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 33554432 --option cores 0 --option max-jobs auto
   chmod -R 775 /mnt/etc/nixos
+  
+  # Copy config to user's home directory (like dustinlyons does)
+  export USERNAME=$(cat /tmp/username.txt)
+  mkdir -p /mnt/home/$USERNAME/.local/share/src
+  cp -r /mnt/etc/nixos /mnt/home/$USERNAME/.local/share/src/
+  chown -R $USERNAME:users /mnt/home/$USERNAME/.local/share/src/nixos
+  
+  # Set up git remote for the user's config
+  chroot /mnt bash -c "cd /home/$USERNAME/.local/share/src/nixos && git init && git remote add origin https://github.com/xlrinn/nix.git"
+  
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
+  echo -e "${GREEN}✓ Configuration copied to /home/$USERNAME/.local/share/src/nixos${NC}"
+  echo -e "${GREEN}✓ Git remote configured${NC}"
 }
 
 prompt_reboot() {
