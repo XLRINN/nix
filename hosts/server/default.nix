@@ -8,7 +8,7 @@ let user = "david";
   ]; in
 {
   imports = [
-    ../../modules/server/disk-config.nix
+    ../../modules/nixos/disk-config.nix
     ../../modules/shared
   ];
 
@@ -24,8 +24,7 @@ let user = "david";
         efiSupport = false;
         gfxmodeBios = "text";
         splashImage = null;
-        # Single partition setup
-        copyKernels = true;
+        
         };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest
