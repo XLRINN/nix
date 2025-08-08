@@ -186,10 +186,15 @@ setup_disk_manual() {
   
   _print "${YELLOW}Mounting partitions...${NC}"
   
-  # Create mount points
+  # Create mount points with debugging
   _print "${YELLOW}Creating mount points...${NC}"
   sudo mkdir -p /mnt
   sudo mkdir -p /mnt/boot
+  
+  # Debug: Show what was created
+  _print "${YELLOW}Checking mount points...${NC}"
+  ls -la /mnt/ 2>/dev/null || echo "No /mnt directory"
+  ls -la /mnt/boot/ 2>/dev/null || echo "No /mnt/boot directory"
   
   # Verify mount points exist
   if [ ! -d "/mnt" ]; then
@@ -215,12 +220,17 @@ setup_disk_manual() {
     return 1
   fi
   
+  # Try mounting with explicit mount point creation
+  # Create mount point right before mounting
+  sudo mkdir -p /mnt
   sudo mount "/dev/${BOOT_DISK}2" /mnt || {
     _print "${RED}${ERROR} Failed to mount root partition${NC}"
     return 1
   }
   
   _print "${YELLOW}Mounting boot partition...${NC}"
+  # Create boot mount point right before mounting
+  sudo mkdir -p /mnt/boot
   sudo mount "/dev/${BOOT_DISK}1" /mnt/boot || {
     _print "${RED}${ERROR} Failed to mount boot partition${NC}"
     return 1
