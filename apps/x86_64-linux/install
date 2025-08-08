@@ -30,6 +30,12 @@ esac
 echo -e "${YELLOW}Detected architecture: $SYSTEM${NC}"
 echo -e "${YELLOW}Using flake target: $FLAKE_TARGET${NC}"
 
+# Check if we're in the NixOS installer environment
+if [ ! -e /etc/NIXOS ]; then
+    echo -e "${RED}This script must be run from the NixOS installer environment.${NC}"
+    exit 1
+fi
+
 # Run the apply script first to configure the system
 echo -e "${YELLOW}Running apply script to configure installation...${NC}"
 ./apps/$APP_DIR/apply
@@ -37,15 +43,32 @@ echo -e "${YELLOW}Running apply script to configure installation...${NC}"
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}Configuration applied successfully.${NC}"
     
-    # Run the build-switch script to install
-    echo -e "${YELLOW}Building and switching to new configuration...${NC}"
-    ./apps/$APP_DIR/build-switch
+    # Run disko to format and mount the disk
+    echo -e "${YELLOW}Formatting and mounting disk...${NC}"
+    nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+      github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Installation completed successfully!${NC}"
-        echo -e "${YELLOW}You can now reboot your system.${NC}"
+        echo -e "${GREEN}Disk formatted and mounted successfully.${NC}"
+        
+        # Copy configuration to /mnt
+        echo -e "${YELLOW}Copying configuration to /mnt...${NC}"
+        mkdir -p /mnt/etc/nixos
+        cp -r * /mnt/etc/nixos/
+        
+        # Install NixOS
+        echo -e "${YELLOW}Installing NixOS...${NC}"
+        nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 8388608
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}Installation completed successfully!${NC}"
+            echo -e "${YELLOW}You can now reboot your system.${NC}"
+        else
+            echo -e "${RED}NixOS installation failed. Please check the error messages above.${NC}"
+            exit 1
+        fi
     else
-        echo -e "${RED}Build-switch failed. Please check the error messages above.${NC}"
+        echo -e "${RED}Disk formatting failed. Please check the error messages above.${NC}"
         exit 1
     fi
 else
