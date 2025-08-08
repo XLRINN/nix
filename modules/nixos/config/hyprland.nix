@@ -1,90 +1,82 @@
 { config, pkgs, lib, ... }:
 
 {
-  home.file = {
-    ".config/hypr/hyprland.conf" = {
+  # Hyprland configuration for NixOS
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+    nvidiaPatches = false;
+  };
+
+  # Create the config file in the system location
+  environment.etc."hypr/hyprland.conf" = {
+    text = ''
       text = ''
-        # Hyprland Configuration
-        # ======================
+        # Custom Hyprland Configuration for XLIN
+        # =====================================
 
         # Monitor Configuration
-        # --------------------
         monitor=,preferred,auto,auto
 
-        # Execute your favorite apps at launch
+        # Auto-start applications
         exec-once = polybar
         exec-once = dunst
         exec-once = wl-paste --watch cliphist store
         exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland
         exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland
 
-        # Source a file (multi-file configs)
-        # source = ~/.config/hypr/myColors.conf
-
-        # Set programs that you use
+        # Application variables
         $terminal = kitty
         $menu = wofi --show drun
         $browser = firefox
         $fileManager = dolphin
+        $editor = nvim
 
-        # Some default env vars.
+        # Environment variables
         env = XCURSOR_SIZE,24
         env = QT_QPA_PLATFORMTHEME,qt5ct
+        env = XDG_CURRENT_DESKTOP,Hyprland
 
-        # For all categories, see https://wiki.hyprland.org/Configuring/Variables/
+        # Input configuration
         input {
             kb_layout = us
-            kb_variant =
-            kb_model =
             kb_options = ctrl:nocaps
-            kb_rules =
-
             follow_mouse = 1
-
             touchpad {
                 natural_scroll = no
+                scroll_factor = 0.5
             }
-
-            sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
+            sensitivity = 0
         }
 
+        # General window settings
         general {
-            # See https://wiki.hyprland.org/Configuring/Variables/ for more
-
-            gaps_in = 5
-            gaps_out = 20
+            gaps_in = 8
+            gaps_out = 16
             border_size = 2
-            col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
-            col.inactive_border = rgba(595959aa)
-
+            col.active_border = rgba(7aa2f7ff) rgba(bb9af7ff) 45deg
+            col.inactive_border = rgba(414868aa)
             layout = dwindle
-
-            # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
             allow_tearing = false
         }
 
+        # Window decoration
         decoration {
-            # See https://wiki.hyprland.org/Configuring/Variables/ for more
-
-            rounding = 10
+            rounding = 12
             blur = yes
-            blur_size = 3
-            blur_passes = 1
+            blur_size = 4
+            blur_passes = 2
             blur_new_optimizations = on
-
             drop_shadow = yes
-            shadow_range = 4
+            shadow_range = 6
             shadow_render_power = 3
-            col.shadow = rgba(1a1a1aee)
+            col.shadow = rgba(00000044)
         }
 
+        # Animations
         animations {
             enabled = yes
-
-            # Some default animations, see https://wiki.hyprland.org/Configuring/Animations/ for more
-
             bezier = myBezier, 0.05, 0.9, 0.1, 1.05
-
             animation = windows, 1, 7, myBezier
             animation = windowsOut, 1, 7, default, popin 80%
             animation = border, 1, 10, default
@@ -93,87 +85,108 @@
             animation = workspaces, 1, 6, default
         }
 
+        # Dwindle layout settings
         dwindle {
-            # See https://wiki.hyprland.org/Configuring/Dwindle-Layout/ for more
-            pseudotile = yes # master switch for pseudotiling. Enabling is bound to mainMod + P in the keybinds section below
-            preserve_split = yes # you probably want this
+            pseudotile = yes
+            preserve_split = yes
+            smart_split = yes
+            smart_resizing = yes
         }
 
+        # Master layout settings
         master {
-            # See https://wiki.hyprland.org/Configuring/Master-Layout/ for more
             new_is_master = true
+            new_on_top = true
+            mfact = 0.55
         }
 
+        # Gestures
         gestures {
-            # See https://wiki.hyprland.org/Configuring/Variables/ for more
             workspace_swipe = off
         }
 
-        # Example per-device config
-        # See https://wiki.hyprland.org/Configuring/Keywords/#executing for more
-        device:epic-mouse-v1 {
-            sensitivity = -0.5
-        }
+        # Window rules
+        windowrulev2 = suppressevent maximize, class:.*
+        windowrulev2 = float, class:^(kitty)$
+        windowrulev2 = float, class:^(wofi)$
+        windowrulev2 = float, class:^(dunst)$
 
-        # Example windowrule v1
-        # windowrule = float, ^(kitty)$
-        # Example windowrule v2
-        # windowrulev2 = float,class:^(kitty)$,title:^(kitty)$
-        # See https://wiki.hyprland.org/Configuring/Window-Rules/ for more
-        windowrulev2 = suppressevent maximize, class:.* # You'll probably like this.
+        # Keybindings
+        # Main modifier
+        $mainMod = SUPER
 
-        # Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
-        bind = SUPER, RETURN, exec, $terminal
-        bind = SUPER, Q, killactive,
-        bind = SUPER, M, exit,
-        bind = SUPER, E, exec, $fileManager
-        bind = SUPER, V, togglefloating,
-        bind = SUPER, R, exec, $menu
-        bind = SUPER, P, pseudo, # dwindle
-        bind = SUPER, J, togglesplit, # dwindle
+        # Application launchers
+        bind = $mainMod, RETURN, exec, $terminal
+        bind = $mainMod, Q, killactive,
+        bind = $mainMod, M, exit,
+        bind = $mainMod, E, exec, $fileManager
+        bind = $mainMod, V, togglefloating,
+        bind = $mainMod, R, exec, $menu
+        bind = $mainMod, B, exec, $browser
+        bind = $mainMod, N, exec, $editor
 
-        # Move focus with mainMod + arrow keys
-        bind = SUPER, left, movefocus, l
-        bind = SUPER, right, movefocus, r
-        bind = SUPER, up, movefocus, u
-        bind = SUPER, down, movefocus, d
+        # Layout controls
+        bind = $mainMod, P, pseudo, # dwindle
+        bind = $mainMod, J, togglesplit, # dwindle
+        bind = $mainMod, S, swapnext,
 
-        # Switch workspaces with mainMod + [0-9]
-        bind = SUPER, 1, workspace, 1
-        bind = SUPER, 2, workspace, 2
-        bind = SUPER, 3, workspace, 3
-        bind = SUPER, 4, workspace, 4
-        bind = SUPER, 5, workspace, 5
-        bind = SUPER, 6, workspace, 6
-        bind = SUPER, 7, workspace, 7
-        bind = SUPER, 8, workspace, 8
-        bind = SUPER, 9, workspace, 9
-        bind = SUPER, 0, workspace, 10
+        # Focus controls
+        bind = $mainMod, left, movefocus, l
+        bind = $mainMod, right, movefocus, r
+        bind = $mainMod, up, movefocus, u
+        bind = $mainMod, down, movefocus, d
 
-        # Move active window to a workspace with mainMod + SHIFT + [0-9]
-        bind = SUPER SHIFT, 1, movetoworkspace, 1
-        bind = SUPER SHIFT, 2, movetoworkspace, 2
-        bind = SUPER SHIFT, 3, movetoworkspace, 3
-        bind = SUPER SHIFT, 4, movetoworkspace, 4
-        bind = SUPER SHIFT, 5, movetoworkspace, 5
-        bind = SUPER SHIFT, 6, movetoworkspace, 6
-        bind = SUPER SHIFT, 7, movetoworkspace, 7
-        bind = SUPER SHIFT, 8, movetoworkspace, 8
-        bind = SUPER SHIFT, 9, movetoworkspace, 9
-        bind = SUPER SHIFT, 0, movetoworkspace, 10
+        # Workspace management
+        bind = $mainMod, 1, workspace, 1
+        bind = $mainMod, 2, workspace, 2
+        bind = $mainMod, 3, workspace, 3
+        bind = $mainMod, 4, workspace, 4
+        bind = $mainMod, 5, workspace, 5
+        bind = $mainMod, 6, workspace, 6
+        bind = $mainMod, 7, workspace, 7
+        bind = $mainMod, 8, workspace, 8
+        bind = $mainMod, 9, workspace, 9
+        bind = $mainMod, 0, workspace, 10
 
-        # Example special workspace (scratchpad)
-        bind = SUPER, S, togglespecialworkspace, magic
-        bind = SUPER SHIFT, S, movetoworkspace, special:magic
+        # Move windows to workspaces
+        bind = $mainMod SHIFT, 1, movetoworkspace, 1
+        bind = $mainMod SHIFT, 2, movetoworkspace, 2
+        bind = $mainMod SHIFT, 3, movetoworkspace, 3
+        bind = $mainMod SHIFT, 4, movetoworkspace, 4
+        bind = $mainMod SHIFT, 5, movetoworkspace, 5
+        bind = $mainMod SHIFT, 6, movetoworkspace, 6
+        bind = $mainMod SHIFT, 7, movetoworkspace, 7
+        bind = $mainMod SHIFT, 8, movetoworkspace, 8
+        bind = $mainMod SHIFT, 9, movetoworkspace, 9
+        bind = $mainMod SHIFT, 0, movetoworkspace, 10
 
-        # Scroll through existing workspaces with mainMod + scroll
-        bind = SUPER, mouse_down, workspace, e+1
-        bind = SUPER, mouse_up, workspace, e-1
+        # Special workspace (scratchpad)
+        bind = $mainMod, minus, togglespecialworkspace, magic
+        bind = $mainMod SHIFT, minus, movetoworkspace, special:magic
 
-        # Move/resize windows with mainMod + LMB/RMB and dragging
-        bindm = SUPER, mouse:272, movewindow
-        bindm = SUPER, mouse:273, resizewindow
+        # Mouse controls
+        bindm = $mainMod, mouse:272, movewindow
+        bindm = $mainMod, mouse:273, resizewindow
+
+        # Function keys
+        bind = , XF86MonBrightnessUp, exec, brightnessctl set +5%
+        bind = , XF86MonBrightnessDown, exec, brightnessctl set 5%-
+        bind = , XF86AudioRaiseVolume, exec, pactl set-sink-volume @DEFAULT_SINK@ +5%
+        bind = , XF86AudioLowerVolume, exec, pactl set-sink-volume @DEFAULT_SINK@ -5%
+        bind = , XF86AudioMute, exec, pactl set-sink-mute @DEFAULT_SINK@ toggle
+        bind = , XF86AudioPlay, exec, playerctl play-pause
+        bind = , XF86AudioNext, exec, playerctl next
+        bind = , XF86AudioPrev, exec, playerctl previous
+
+        # Screenshot
+        bind = $mainMod, Print, exec, grim -g "$(slurp)" - | wl-copy
+        bind = $mainMod SHIFT, Print, exec, grim -g "$(slurp)" ~/Pictures/screenshot-$(date +%Y%m%d_%H%M%S).png
+
+        # Lock screen
+        bind = $mainMod, L, exec, swaylock
+
+        # Reload Hyprland
+        bind = $mainMod SHIFT, R, exec, hyprctl reload
       '';
-    };
   };
 }
