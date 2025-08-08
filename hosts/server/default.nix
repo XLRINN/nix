@@ -20,10 +20,12 @@ let user = "david";
         device = "/dev/sda";
         useOSProber = false;
         forceInstall = true;
-        # BIOS-specific settings
+        # BIOS-specific settings for single partition
         efiSupport = false;
         gfxmodeBios = "text";
         splashImage = null;
+        # Single partition setup
+        copyKernels = true;
         };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest

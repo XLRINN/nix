@@ -315,9 +315,34 @@ run_disko() {
     _print "${GREEN}${SUCCESS} Disk setup complete!${NC}"
   else
     _print "${RED}${ERROR} Disko failed!${NC}"
-    _print "${YELLOW}${WARNING} Check the error messages above${NC}"
-    exit 1
+    _print "${YELLOW}${WARNING} Trying fallback method...${NC}"
+    setup_disk_fallback
   fi
+}
+
+# Simple fallback disk setup (if Disko fails)
+setup_disk_fallback() {
+  _print "${CYAN}${DISK} Setting up disk with fallback method${NC}"
+  
+  # Check if disk exists
+  if [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
+    return 1
+  fi
+  
+  _print "${YELLOW}Wiping disk...${NC}"
+  sudo dd if=/dev/zero of="/dev/$BOOT_DISK" bs=1M count=100
+  
+  _print "${YELLOW}Creating partition table...${NC}"
+  printf "o\nn\np\n1\n\n\nw\n" | sudo fdisk "/dev/$BOOT_DISK"
+  
+  _print "${YELLOW}Formatting partition...${NC}"
+  sudo mkfs.ext4 -F "/dev/${BOOT_DISK}1"
+  
+  _print "${YELLOW}Mounting partition...${NC}"
+  sudo mount "/dev/${BOOT_DISK}1" /mnt
+  
+  _print "${GREEN}${SUCCESS} Fallback disk setup complete!${NC}"
 }
 
 setup_files() {
@@ -509,9 +534,8 @@ get_user_input
 confirm_configuration
 download_config
 setup_disk_with_desktop_method
-setup_disk_manual
-setup_disk_simple
 run_disko
+setup_disk_fallback
 setup_files
 install_nixos
 install_result=$?

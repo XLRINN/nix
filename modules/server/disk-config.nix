@@ -24,7 +24,7 @@
 #   };
 # }
 
-# Multi-partition configuration (current)
+# Single partition configuration (simpler and more reliable)
 {
   disko.devices = {
     disk = {
@@ -34,17 +34,7 @@
         content = {
           type = "msdos";  # Use MBR for BIOS compatibility
           partitions = {
-            # Boot partition for GRUB
-            boot = {
-              size = "512M";
-              content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/boot";
-                mountOptions = [ "defaults" ];
-              };
-            };
-            # Root filesystem
+            # Single root partition (simpler)
             root = {
               size = "100%";
               content = {
