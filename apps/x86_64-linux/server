@@ -161,8 +161,12 @@ setup_disk_manual() {
     return 1
   fi
   
+  _print "${YELLOW}Unmounting any existing mounts...${NC}"
+  sudo umount /mnt/boot 2>/dev/null || true
+  sudo umount /mnt 2>/dev/null || true
+  
   _print "${YELLOW}Wiping disk /dev/$BOOT_DISK...${NC}"
-  sudo wipefs -a "/dev/$BOOT_DISK"
+  sudo wipefs -a "/dev/$BOOT_DISK" 2>/dev/null || true
   
   _print "${YELLOW}Creating MBR partition table...${NC}"
   sudo parted "/dev/$BOOT_DISK" mklabel msdos
@@ -200,8 +204,12 @@ setup_disk_simple() {
     return 1
   fi
   
+  _print "${YELLOW}Unmounting any existing mounts...${NC}"
+  sudo umount /mnt/boot 2>/dev/null || true
+  sudo umount /mnt 2>/dev/null || true
+  
   _print "${YELLOW}Wiping disk /dev/$BOOT_DISK...${NC}"
-  sudo wipefs -a "/dev/$BOOT_DISK"
+  sudo wipefs -a "/dev/$BOOT_DISK" 2>/dev/null || true
   
   _print "${YELLOW}Creating MBR partition table...${NC}"
   sudo parted "/dev/$BOOT_DISK" mklabel msdos
