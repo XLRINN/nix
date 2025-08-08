@@ -22,9 +22,9 @@ let user = "david";
         forceInstall = true;
         };
     };
-    kernelPackages = pkgs.linuxPackages_latest;
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
-    kernelModules = [ "uinput" "iwlwifi" ];
+    kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest
+    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "virtio" "virtio_pci" "virtio_net" "virtio_blk" ];
+    kernelModules = [ "uinput" ];  # Remove iwlwifi (no WiFi on servers)
   };
 
   # Set your time zone.
@@ -34,11 +34,14 @@ let user = "david";
     hostName = "loki"; # Define your hostname.
     useDHCP = false;
     networkmanager.enable = true; # Enable NetworkManager
+    # Generic server firewall
+    firewall.enable = true;
+    firewall.allowedTCPPorts = [ 22 80 443 ]; # SSH, HTTP, HTTPS
   };
 
   hardware = {
-    enableAllFirmware = true; # Enable all firmware
-    firmware = [ pkgs.linux-firmware ]; # Include firmware
+    enableAllFirmware = true; # Enable for broad hardware compatibility
+    firmware = [ pkgs.linux-firmware ]; # Include firmware for various server hardware
   };
 
   virtualisation.docker.enable = true;
@@ -118,10 +121,9 @@ let user = "david";
   };
 
   environment.systemPackages = with pkgs; [
-    gitAndTools.gitFull
+    git
     inetutils
     neovim
-    gh  # GitHub CLI
     # Network tools
     iproute2
     openssh

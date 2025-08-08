@@ -211,12 +211,25 @@ install_nixos() {
   # Check available disk space
   _print "${YELLOW}Checking available disk space...${NC}"
   df -h /
+  _print "${YELLOW}Memory usage:${NC}"
+  free -h
+  _print "${YELLOW}Current processes:${NC}"
+  ps aux | head -5
   
   # Aggressive cleanup for Hetzner installer environment
   _print "${YELLOW}Aggressive cleanup for Hetzner installer environment...${NC}"
   sudo nix-collect-garbage -d || true
   sudo rm -rf /tmp/* || true
   sudo rm -rf /var/tmp/* || true
+  sudo systemctl restart nix-daemon || true
+  
+  # Kill unnecessary processes to free memory
+  _print "${YELLOW}Killing unnecessary processes...${NC}"
+  sudo pkill -f "nix-daemon" || true
+  sudo pkill -f "nix-store" || true
+  sleep 5
+  
+  # Restart nix-daemon with limited resources
   sudo systemctl restart nix-daemon || true
   sleep 10
   
@@ -226,34 +239,54 @@ install_nixos() {
   
   # Install NixOS
   _print "${BLUE}Installing NixOS...${NC}"
-  if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose; then
+  _print "${YELLOW}Target: $FLAKE_TARGET${NC}"
+  _print "${YELLOW}Current directory: $(pwd)${NC}"
+  _print "${YELLOW}Available flake targets:${NC}"
+  nix flake show . 2>/dev/null || echo "Could not show flake targets"
+  
+  # Set memory limits to prevent kernel panic
+  _print "${YELLOW}Setting memory limits...${NC}"
+  ulimit -v 1048576  # 1GB virtual memory limit
+  ulimit -m 524288   # 512MB memory limit
+  
+  # Capture all output for debugging
+  _print "${BLUE}Starting installation with full output capture...${NC}"
+  if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
     
     # Verify installation was successful
     _print "${BLUE}Verifying installation...${NC}"
-    if [ -f "/mnt/etc/nixos/configuration.nix" ] || [ -f "/mnt/etc/nixos/default.nix" ] || [ -f "/mnt/etc/nixos/flake.nix" ]; then
-      if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
-        _print "${GREEN}${SUCCESS} Installation verification passed${NC}"
+    
+    # Check for essential system directories and files
+    if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ] && [ -d "/mnt/bin" ] && [ -d "/mnt/usr" ]; then
+      if [ -f "/mnt/bin/bash" ] && [ -f "/mnt/bin/sh" ]; then
+        _print "${GREEN}${SUCCESS} Installation verification passed - system binaries found${NC}"
         return 0
       else
-        _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
+        _print "${RED}${ERROR} Installation verification failed - system binaries missing${NC}"
         _print "${YELLOW}Checking what was installed:${NC}"
-        ls -la /mnt/
+        ls -la /mnt/bin/ 2>/dev/null || echo "No /mnt/bin directory"
         return 1
       fi
     else
-      _print "${RED}${ERROR} Installation verification failed - configuration files not found${NC}"
+      _print "${RED}${ERROR} Installation verification failed - essential directories missing${NC}"
       _print "${YELLOW}Checking what was installed:${NC}"
       ls -la /mnt/
       return 1
     fi
   else
     _print "${RED}${ERROR} Installation failed${NC}"
+    _print "${YELLOW}Installation log saved to /tmp/nixos-install.log${NC}"
+    _print "${YELLOW}Last 20 lines of log:${NC}"
+    tail -20 /tmp/nixos-install.log 2>/dev/null || echo "Could not read log file"
+    _print "${YELLOW}Checking what was installed:${NC}"
+    ls -la /mnt/ 2>/dev/null || echo "No /mnt directory"
     _print "${YELLOW}Manual commands to try:${NC}"
     _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
     _print "${YELLOW}2. Check memory: free -h${NC}"
     _print "${YELLOW}3. Check disk space: df -h${NC}"
+    _print "${YELLOW}4. Check if target exists: nix flake show .${NC}"
     return 1
   fi
 }
@@ -275,7 +308,16 @@ prompt_reboot() {
       _print "${YELLOW}3. Exit when done: exit${NC}"
       
       # Chroot into the installed system
-      exec sudo chroot /mnt /bin/bash
+      if [ -f "/mnt/bin/bash" ]; then
+        exec sudo chroot /mnt /bin/bash
+      elif [ -f "/mnt/bin/sh" ]; then
+        exec sudo chroot /mnt /bin/sh
+      else
+        _print "${RED}${ERROR} No shell found in installed system!${NC}"
+        _print "${YELLOW}Checking what's in /mnt/bin:${NC}"
+        ls -la /mnt/bin/ 2>/dev/null || echo "No /mnt/bin directory"
+        exec /bin/bash
+      fi
     else
       _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
       _print "${YELLOW}The system may not be properly installed.${NC}"
