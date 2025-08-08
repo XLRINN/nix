@@ -172,13 +172,13 @@ setup_disk_manual() {
   sudo parted "/dev/$BOOT_DISK" mklabel msdos
   
   _print "${YELLOW}Creating boot partition (512MB)...${NC}"
-  sudo parted "/dev/$BOOT_DISK" mkpart primary ext4 1MiB 513MiB
+  echo "mkpart primary ext4 1MiB 513MiB" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Creating root partition (remaining space)...${NC}"
-  sudo parted "/dev/$BOOT_DISK" mkpart primary ext4 513MiB 100%
+  echo "mkpart primary ext4 513MiB 100%" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Setting boot flag...${NC}"
-  sudo parted "/dev/$BOOT_DISK" set 1 boot on
+  echo "set 1 boot on" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Formatting partitions...${NC}"
   sudo mkfs.ext4 "/dev/${BOOT_DISK}1"  # Boot partition
@@ -215,10 +215,10 @@ setup_disk_simple() {
   sudo parted "/dev/$BOOT_DISK" mklabel msdos
   
   _print "${YELLOW}Creating single root partition...${NC}"
-  sudo parted "/dev/$BOOT_DISK" mkpart primary ext4 1MiB 100%
+  echo "mkpart primary ext4 1MiB 100%" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Setting boot flag...${NC}"
-  sudo parted "/dev/$BOOT_DISK" set 1 boot on
+  echo "set 1 boot on" | sudo parted "/dev/$BOOT_DISK"
   
   _print "${YELLOW}Formatting partition...${NC}"
   sudo mkfs.ext4 "/dev/${BOOT_DISK}1"
