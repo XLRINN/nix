@@ -82,7 +82,7 @@
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
-        "install" = mkApp "install" system;
+        "desktop" = mkApp "desktop" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;

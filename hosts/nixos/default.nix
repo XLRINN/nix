@@ -16,10 +16,14 @@ let user = "david";
         configurationLimit = 42;
       };
       efi.canTouchEfiVariables = true;
+      # Faster boot
+      timeout = 1;
     };
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
     kernelModules = [ "uinput" "iwlwifi" ];
+    # Speed optimizations
+    kernelParams = [ "quiet" "loglevel=3" ];
   };
 
   # Set your time zone.
@@ -116,6 +120,15 @@ let user = "david";
       trusted-users = [ "@admin" "${user}" ];
       substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
       trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+      # Speed optimizations
+      max-jobs = "auto";
+      cores = 0;
+      builders-use-substitutes = true;
+      use-substitutes = true;
+      # Increase download buffer for faster downloads
+      download-buffer-size = 16777216;
+      # Parallel builds
+      parallel-build = true;
     };
 
     package = pkgs.nix;
@@ -144,6 +157,17 @@ let user = "david";
     neovim
     noto-fonts-emoji
   ];
+
+
+
+  # Performance optimizations
+  powerManagement.cpuFreqGovernor = "performance";
+  
+  # Faster package installation
+  environment.variables = {
+    NIX_BUILD_CORES = "0";
+    NIX_OPTIONS = "--cores 0";
+  };
 
   system.stateVersion = "21.05"; # Don't change this
 }
