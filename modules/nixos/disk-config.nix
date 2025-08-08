@@ -3,7 +3,7 @@ _: {
   # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
     disk = {
-      vdb = {
+      main = {
         device = "/dev/sda";
         type = "disk";
         content = {
@@ -16,6 +16,8 @@ _: {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
+                mountOptions = [ "defaults" ];
+                extraArgs = [ "-n" "ESP" ];
               };
             };
             root = {
@@ -24,6 +26,8 @@ _: {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
+                mountOptions = [ "defaults" ];
+                extraArgs = [ "-L" "nixos-root" ];
               };
             };
           };
