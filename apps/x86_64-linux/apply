@@ -32,11 +32,7 @@ fi
 
 # Custom print function
 _print() {
-  if [[ "$OS" == "Darwin" ]]; then
-    echo -e "$1"
-  else
-    echo "$1"
-  fi
+  echo -e "$1"
 }
 
 # Custom prompt function
