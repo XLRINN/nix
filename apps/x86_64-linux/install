@@ -63,7 +63,7 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 8388608
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 16777216
   chmod -R 775 /mnt/etc/nixos
 }
 
