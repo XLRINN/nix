@@ -4,6 +4,13 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
+<<<<<<< HEAD
+=======
+    secrets = {
+      url = "git+ssh://git@github.com-secretnix/XLRINN/secretnix.git?ref=master";
+      flake = false;
+    };
+>>>>>>> 1b68f39 (Add agenix secrets management and Avante.nvim with secure API key)
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";

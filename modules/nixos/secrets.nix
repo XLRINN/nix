@@ -1,21 +1,19 @@
-<<<<<<< HEAD
-=======
 { config, pkgs, agenix, secrets, ... }:
 
 let user = "david"; in
 {
   age.identityPaths = [
-    "/Users/${user}/.ssh/id_ed25519"
+    "/home/${user}/.ssh/id_ed25519"
   ];
 
   # OpenAI API key for Avante and other AI tools
   age.secrets."openai-api-key" = {
     symlink = false;
-    path = "/Users/${user}/.openai_api_key";
+    path = "/home/${user}/.openai_api_key";
     file = "${secrets}/openai-api-key.age";
     mode = "600";
     owner = "${user}";
-    group = "staff";
+    group = "wheel";
   };
 
   # Your other secrets go here
@@ -30,21 +28,12 @@ let user = "david"; in
 
   #
   # age.secrets."github-ssh-key" = {
-  #   symlink = true;
-  #   path = "/Users/${user}/.ssh/id_github";
+  #   symlink = false;
+  #   path = "/home/${user}/.ssh/id_github";
   #   file =  "${secrets}/github-ssh-key.age";
   #   mode = "600";
   #   owner = "${user}";
-  #   group = "staff";
-  # };
-
-  # age.secrets."github-signing-key" = {
-  #   symlink = false;
-  #   path = "/Users/${user}/.ssh/pgp_github.key";
-  #   file =  "${secrets}/github-signing-key.age";
-  #   mode = "600";
-  #   owner = "${user}";
+  #   group = "wheel";
   # };
 
 }
->>>>>>> 1b68f39 (Add agenix secrets management and Avante.nvim with secure API key)
