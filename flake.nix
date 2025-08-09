@@ -3,14 +3,12 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    agenix.url = "github:ryantm/agenix";
     home-manager.url = "github:nix-community/home-manager";
-<<<<<<< HEAD
-=======
     secrets = {
       url = "git+ssh://git@github.com-secretnix/XLRINN/secretnix.git?ref=master";
       flake = false;
     };
->>>>>>> 1b68f39 (Add agenix secrets management and Avante.nvim with secure API key)
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -58,17 +56,9 @@
         url = "github:dc-tec/nixvim";
         flake = false;
       };
-    claude-desktop = {
-      url = "github:k3d3/claude-desktop-linux-flake";
-      inputs = { 
-        nixpkgs.follows = "nixpkgs";
-        flake-utils.follows = "flake-utils";
-      };
-    };
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, claude-desktop, flake-utils } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, agenix, secrets, oh-my-posh, stylix, hyprland, nvf,nixvim, } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -98,8 +88,6 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "install" = mkApp "install" system;
-        "sync-master" = mkApp "sync-master" system;
-        "cli-only" = mkApp "cli-only" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -120,7 +108,9 @@
       in
         darwin.lib.darwinSystem {
           inherit system;
-          specialArgs = inputs;
+          specialArgs = inputs // {
+            inherit secrets;
+          };
           modules = [
             home-manager.darwinModules.home-manager
             nix-homebrew.darwinModules.nix-homebrew
@@ -145,7 +135,9 @@
 
       nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit inputs claude-desktop; };
+        specialArgs = inputs // {
+          inherit secrets;
+        };
         modules = [
           disko.nixosModules.disko
           home-manager.nixosModules.home-manager {
@@ -160,23 +152,6 @@
 #        environment.variables = {
 #          EDITOR = "nvim";
 #        };
-     }) // {
-       # CLI-only configuration
-       "x86_64-linux-cli" = nixpkgs.lib.nixosSystem {
-         system = "x86_64-linux";
-         specialArgs = { inherit inputs claude-desktop; };
-         modules = [
-           disko.nixosModules.disko
-           home-manager.nixosModules.home-manager {
-             home-manager = {
-               useGlobalPkgs = true;
-               useUserPackages = true;
-               users.${user} = import ./modules/nixos/home-manager.nix;
-             };
-           }
-           ./hosts/nixos/cli-only.nix
-         ];
-       };
-     };
+     });
   };
 }

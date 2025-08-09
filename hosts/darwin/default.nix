@@ -1,20 +1,22 @@
-{ config, pkgs, ... }:
+{ config, inputs, pkgs, agenix, ... }:
 
 let user = "david"; in
 
 {
 
   imports = [
+    ../../modules/darwin/secrets.nix
     ../../modules/darwin/home-manager.nix
     ../../modules/shared
     ../../modules/shared/cachix
+    agenix.darwinModules.default
   ];
 
-  # Auto upgrade nix package and the daemon service.
-  services.nix-daemon.enable = true;
+  # Set primary user for nix-darwin
+  system.primaryUser = user;
 
-  # Enable sudo Touch ID authentication
-  security.pam.enableSudoTouchIdAuth = true;
+  # Enable sudo Touch ID authentication (new syntax)
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   # Setup user, packages, programs
   nix = {
@@ -22,7 +24,6 @@ let user = "david"; in
     settings.trusted-users = [ "@admin" "${user}" ];
 
     gc = {
-      user = "root";
       automatic = true;
       interval = { Weekday = 0; Hour = 2; Minute = 0; };
       options = "--delete-older-than 30d";

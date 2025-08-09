@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 { config, pkgs, agenix, secrets, ... }:
 
 let user = "david"; in
@@ -47,4 +45,3 @@ let user = "david"; in
   # };
 
 }
->>>>>>> 1b68f39 (Add agenix secrets management and Avante.nvim with secure API key)
