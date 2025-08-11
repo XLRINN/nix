@@ -5,14 +5,22 @@
     content = {
       type = "gpt";
       partitions = {
-        grub = {
-          size = "1M";
-          type = "EF02"; # BIOS boot partition
+        efi = {
+          size = "512M";
+          type = "EF00";
+          content = {
+            type = "filesystem";
+            format = "vfat";
+            mountpoint = "/boot";
+          };
         };
         root = {
           size = "100%";
-          filesystem = "ext4";
-          mountpoint = "/";
+          content = {
+            type = "filesystem";
+            format = "ext4";
+            mountpoint = "/";
+          };
         };
       };
     };
