@@ -1,12 +1,16 @@
 { config, pkgs, lib, ... }:
 
 {
-  home = {
-    username = "david";
-    homeDirectory = "/home/david";
-    stateVersion = "23.11";
-  };
+  # User configuration
+  home.username = "david";
+  home.homeDirectory = "/home/david";
+  home.stateVersion = "23.11";
 
-  # Minimal configuration to avoid warnings
+  # Let Home Manager install and manage itself
   programs.home-manager.enable = true;
+
+  # Basic packages
+  home.packages = with pkgs; [
+    # Add any basic packages you want here
+  ];
 }

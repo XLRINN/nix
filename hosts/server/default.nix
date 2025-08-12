@@ -8,8 +8,8 @@ let user = "david";
   ]; in
 {
   imports = [
-    ../../modules/server/disk-config.nix # Use server-specific disk config
-    ../../modules/server/home-manager.nix # Use server-specific home-manager config
+    # ../../modules/server/disk-config.nix # Use server-specific disk config
+    # ../../modules/server/home-manager.nix # Use server-specific home-manager config
   ];
 
   # Use GRUB boot loader for legacy BIOS
