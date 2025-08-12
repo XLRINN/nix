@@ -126,27 +126,9 @@ let user = "david";
   };
 
   environment.systemPackages = with pkgs; [
+    # Minimum required packages for initial setup
     git
-    inetutils
-    neovim
-    # Network tools
-    iproute2
     openssh
-    # System monitoring
-    htop
-    procps
-    # File management
-    tree
-    rsync
-    # Text processing
-    jq
-    ripgrep
-    # Additional utilities
-    curl
-    wget
-    # Shell and terminal
-    zsh
-    tmux
   ];
 
   # Environment variables for API keys

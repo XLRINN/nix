@@ -3,7 +3,6 @@
 let
   user = "david";
   xdg_configHome  = "/home/${user}/.config";
-  shared-programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared-files = import ../shared/files.nix { inherit config pkgs; };
 
   polybar-user_modules = builtins.readFile (pkgs.substituteAll {
@@ -117,6 +116,17 @@ in
     };
   };
 
-  programs = shared-programs // {};
+  imports = [
+    # CLI tools
+    ../shared/config/terminal/git.nix
+    ../shared/config/terminal/zsh.nix
+    ../shared/config/terminal/neovim.nix
+    ../shared/config/terminal/tmux.nix
+    ../shared/config/terminal/zellij.nix
+    ../shared/config/terminal/direnv.nix
+    ../shared/config/terminal/monitoring.nix
+    # GUI tools
+    ../shared/config/gui/alacritty.nix
+  ];
 
 }
