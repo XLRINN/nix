@@ -6,12 +6,12 @@
         device = "/dev/sda";
         type = "disk";
         content = {
-          type = "gpt";
-          partitions = [
-            {
-              name = "root";
-              start = "1MiB";
-              end = "100%";
+          type = "table";
+          partitions = {
+            root = {
+              size = "100%";
+              start = "1M";
+              bootable = true;
               content = {
                 type = "filesystem";
                 format = "ext4";
@@ -20,8 +20,8 @@
                 # Add partition label to match what the boot process expects
                 label = "disk-sda-root";
               };
-            }
-          ];
+            };
+          };
         };
       };
     };
