@@ -1,4 +1,4 @@
-# Simple GPT with explicit boot configuration
+# Simple GPT configuration - only disk layout, no boot config
 {
   disko.devices = {
     disk = {
@@ -25,7 +25,4 @@
       };
     };
   };
-  
-  # Explicitly configure boot loader to install to the correct device
-  boot.loader.grub.devices = [ "/dev/sda" ];
 }

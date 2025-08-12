@@ -151,7 +151,7 @@ setup_disk() {
   _print "${YELLOW}Creating GPT configuration...${NC}"
   # Replace with a working GPT+BIOS configuration
   cat > "$TMP_DISK_CONFIG" << EOF
-# Simple GPT with explicit boot configuration
+# Simple GPT configuration - only disk layout, no boot config
 {
   disko.devices = {
     disk = {
@@ -178,9 +178,6 @@ setup_disk() {
       };
     };
   };
-  
-  # Explicitly configure boot loader to install to the correct device
-  boot.loader.grub.devices = [ "/dev/${BOOT_DISK}" ];
 }
 EOF
   
