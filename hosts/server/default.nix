@@ -9,7 +9,7 @@ let user = "david";
 {
   imports = [
     ../../modules/server/disk-config.nix # Use server-specific disk config
-    ../../modules/shared
+    # ../../modules/shared  # Disable shared modules to reduce memory usage
   ];
 
   # Use GRUB boot loader for GPT with BIOS boot partition
@@ -50,7 +50,7 @@ let user = "david";
 
   # virtualisation.docker.enable = true; # Disable Docker for minimal install
 
-  programs.zsh.enable = true; # Enable zsh
+  # programs.zsh.enable = true; # Disable zsh to reduce memory usage
 
   users.users = {
     "${user}" = {
@@ -59,7 +59,7 @@ let user = "david";
         "wheel" # Enable 'sudo' for the user.
         "networkmanager"
       ];
-      shell = pkgs.zsh;
+      shell = pkgs.bash;
       openssh.authorizedKeys.keys = keys;
       # Create user directories with proper permissions
       createHome = true;
@@ -106,9 +106,9 @@ let user = "david";
     '';
   };
 
-  # Manages keys and such
+  # Minimal programs
   programs = {
-    gnupg.agent.enable = true;
+    # gnupg.agent.enable = true; # Disable to reduce memory usage
   };
 
   environment.systemPackages = with pkgs; [
