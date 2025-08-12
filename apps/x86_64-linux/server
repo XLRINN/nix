@@ -137,8 +137,25 @@ setup_disk() {
   export BOOT_DISK="$BOOT_DISK"
   export NETWORK_CONFIG="$NETWORK_CONFIG"
   
-  _print "${GREEN}${SUCCESS} Using NixOS disk configuration from modules/server/disk-config.nix${NC}"
-  _print "${GREEN}${SUCCESS} Disk configuration ready!${NC}"
+  _print "${BLUE}Preparing disk configuration for /dev/${BOOT_DISK}...${NC}"
+
+  # Ensure /mnt is not mounted from a previous attempt
+  sudo umount -R /mnt 2>/dev/null || true
+
+  # Create a temporary disko config with the selected boot disk
+  TMP_DISK_CONFIG=/tmp/disk-config.nix
+  sed "s|/dev/sda|/dev/${BOOT_DISK}|g" modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
+
+  _print "${BLUE}Running disko to partition and format the disk...${NC}"
+  # Use nix to run disko without requiring it to be pre-installed in the image
+  nix run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG" | sed 's/^/  /'
+
+  _print "${BLUE}Mounting filesystems to /mnt...${NC}"
+  nix run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG" | sed 's/^/  /'
+
+  _print "${GREEN}${SUCCESS} Disk partitioned and mounted successfully${NC}"
+  _print "${BLUE}Mounted filesystems:${NC}"
+  findmnt -R /mnt | sed 's/^/  /'
 }
 
 setup_files() {
@@ -175,14 +192,22 @@ install_nixos() {
   nix flake show . 2>/dev/null || echo "Could not show flake targets"
   
   # Set memory limits to prevent out of memory errors
-  _print "${YELLOW}Setting memory limits...${NC}"
-  ulimit -v 2097152  # 2GB virtual memory limit
-  ulimit -m 1048576  # 1GB memory limit
-  
-  # Set Nix memory limits
+  # Optional: Set Nix concurrency for stability in low-memory environments
   export NIX_BUILD_CORES=1
   export NIX_REMOTE=daemon
   
+  # Run a GC to reduce pressure before the build
+  _print "${YELLOW}Running garbage collection before installation...${NC}"
+  nix store gc 2>/dev/null || true
+  nix-collect-garbage -d 2>/dev/null || true
+
+  # Verify that /mnt is a mount point
+  if ! findmnt /mnt >/dev/null 2>&1; then
+    _print "${RED}${ERROR} /mnt is not mounted. Disk setup likely failed.${NC}"
+    _print "${YELLOW}Aborting installation to avoid writing to the wrong target.${NC}"
+    exit 1
+  fi
+
   # Capture all output for debugging
   _print "${BLUE}Starting installation with full output capture...${NC}"
   if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
