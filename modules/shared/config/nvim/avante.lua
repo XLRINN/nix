@@ -24,6 +24,9 @@ function M.setup()
         api_key = vim.env.OPENROUTER_API_KEY,
         extra_headers = { ["HTTP-Referer"] = "avante.nvim" }, -- optional but recommended by OpenRouter
       },
+      -- Disable other providers explicitly
+      anthropic = { enabled = false },
+      openai = { enabled = false },
     },
     budget = {
       provider = "openai_compatible",
@@ -33,6 +36,9 @@ function M.setup()
         api_key = vim.env.OPENROUTER_API_KEY,
         extra_headers = { ["HTTP-Referer"] = "avante.nvim" },
       },
+      -- Disable other providers explicitly
+      anthropic = { enabled = false },
+      openai = { enabled = false },
     },
     premium = {
       provider = "openai_compatible",
@@ -42,12 +48,18 @@ function M.setup()
         api_key = vim.env.OPENROUTER_API_KEY,
         extra_headers = { ["HTTP-Referer"] = "avante.nvim" },
       },
+      -- Disable other providers explicitly
+      anthropic = { enabled = false },
+      openai = { enabled = false },
     },
   }
 
   -- base settings shared by all profiles
   local base = {
     provider = "openai_compatible", -- Force OpenRouter provider
+    -- Disable all other providers explicitly
+    anthropic = { enabled = false },
+    openai = { enabled = false },
     prompts = {
       system = table.concat({
         "You are a precise coding assistant.",
@@ -65,13 +77,19 @@ function M.setup()
 
   -- initial setup with the 'free' profile
   local config = vim.tbl_deep_extend("force", base, profiles[current])
+  
+  -- Ensure we're using OpenRouter and disable any native providers
+  config.provider = "openai_compatible"
+  config.anthropic = { enabled = false }
+  config.openai = { enabled = false }
+  
   require("avante").setup(config)
   
   -- Store the current configuration for reference
   _G.avante_config = config
   
   -- Notify that configuration is loaded
-  vim.notify("Avante configured with " .. current .. " profile", vim.log.levels.INFO)
+  vim.notify("Avante configured with " .. current .. " profile using OpenRouter", vim.log.levels.INFO)
 
   -- helper to switch models on the fly
   local function use_profile(name)
@@ -80,9 +98,17 @@ function M.setup()
       vim.notify("Avante: unknown profile '" .. tostring(name) .. "' (free|budget|premium)", vim.log.levels.WARN)
       return
     end
-    require("avante").setup(vim.tbl_deep_extend("force", base, p))
+    local new_config = vim.tbl_deep_extend("force", base, p)
+    
+    -- Ensure we're using OpenRouter and disable any native providers
+    new_config.provider = "openai_compatible"
+    new_config.anthropic = { enabled = false }
+    new_config.openai = { enabled = false }
+    
+    require("avante").setup(new_config)
     current = name
-    vim.notify("Avante → " .. name, vim.log.levels.INFO)
+    _G.avante_config = new_config
+    vim.notify("Avante → " .. name .. " (OpenRouter)", vim.log.levels.INFO)
   end
 
   -- user commands

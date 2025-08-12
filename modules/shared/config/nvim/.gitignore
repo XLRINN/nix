@@ -1,0 +1,18 @@
+# Neovim configuration files that may contain sensitive data
+#init.lua
+#*.lua
+#lazy-lock.json
+#*.lock
+
+# Backup files
+#*.swp
+#*.swo
+#*~
+
+# Session files
+#Session.vim
+#*.session
+
+# Temporary files
+#*.tmp
+#*.temp

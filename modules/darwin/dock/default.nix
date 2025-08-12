@@ -49,22 +49,22 @@ in {
       normalize = path: if hasSuffix ".app" path then path + "/" else path;
     in
     {
-      system.activationScripts.postUserActivation.text = ''
+      system.activationScripts.extraActivation.text = ''
         echo >&2 "Setting up the Dock..."
         #haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
         
         # Apply autohide setting
-        defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"};
+        sudo -u $USER defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"};
 
         # Apply Dock position setting
-        defaults write com.apple.dock orientation -string "${cfg.position}";
+        sudo -u $USER defaults write com.apple.dock orientation -string "${cfg.position}";
 
         # Apply Dock size setting
-        defaults write com.apple.dock tilesize -int ${toString cfg.size};
+        sudo -u $USER defaults write com.apple.dock tilesize -int ${toString cfg.size};
 
         # Apply Dock magnification settings
-        defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"};
-        defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize};
+        sudo -u $USER defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"};
+        sudo -u $USER defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize};
 
         # Restart Dock to apply changes
         killall Dock

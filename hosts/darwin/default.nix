@@ -1,15 +1,13 @@
-{ config, inputs, pkgs, agenix, ... }:
+{ config, inputs, pkgs, ... }:
 
 let user = "david"; in
 
 {
 
   imports = [
-    ../../modules/darwin/secrets.nix
     ../../modules/darwin/home-manager.nix
     ../../modules/shared
     ../../modules/shared/cachix
-    agenix.darwinModules.default
   ];
 
   # Set primary user for nix-darwin
@@ -40,7 +38,7 @@ let user = "david"; in
 
 
   system = {
-    stateVersion = 4;
+    stateVersion = 5;
 
     defaults = {
       NSGlobalDomain = {

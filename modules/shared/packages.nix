@@ -5,6 +5,7 @@ with pkgs; [
  # alacritty
   #ghostty
   aspell
+  #  bitwarden-cli  # Disabled - Nixpkgs version still has argon2 build issues
   aspellDicts.en
   bash-completion
   bat
