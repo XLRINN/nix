@@ -1,4 +1,4 @@
-{ config, inputs, pkgs, ... }:
+{ config, inputs, pkgs, lib, ... }:
 
 let user = "david";
   keys = [ 
@@ -8,8 +8,8 @@ let user = "david";
   ]; in
 {
   imports = [
-    # ../../modules/server/disk-config.nix # Use server-specific disk config
-    # ../../modules/server/home-manager.nix # Use server-specific home-manager config
+    ../../modules/server/disk-config.nix # Use server-specific disk config
+    ../../modules/shared
   ];
 
   # Use GRUB boot loader for legacy BIOS
@@ -36,7 +36,7 @@ let user = "david";
 
   networking = {
     hostName = "loki"; # Define your hostname.
-    useDHCP = true;  # Changed to true for initial setup
+    useDHCP = lib.mkForce false;  # Force false when using NetworkManager
     networkmanager.enable = true; # Enable NetworkManager
     # Generic server firewall
     firewall.enable = true;
