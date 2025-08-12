@@ -272,9 +272,12 @@ install_nixos() {
     exit 1
   fi
 
+  # Set experimental features via environment variable instead of flag
+  export NIX_CONFIG="experimental-features = nix-command flakes"
+  
   # Capture all output for debugging
   _print "${BLUE}Starting installation with full output capture...${NC}"
-  if timeout 7200 sudo nixos-install --extra-experimental-features "nix-command flakes" --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
+  if timeout 7200 sudo -E nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
     
