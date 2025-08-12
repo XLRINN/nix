@@ -1,0 +1,304 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Emojis
+ROCKET="🚀"
+SERVER="🖥️"
+DISK="💾"
+NETWORK="🌐"
+USER="👤"
+EMAIL="📧"
+HOSTNAME="🏷️"
+SUCCESS="✅"
+ERROR="❌"
+WARNING="⚠️"
+INFO="ℹ️"
+
+# Custom print function
+_print() {
+  echo -e "$1"
+}
+
+check_installer() {
+  if [ -e /etc/NIXOS ]; then
+    _print "${GREEN}${SUCCESS} Running in the NixOS installer environment.${NC}"
+  else
+    _print "${RED}${ERROR} Not running in the NixOS installer environment.${NC}"
+    exit 1
+  fi
+}
+
+# Set defaults and get user input
+get_user_input() {
+  _print "${CYAN}${USER} Server Configuration${NC}"
+  
+  # Use local configuration - no download needed
+  _print "${BLUE}Using local configuration from current directory...${NC}"
+  
+  # Extract hostname from default.nix
+  _print "${BLUE}Extracting hostname from configuration...${NC}"
+  export HOST_NAME=$(grep -o 'hostName = "[^"]*"' hosts/server/default.nix | cut -d'"' -f2)
+  if [ -z "$HOST_NAME" ]; then
+    export HOST_NAME="loki"  # fallback
+  fi
+  _print "${GREEN}${SUCCESS} Hostname: $HOST_NAME${NC}"
+  
+  # Extract username from default.nix
+  _print "${BLUE}Extracting username from configuration...${NC}"
+  export USERNAME=$(grep -o 'user = "[^"]*"' hosts/server/default.nix | cut -d'"' -f2)
+  if [ -z "$USERNAME" ]; then
+    export USERNAME="david"  # fallback
+  fi
+  export GIT_NAME="$USERNAME"
+  export GIT_EMAIL="xlrin.morgan@gmail.com"
+  _print "${GREEN}${SUCCESS} Username: $USERNAME${NC}"
+  
+  # Use DHCP by default
+  export NETWORK_CONFIG="dhcp"
+  _print "${GREEN}${SUCCESS} Network: DHCP${NC}"
+  
+  # Automatically use sda as boot disk
+  export BOOT_DISK="sda"
+  _print "${GREEN}${SUCCESS} Boot disk: $BOOT_DISK${NC}"
+  
+  # Validate the disk exists
+  if [ ! -b "/dev/$BOOT_DISK" ]; then
+    _print "${RED}${ERROR} Disk /dev/$BOOT_DISK does not exist!${NC}"
+    _print "${YELLOW}Available disks:${NC}"
+    lsblk -nd --output NAME,SIZE,TYPE | grep -v loop | grep -v sr0
+    exit 1
+  fi
+}
+
+# Show configuration summary and confirm
+confirm_configuration() {
+  _print "${CYAN}${INFO} Configuration Summary${NC}"
+  _print "${GREEN}Username: $USERNAME${NC}"
+  _print "${GREEN}Email: $GIT_EMAIL${NC}"
+  _print "${GREEN}Name: $GIT_NAME${NC}"
+  _print "${GREEN}Hostname: $HOST_NAME${NC}"
+  _print "${GREEN}Boot disk: $BOOT_DISK${NC}"
+  _print "${GREEN}Network: $NETWORK_CONFIG${NC}"
+  
+  _print "${GREEN}${SUCCESS} Proceeding with installation...${NC}"
+}
+
+# Simple disk setup using NixOS configuration
+setup_disk() {
+  _print "${CYAN}${DISK} Setting up disk using NixOS configuration${NC}"
+  
+  # Set environment variables for the installation
+  export USERNAME="$USERNAME"
+  export GIT_EMAIL="$GIT_EMAIL"
+  export GIT_NAME="$GIT_NAME"
+  export HOST_NAME="$HOST_NAME"
+  export BOOT_DISK="$BOOT_DISK"
+  export NETWORK_CONFIG="$NETWORK_CONFIG"
+  
+  _print "${BLUE}Preparing disk configuration for /dev/${BOOT_DISK}...${NC}"
+
+  # Ensure /mnt is not mounted from a previous attempt
+  sudo umount -R /mnt 2>/dev/null || true
+  sudo mkdir -p /mnt
+
+  # Create a temporary disko config with the selected boot disk
+  TMP_DISK_CONFIG=/tmp/disk-config.nix
+  sed "s|/dev/sda|/dev/${BOOT_DISK}|g" modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
+
+  _print "${BLUE}Running disko to partition and format the disk...${NC}"
+  # Use nix to run disko with experimental features enabled
+  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG"; then
+    _print "${RED}${ERROR} Disk partitioning failed.${NC}"
+    exit 1
+  fi
+
+  _print "${BLUE}Mounting filesystems to /mnt...${NC}"
+  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG"; then
+    _print "${RED}${ERROR} Mounting filesystems failed.${NC}"
+    exit 1
+  fi
+
+  if ! findmnt /mnt >/dev/null 2>&1; then
+    _print "${RED}${ERROR} /mnt is not a mount point after disko mount.${NC}"
+    exit 1
+  fi
+
+  _print "${GREEN}${SUCCESS} Disk partitioned and mounted successfully${NC}"
+  _print "${BLUE}Mounted filesystems:${NC}"
+  findmnt -R /mnt | sed 's/^/  /'
+}
+
+setup_files() {
+  _print "${CYAN}${SERVER} Setting up NixOS files${NC}"
+  # Ensure target is mounted before copying
+  if ! findmnt /mnt >/dev/null 2>&1; then
+    _print "${RED}${ERROR} /mnt is not mounted. Aborting file copy.${NC}"
+    exit 1
+  fi
+
+  sudo mkdir -p /mnt/etc/nixos
+  sudo cp -r * /mnt/etc/nixos
+  cd /mnt/etc/nixos
+  _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
+}
+
+install_nixos() {
+  _print "${CYAN}${ROCKET} Installing NixOS${NC}"
+  
+  ARCH=$(uname -m)
+
+  case "$ARCH" in
+    x86_64)
+      FLAKE_TARGET="x86_64-linux-server"
+      ;;
+    aarch64)
+      FLAKE_TARGET="aarch64-linux-server"
+      ;;
+    *)
+      _print "${RED}${ERROR} Unsupported architecture: $ARCH${NC}"
+      exit 1
+      ;;
+  esac
+
+  _print "${BLUE}Starting NixOS installation with target: $FLAKE_TARGET${NC}"
+  _print "${YELLOW}Target: $FLAKE_TARGET${NC}"
+  _print "${YELLOW}Current directory: $(pwd)${NC}"
+  _print "${YELLOW}Available flake targets:${NC}"
+  nix --extra-experimental-features "nix-command flakes" flake show . 2>/dev/null || echo "Could not show flake targets"
+  
+  # Optional: Set Nix concurrency for stability in low-memory environments
+  export NIX_BUILD_CORES=1
+  export NIX_REMOTE=daemon
+  
+  # Run a GC to reduce pressure before the build
+  _print "${YELLOW}Running garbage collection before installation...${NC}"
+  nix store gc 2>/dev/null || true
+  nix-collect-garbage -d 2>/dev/null || true
+
+  # Verify that /mnt is a mount point
+  if ! findmnt /mnt >/dev/null 2>&1; then
+    _print "${RED}${ERROR} /mnt is not mounted. Disk setup likely failed.${NC}"
+    _print "${YELLOW}Aborting installation to avoid writing to the wrong target.${NC}"
+    exit 1
+  fi
+
+  # Capture all output for debugging
+  _print "${BLUE}Starting installation with full output capture...${NC}"
+  if timeout 7200 sudo nixos-install --extra-experimental-features "nix-command flakes" --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
+    _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
+    sudo chmod -R 775 /mnt/etc/nixos
+    
+    # Verify installation was successful
+    _print "${BLUE}Verifying installation...${NC}"
+    
+    # Check for essential system directories and files
+    if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
+      _print "${GREEN}${SUCCESS} Installation verification passed - boot and nix directories found${NC}"
+      _print "${YELLOW}Note: System binaries will be created on first boot${NC}"
+      return 0
+    else
+      _print "${RED}${ERROR} Installation verification failed - essential directories missing${NC}"
+      _print "${YELLOW}Checking what was installed:${NC}"
+      ls -la /mnt/
+      return 1
+    fi
+  else
+    _print "${RED}${ERROR} Installation failed${NC}"
+    _print "${YELLOW}Installation log saved to /tmp/nixos-install.log${NC}"
+    _print "${YELLOW}Last 20 lines of log:${NC}"
+    tail -20 /tmp/nixos-install.log 2>/dev/null || echo "Could not read log file"
+    _print "${YELLOW}Checking what was installed:${NC}"
+    ls -la /mnt/ 2>/dev/null || echo "No /mnt directory"
+    _print "${YELLOW}Manual commands to try:${NC}"
+    _print "${YELLOW}1. sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy${NC}"
+    _print "${YELLOW}2. Check memory: free -h${NC}"
+    _print "${YELLOW}3. Check disk space: df -h${NC}"
+    _print "${YELLOW}4. Check if target exists: nix flake show .${NC}"
+    return 1
+  fi
+}
+
+prompt_reboot() {
+  _print "${CYAN}${INFO} Installation Complete!${NC}"
+  
+  # Check if installation was actually successful
+  if [ -f "/mnt/etc/nixos/configuration.nix" ] || [ -f "/mnt/etc/nixos/default.nix" ] || [ -f "/mnt/etc/nixos/flake.nix" ]; then
+    if [ -d "/mnt/boot" ] && [ -d "/mnt/nix" ]; then
+      _print "${GREEN}${SUCCESS} Installation verification passed - system is ready for password setup${NC}"
+      
+      # Skip chroot since system binaries aren't available yet
+      _print "${YELLOW}System binaries not yet created - skipping chroot${NC}"
+      _print "${YELLOW}You can set passwords after first boot${NC}"
+      _print "${GREEN}${SUCCESS} Installation complete! Reboot to finish setup.${NC}"
+      exit 0
+    else
+      _print "${RED}${ERROR} Installation verification failed - boot or nix directories missing${NC}"
+      _print "${YELLOW}The system may not be properly installed.${NC}"
+      _print "${YELLOW}Checking what was installed:${NC}"
+      ls -la /mnt/
+      
+      _print "${YELLOW}${WARNING} Manual troubleshooting required:${NC}"
+      _print "${YELLOW}1. Check if /mnt/boot and /mnt/nix directories exist${NC}"
+      _print "${YELLOW}2. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
+      _print "${YELLOW}3. Check disk space and memory${NC}"
+      
+      # Drop into shell for manual troubleshooting
+      exec /bin/bash
+    fi
+  else
+    _print "${RED}${ERROR} Installation verification failed - configuration files not found${NC}"
+    _print "${YELLOW}The system may not be properly installed.${NC}"
+    _print "${YELLOW}Checking what was installed:${NC}"
+    ls -la /mnt/
+    
+    _print "${YELLOW}${WARNING} Manual troubleshooting required:${NC}"
+    _print "${YELLOW}1. Check if /mnt/etc/nixos/configuration.nix, default.nix, or flake.nix exists${NC}"
+    _print "${YELLOW}2. Try manual installation: sudo nixos-install --flake .#x86_64-linux-server --no-root-passwd --no-channel-copy${NC}"
+    _print "${YELLOW}3. Check disk space and memory${NC}"
+    
+    # Drop into shell for manual troubleshooting
+    exec /bin/bash
+  fi
+}
+
+cleanup() {
+  _print "${CYAN}${INFO} Cleaning up temporary files${NC}"
+  
+  # Final garbage collection and cleanup
+  _print "${YELLOW}Final cleanup and garbage collection...${NC}"
+  sudo nix-collect-garbage -d || true
+  sudo rm -rf /tmp/* || true
+  sudo rm -rf /var/tmp/* || true
+  
+  _print "${GREEN}${SUCCESS} Cleanup complete!${NC}"
+}
+
+# Main execution
+_print "${PURPLE}${ROCKET} NixOS Server Installation (Local)${NC}"
+_print "${BLUE}Installing CLI-only NixOS server from local configuration${NC}"
+
+# Check if we're in the right directory
+if [ ! -f "flake.nix" ] || [ ! -d "hosts/server" ]; then
+  _print "${RED}${ERROR} This script must be run from the root of your nix configuration directory${NC}"
+  _print "${YELLOW}Please copy your configuration to the installer and run from there${NC}"
+  exit 1
+fi
+
+check_installer
+get_user_input
+confirm_configuration
+setup_disk
+setup_files
+install_nixos
+install_result=$?
+cleanup
+prompt_reboot
