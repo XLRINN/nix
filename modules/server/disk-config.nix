@@ -1,5 +1,3 @@
-z
-
 # Single partition configuration (simpler and more reliable)
 {
   disko.devices = {
