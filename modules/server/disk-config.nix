@@ -6,7 +6,7 @@
         device = "/dev/sda";
         type = "disk";
         content = {
-          type = "msdos";
+          type = "dos";
           partitions = {
             root = {
               size = "100%";

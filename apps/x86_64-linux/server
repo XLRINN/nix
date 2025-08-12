@@ -143,9 +143,13 @@ setup_disk() {
   sudo umount -R /mnt 2>/dev/null || true
   sudo mkdir -p /mnt
 
-  # Create a temporary disko config with the selected boot disk
+  # Create a temporary disko config with the selected boot disk and fix msdos->dos
   TMP_DISK_CONFIG=/tmp/disk-config.nix
-  sed "s|/dev/sda|/dev/${BOOT_DISK}|g" modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
+  sed -e "s|/dev/sda|/dev/${BOOT_DISK}|g" -e 's|type = "msdos"|type = "dos"|g' modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
+  
+  # Show the fixed configuration for debugging
+  _print "${YELLOW}Disk configuration being used:${NC}"
+  cat "$TMP_DISK_CONFIG" | head -20
 
   _print "${BLUE}Running disko to partition and format the disk...${NC}"
   # Use nix to run disko with experimental features enabled
