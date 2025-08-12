@@ -228,6 +228,15 @@ setup_files() {
   sudo mkdir -p /mnt/etc/nixos
   sudo cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
+  
+  # Fix GRUB configuration to avoid mirroredBoots conflict with disko
+  if grep -q 'device = "/dev/' hosts/server/default.nix; then
+    _print "${YELLOW}Fixing GRUB device configuration to avoid mirroredBoots conflict...${NC}"
+    sudo sed -i '/device = "\/dev\//d' hosts/server/default.nix
+    sudo sed -i '/# Install GRUB to MBR/d' hosts/server/default.nix
+    sudo sed -i 's/# Use GRUB boot loader for MBR\/BIOS/# Use GRUB boot loader - let disko handle device configuration/' hosts/server/default.nix
+  fi
+  
   _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
 }
 

@@ -11,12 +11,12 @@ let user = "david";
     ../../modules/server/disk-config.nix
   ];
 
-  # Use GRUB boot loader for MBR/BIOS
+  # Use GRUB boot loader - let disko handle device configuration
   boot = {
     loader = {
       grub = {
         enable = true;
-        device = "/dev/sda";  # Install GRUB to MBR
+        # Don't specify device when using disko - it handles boot setup
         useOSProber = false;
         efiSupport = false;
         gfxmodeBios = "text";
