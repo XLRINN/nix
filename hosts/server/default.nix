@@ -7,9 +7,14 @@ let user = "david";
     # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
   ]; in
 {
-  imports = [
-    ../../modules/server/disk-config.nix  # Use BIOS-specific disk config
-  ];
+  # No imports - we'll handle everything manually
+
+  # Manual filesystem configuration using label
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos-root";  # Use filesystem label
+    fsType = "ext4";
+    options = [ "defaults" "noatime" ];
+  };
 
   # GRUB configuration for BIOS-only systems
   boot = {

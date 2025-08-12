@@ -143,49 +143,29 @@ setup_disk() {
   sudo umount -R /mnt 2>/dev/null || true
   sudo mkdir -p /mnt
 
-  # Create disko config matching the working nixos structure
-  TMP_DISK_CONFIG=/tmp/disk-config.nix
-  cat > "$TMP_DISK_CONFIG" << EOF
-# BIOS-only configuration matching the structure of working nixos config
-{
-  disko.devices.disk.main = {
-    device = "/dev/${BOOT_DISK}";
-    type = "disk";
-    content = {
-      type = "gpt";
-      partitions = {
-        bios = {
-          size = "1M";
-          type = "EF02";  # BIOS boot partition for GPT
-        };
-        root = {
-          size = "100%";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/";
-          };
-        };
-      };
-    };
-  };
-}
-EOF
-
-  _print "${BLUE}Running disko to partition and format the disk...${NC}"
-  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG"; then
-    _print "${RED}${ERROR} Disk partitioning failed.${NC}"
-    exit 1
-  fi
-
-  _print "${BLUE}Mounting filesystems to /mnt...${NC}"
-  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG"; then
-    _print "${RED}${ERROR} Mounting filesystems failed.${NC}"
-    exit 1
-  fi
-
+  # Manual partitioning with proper labels
+  _print "${YELLOW}Creating GPT partition table with BIOS boot partition...${NC}"
+  
+  # Wipe the disk and create GPT partition table
+  sudo parted -s /dev/${BOOT_DISK} mklabel gpt
+  
+  # Create BIOS boot partition (1MB)
+  sudo parted -s /dev/${BOOT_DISK} mkpart primary 1MiB 2MiB
+  sudo parted -s /dev/${BOOT_DISK} set 1 bios_grub on
+  
+  # Create root partition (rest of disk) with explicit label
+  sudo parted -s /dev/${BOOT_DISK} mkpart primary ext4 2MiB 100%
+  
+  # Format the root partition with a specific label
+  _print "${BLUE}Formatting root partition with label 'nixos-root'...${NC}"
+  sudo mkfs.ext4 -F -L nixos-root /dev/${BOOT_DISK}2
+  
+  # Mount the root partition
+  _print "${BLUE}Mounting root partition to /mnt...${NC}"
+  sudo mount /dev/${BOOT_DISK}2 /mnt
+  
   if ! findmnt /mnt >/dev/null 2>&1; then
-    _print "${RED}${ERROR} /mnt is not mounted after disko.${NC}"
+    _print "${RED}${ERROR} /mnt is not mounted after manual partition setup.${NC}"
     exit 1
   fi
 
