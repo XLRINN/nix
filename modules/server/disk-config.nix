@@ -6,12 +6,12 @@
         device = "/dev/sda";
         type = "disk";
         content = {
-          type = "table";
-          format = "msdos";  # Use MBR for BIOS compatibility
-          partitions = {
-            # Single root partition (simpler)
-            root = {
-              size = "100%";
+          type = "gpt";
+          partitions = [
+            {
+              name = "root";
+              start = "1MiB";
+              end = "100%";
               content = {
                 type = "filesystem";
                 format = "ext4";
@@ -20,8 +20,8 @@
                 # Add partition label to match what the boot process expects
                 label = "disk-sda-root";
               };
-            };
-          };
+            }
+          ];
         };
       };
     };
