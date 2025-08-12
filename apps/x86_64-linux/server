@@ -149,13 +149,13 @@ setup_disk() {
   
   # Always use a known-working GPT configuration
   _print "${YELLOW}Creating GPT configuration...${NC}"
-  # Replace with a working GPT+BIOS configuration
+  # Replace with a working GPT+BIOS configuration using disko's standard naming
   cat > "$TMP_DISK_CONFIG" << EOF
-# Simple GPT configuration - only disk layout, no boot config
+# GPT configuration using disko's standard naming
 {
   disko.devices = {
     disk = {
-      ${BOOT_DISK} = {
+      main = {
         device = "/dev/${BOOT_DISK}";
         type = "disk";
         content = {

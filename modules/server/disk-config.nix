@@ -1,8 +1,8 @@
-# Simple GPT configuration - only disk layout, no boot config
+# GPT configuration using disko's standard naming
 {
   disko.devices = {
     disk = {
-      sda = {
+      main = {
         device = "/dev/sda";
         type = "disk";
         content = {
