@@ -27,9 +27,9 @@ let user = "david";
         copyKernels = true;
       };
     };
-    kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "virtio" "virtio_pci" "virtio_net" "virtio_blk" ];
-    kernelModules = [ "uinput" ];  # Remove iwlwifi (no WiFi on servers)
+    kernelPackages = pkgs.linuxPackages;  # Use stable kernel
+    initrd.availableKernelModules = [ "ahci" "sd_mod" "virtio" "virtio_pci" "virtio_blk" ];
+    kernelModules = [ ];
   };
 
   # Set your time zone.
@@ -45,11 +45,10 @@ let user = "david";
   };
 
   hardware = {
-    enableAllFirmware = true; # Enable for broad hardware compatibility
-    firmware = [ pkgs.linux-firmware ]; # Include firmware for various server hardware
+    enableAllFirmware = false; # Minimal firmware for resource efficiency
   };
 
-  virtualisation.docker.enable = true;
+  # virtualisation.docker.enable = true; # Disable Docker for minimal install
 
   programs.zsh.enable = true; # Enable zsh
 
@@ -58,8 +57,6 @@ let user = "david";
       isNormalUser = true;
       extraGroups = [
         "wheel" # Enable 'sudo' for the user.
-        "admin" # Admin group for additional privileges
-        "docker"
         "networkmanager"
       ];
       shell = pkgs.zsh;
@@ -99,25 +96,14 @@ let user = "david";
 
   # Turn on flag for proprietary software
   nix = {
-    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nix:/etc/nixos" ];
     settings = {
       allowed-users = [ "${user}" ];
-      trusted-users = [ "@admin" "${user}" ];
-      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
-      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
-      download-buffer-size = 16777216; # 16MB buffer size
+      trusted-users = [ "${user}" ];
     };
-
     package = pkgs.nix;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
-
-    gc = {
-      automatic = true;
-      dates = "14d";
-      options = "--delete-older-than 30d";
-    };
   };
 
   # Manages keys and such
@@ -143,33 +129,11 @@ let user = "david";
 
 
 
-  # Set up nix directory and remote
+  # Minimal activation scripts
   system.activationScripts = {
     setupNixDir = ''
-      # Create nix directory in home
-      mkdir -p /home/${user}/nix
-      chown ${user}:users /home/${user}/nix
-      
-      # Copy current nix config to home directory
-      if [ ! -d /home/${user}/nix/.git ]; then
-        cp -r /etc/nixos/* /home/${user}/nix/
-        chown -R ${user}:users /home/${user}/nix
-        
-        cd /home/${user}/nix
-        git init
-        git add .
-        git commit -m "Initial commit from installation"
-        
-        # Add remote with your actual repo URL
-        git remote add origin https://github.com/xlrinn/nix.git
-        
-        # Set up git configuration for the user
-        git config --global user.name "david"
-        git config --global user.email "xlrin.morgan@gmail.com"
-        
-        # Note: GitHub CLI will handle authentication automatically
-        # No manual SSH key setup needed!
-      fi
+      mkdir -p /home/${user}
+      chown ${user}:users /home/${user}
     '';
   };
 

@@ -18,7 +18,7 @@ in
     ./config/terminal/monitoring.nix
   ] ++ lib.optionals (!isServer) [
     # GUI tools
-    ./config/gui/alacritty.nix
+    #./config/gui/alacritty.nix
   ];
 
   # Home configuration (required by Home Manager)
