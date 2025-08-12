@@ -24,8 +24,7 @@ let user = "david";
         efiSupport = false;
         gfxmodeBios = "text";
         splashImage = null;
-        
-        };
+      };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "virtio" "virtio_pci" "virtio_net" "virtio_blk" ];
@@ -37,7 +36,7 @@ let user = "david";
 
   networking = {
     hostName = "loki"; # Define your hostname.
-    useDHCP = false;
+    useDHCP = true;  # Changed to true for initial setup
     networkmanager.enable = true; # Enable NetworkManager
     # Generic server firewall
     firewall.enable = true;
