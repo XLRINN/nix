@@ -40,16 +40,21 @@ require("lazy").setup({
     { "preservim/nerdtree" },
     { "tpope/vim-fugitive" },
     
-    -- Avante AI assistant
-    { "yetone/avante.nvim",
+
+    {
+      "yetone/avante.nvim",
+      event = "VeryLazy",
+      build = (vim.fn.has("win32") ~= 0)
+          and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false"
+          or "make",
       config = function()
-        require("avante").setup({
-          api_key = os.getenv("AVANTE_API_KEY") or "your-api-key-here",
-          model = "gpt-4",
-          max_tokens = 1000,
-          temperature = 0.7,
-        })
+        require("avante").setup() -- This will load and run the avante.lua file
       end,
+      dependencies = {
+        "nvim-lua/plenary.nvim",
+        "MunifTanjim/nui.nvim",
+        "MeanderingProgrammer/render-markdown.nvim",
+      },
     },
     
     -- Theme collection
@@ -114,11 +119,14 @@ require("lazy").setup({
     { "neovim/nvim-lspconfig", enabled = false },
     { "andersevenrud/nordic.nvim" },
     
-    -- GitHub Copilot
-    {"github/copilot.vim"},
+   
   },
 })
 
 -- Key mappings
 vim.keymap.set('n', '<leader>th', ':Themery<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>n', ':NERDTreeToggle<CR>', { noremap = true, silent = true })
+
+-- Avante key mappings
+vim.keymap.set('n', '<leader>aa', ':Avante<CR>', { noremap = true, silent = true })
+vim.keymap.set('v', '<leader>aa', ':Avante<CR>', { noremap = true, silent = true })
