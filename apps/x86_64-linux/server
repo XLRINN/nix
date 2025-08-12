@@ -147,33 +147,30 @@ setup_disk() {
   # Fix any incorrect partition table types (msdos/dos -> gpt)
   TMP_DISK_CONFIG=/tmp/disk-config.nix
   
-  # Always use a known-working GPT configuration - let disko handle fileSystems
+  # Always use a known-working GPT configuration
   _print "${YELLOW}Creating GPT configuration...${NC}"
   # Replace with a working GPT+BIOS configuration
-  cat > "$TMP_DISK_CONFIG" << 'EOF'
-# Simple GPT with BIOS boot partition - let disko handle fileSystems
+  cat > "$TMP_DISK_CONFIG" << EOF
+# Simple GPT with explicit boot configuration
 {
   disko.devices = {
     disk = {
-      main = {
-        device = "/dev/BOOTDISK";
+      ${BOOT_DISK} = {
+        device = "/dev/${BOOT_DISK}";
         type = "disk";
         content = {
           type = "gpt";
           partitions = {
-            boot = {
+            bios = {
               size = "1M";
-              type = "EF02";  # BIOS boot partition for GPT on BIOS systems
-              priority = 1;
+              type = "EF02";  # BIOS boot partition
             };
             root = {
               size = "100%";
-              priority = 2;
               content = {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = [ "defaults" ];
               };
             };
           };
@@ -181,9 +178,11 @@ setup_disk() {
       };
     };
   };
+  
+  # Explicitly configure boot loader to install to the correct device
+  boot.loader.grub.devices = [ "/dev/${BOOT_DISK}" ];
 }
 EOF
-  sed -i "s|/dev/BOOTDISK|/dev/${BOOT_DISK}|g" "$TMP_DISK_CONFIG"
   
   # Show the configuration for debugging
   _print "${YELLOW}Disk configuration being used:${NC}"

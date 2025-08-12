@@ -1,26 +1,23 @@
-# Simple GPT with BIOS boot partition - let disko handle fileSystems
+# Simple GPT with explicit boot configuration
 {
   disko.devices = {
     disk = {
-      main = {
+      sda = {
         device = "/dev/sda";
         type = "disk";
         content = {
           type = "gpt";
           partitions = {
-            boot = {
+            bios = {
               size = "1M";
-              type = "EF02";  # BIOS boot partition for GPT on BIOS systems
-              priority = 1;
+              type = "EF02";  # BIOS boot partition
             };
             root = {
               size = "100%";
-              priority = 2;
               content = {
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-                mountOptions = [ "defaults" ];
               };
             };
           };
@@ -28,4 +25,7 @@
       };
     };
   };
+  
+  # Explicitly configure boot loader to install to the correct device
+  boot.loader.grub.devices = [ "/dev/sda" ];
 }
