@@ -6,7 +6,8 @@
         device = "/dev/sda";
         type = "disk";
         content = {
-          type = "msdos";  # Use MBR for BIOS compatibility
+          type = "table";
+          format = "msdos";  # Use MBR for BIOS compatibility
           partitions = {
             # Single root partition (simpler)
             root = {
