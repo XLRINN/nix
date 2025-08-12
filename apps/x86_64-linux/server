@@ -147,12 +147,11 @@ setup_disk() {
   # Fix any incorrect partition table types (msdos/dos -> gpt)
   TMP_DISK_CONFIG=/tmp/disk-config.nix
   
-  # Check if the config has incorrect partition types and fix them
-  if grep -q 'type = "msdos"\|type = "dos"' modules/server/disk-config.nix; then
-    _print "${YELLOW}Fixing partition table type to GPT...${NC}"
-    # Replace the entire disk config with a working GPT+BIOS configuration
-    cat > "$TMP_DISK_CONFIG" << 'EOF'
-# GPT with BIOS boot partition for maximum compatibility
+  # Always use a known-working GPT configuration with proper labels
+  _print "${YELLOW}Creating GPT configuration with proper filesystem labels...${NC}"
+  # Replace with a working GPT+BIOS configuration that includes proper labeling
+  cat > "$TMP_DISK_CONFIG" << 'EOF'
+# Simple GPT with BIOS boot partition - explicit labels
 {
   disko.devices = {
     disk = {
@@ -170,6 +169,7 @@ setup_disk() {
             root = {
               size = "100%";
               priority = 2;
+              label = "nixos-root";  # Explicit label for the root partition
               content = {
                 type = "filesystem";
                 format = "ext4";
@@ -182,13 +182,15 @@ setup_disk() {
       };
     };
   };
+
+  # Explicit fileSystems configuration to ensure proper mounting
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos-root";
+    fsType = "ext4";
+  };
 }
 EOF
-    sed -i "s|/dev/BOOTDISK|/dev/${BOOT_DISK}|g" "$TMP_DISK_CONFIG"
-  else
-    # Just update the device path if config is already correct
-    sed "s|/dev/sda|/dev/${BOOT_DISK}|g" modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
-  fi
+  sed -i "s|/dev/BOOTDISK|/dev/${BOOT_DISK}|g" "$TMP_DISK_CONFIG"
   
   # Show the configuration for debugging
   _print "${YELLOW}Disk configuration being used:${NC}"

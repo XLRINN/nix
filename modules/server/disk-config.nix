@@ -1,4 +1,4 @@
-# GPT with BIOS boot partition for maximum compatibility
+# Simple GPT with BIOS boot partition - explicit labels
 {
   disko.devices = {
     disk = {
@@ -16,6 +16,7 @@
             root = {
               size = "100%";
               priority = 2;
+              label = "nixos-root";  # Explicit label for the root partition
               content = {
                 type = "filesystem";
                 format = "ext4";
@@ -27,5 +28,11 @@
         };
       };
     };
+  };
+
+  # Explicit fileSystems configuration to ensure proper mounting
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos-root";
+    fsType = "ext4";
   };
 }
