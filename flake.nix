@@ -88,6 +88,12 @@
         "install" = mkApp "install" system;
         "server" = mkApp "server" system;
         "sync-master" = mkApp "sync-master" system;
+        "install-minimal" = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "install-minimal" ''
+            nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- --flake github:xlrinn/nix#x86_64-linux-server-minimal /dev/sda
+          '');
+        };
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
