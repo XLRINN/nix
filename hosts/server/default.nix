@@ -11,19 +11,16 @@ let user = "david";
     ../../modules/server/disk-config.nix
   ];
 
-  # Use GRUB boot loader for GPT with BIOS boot partition
+  # Use GRUB boot loader for MBR/BIOS
   boot = {
     loader = {
       grub = {
         enable = true;
+        device = "/dev/sda";  # Install GRUB to MBR
         useOSProber = false;
-        forceInstall = true;
-        # GPT with BIOS boot partition settings
         efiSupport = false;
         gfxmodeBios = "text";
         splashImage = null;
-        # Let disko handle the device configuration
-        copyKernels = true;
       };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel
