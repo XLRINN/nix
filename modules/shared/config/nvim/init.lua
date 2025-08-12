@@ -48,7 +48,8 @@ require("lazy").setup({
           and "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false"
           or "make",
       config = function()
-        require("avante").setup() -- This will load and run the avante.lua file
+        require("avante").setup() -- Load the plugin first
+        require("avante-config") -- Load your custom configuration module
       end,
       dependencies = {
         "nvim-lua/plenary.nvim",
