@@ -22,4 +22,3 @@ in
     stateVersion = "23.11";
   };
 }
-}
