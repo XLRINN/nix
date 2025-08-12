@@ -147,11 +147,11 @@ setup_disk() {
   # Fix any incorrect partition table types (msdos/dos -> gpt)
   TMP_DISK_CONFIG=/tmp/disk-config.nix
   
-  # Always use a known-working GPT configuration with proper labels
-  _print "${YELLOW}Creating GPT configuration with proper filesystem labels...${NC}"
-  # Replace with a working GPT+BIOS configuration that includes proper labeling
+  # Always use a known-working GPT configuration - let disko handle fileSystems
+  _print "${YELLOW}Creating GPT configuration...${NC}"
+  # Replace with a working GPT+BIOS configuration
   cat > "$TMP_DISK_CONFIG" << 'EOF'
-# Simple GPT with BIOS boot partition - explicit labels
+# Simple GPT with BIOS boot partition - let disko handle fileSystems
 {
   disko.devices = {
     disk = {
@@ -169,7 +169,6 @@ setup_disk() {
             root = {
               size = "100%";
               priority = 2;
-              label = "nixos-root";  # Explicit label for the root partition
               content = {
                 type = "filesystem";
                 format = "ext4";
@@ -181,12 +180,6 @@ setup_disk() {
         };
       };
     };
-  };
-
-  # Explicit fileSystems configuration to ensure proper mounting
-  fileSystems."/" = {
-    device = "/dev/disk/by-label/nixos-root";
-    fsType = "ext4";
   };
 }
 EOF
