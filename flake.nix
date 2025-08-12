@@ -180,6 +180,20 @@
             ./hosts/server
           ];
         };
+               "x86_64-linux-server-minimal" = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./hosts/server-minimal
+          ];
+        };
+               "aarch64-linux-server-minimal" = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          specialArgs = { inherit inputs; };
+          modules = [
+            ./hosts/server-minimal
+          ];
+        };
 
      };
   };
