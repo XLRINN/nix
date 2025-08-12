@@ -12,18 +12,19 @@ let user = "david";
     ../../modules/shared
   ];
 
-  # Use GRUB boot loader for legacy BIOS
+  # Use GRUB boot loader for GPT with BIOS boot partition
   boot = {
     loader = {
       grub = {
         enable = true;
-        device = "/dev/sda";
         useOSProber = false;
         forceInstall = true;
-        # BIOS-specific settings for single partition
+        # GPT with BIOS boot partition settings
         efiSupport = false;
         gfxmodeBios = "text";
         splashImage = null;
+        # Let disko handle the device configuration
+        copyKernels = true;
       };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel instead of latest
