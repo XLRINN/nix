@@ -8,19 +8,16 @@ let user = "david";
   ]; in
 {
   imports = [
-    ../../modules/server/disk-config.nix
+    ../../modules/server/disk-config.nix  # Use BIOS-specific disk config
   ];
 
-  # Use GRUB boot loader - let disko handle device configuration
+  # GRUB configuration for BIOS-only systems
   boot = {
     loader = {
       grub = {
         enable = true;
-        # Don't specify device when using disko - it handles boot setup
+        device = "/dev/sda";  # Install to MBR
         useOSProber = false;
-        efiSupport = false;
-        gfxmodeBios = "text";
-        splashImage = null;
       };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel

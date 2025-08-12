@@ -143,36 +143,27 @@ setup_disk() {
   sudo umount -R /mnt 2>/dev/null || true
   sudo mkdir -p /mnt
 
-  # Create a temporary disko config with the selected boot disk
-  # Fix any incorrect partition table types (msdos/dos -> gpt)
+  # Create disko config matching the working nixos structure
   TMP_DISK_CONFIG=/tmp/disk-config.nix
-  
-  # Always use a known-working GPT configuration
-  _print "${YELLOW}Creating GPT configuration...${NC}"
-  # Replace with a working GPT+BIOS configuration using disko's standard naming
   cat > "$TMP_DISK_CONFIG" << EOF
-# GPT configuration using disko's standard naming
+# BIOS-only configuration matching the structure of working nixos config
 {
-  disko.devices = {
-    disk = {
-      main = {
-        device = "/dev/${BOOT_DISK}";
-        type = "disk";
-        content = {
-          type = "gpt";
-          partitions = {
-            bios = {
-              size = "1M";
-              type = "EF02";  # BIOS boot partition
-            };
-            root = {
-              size = "100%";
-              content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/";
-              };
-            };
+  disko.devices.disk.main = {
+    device = "/dev/${BOOT_DISK}";
+    type = "disk";
+    content = {
+      type = "gpt";
+      partitions = {
+        bios = {
+          size = "1M";
+          type = "EF02";  # BIOS boot partition for GPT
+        };
+        root = {
+          size = "100%";
+          content = {
+            type = "filesystem";
+            format = "ext4";
+            mountpoint = "/";
           };
         };
       };
@@ -180,26 +171,21 @@ setup_disk() {
   };
 }
 EOF
-  
-  # Show the configuration for debugging
-  _print "${YELLOW}Disk configuration being used:${NC}"
-  grep -E "device =|type =|size =|mountpoint =" "$TMP_DISK_CONFIG" | head -10
 
   _print "${BLUE}Running disko to partition and format the disk...${NC}"
-  # Use nix to run disko with experimental features enabled
-  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG" | sed 's/^/  /'; then
+  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG"; then
     _print "${RED}${ERROR} Disk partitioning failed.${NC}"
     exit 1
   fi
 
   _print "${BLUE}Mounting filesystems to /mnt...${NC}"
-  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG" | sed 's/^/  /'; then
+  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG"; then
     _print "${RED}${ERROR} Mounting filesystems failed.${NC}"
     exit 1
   fi
 
   if ! findmnt /mnt >/dev/null 2>&1; then
-    _print "${RED}${ERROR} /mnt is not a mount point after disko mount.${NC}"
+    _print "${RED}${ERROR} /mnt is not mounted after disko.${NC}"
     exit 1
   fi
 
