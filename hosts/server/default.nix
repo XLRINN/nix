@@ -8,8 +8,7 @@ let user = "david";
   ]; in
 {
   imports = [
-    ../../modules/server/disk-config.nix # Use server-specific disk config
-    # ../../modules/shared  # Disable shared modules to reduce memory usage
+    ../../modules/server/disk-config.nix
   ];
 
   # Use GRUB boot loader for GPT with BIOS boot partition
