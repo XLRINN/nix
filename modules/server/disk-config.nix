@@ -1,4 +1,4 @@
-# Simple MBR layout for maximum compatibility
+# GPT with BIOS boot partition for maximum compatibility
 {
   disko.devices = {
     disk = {
@@ -6,11 +6,16 @@
         device = "/dev/sda";
         type = "disk";
         content = {
-          type = "dos";
+          type = "gpt";
           partitions = {
+            boot = {
+              size = "1M";
+              type = "EF02";  # BIOS boot partition for GPT on BIOS systems
+              priority = 1;
+            };
             root = {
               size = "100%";
-              bootable = true;
+              priority = 2;
               content = {
                 type = "filesystem";
                 format = "ext4";

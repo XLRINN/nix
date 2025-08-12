@@ -143,13 +143,56 @@ setup_disk() {
   sudo umount -R /mnt 2>/dev/null || true
   sudo mkdir -p /mnt
 
-  # Create a temporary disko config with the selected boot disk and fix msdos->dos
+  # Create a temporary disko config with the selected boot disk
+  # Fix any incorrect partition table types (msdos/dos -> gpt)
   TMP_DISK_CONFIG=/tmp/disk-config.nix
-  sed -e "s|/dev/sda|/dev/${BOOT_DISK}|g" -e 's|type = "msdos"|type = "dos"|g' modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
   
-  # Show the fixed configuration for debugging
+  # Check if the config has incorrect partition types and fix them
+  if grep -q 'type = "msdos"\|type = "dos"' modules/server/disk-config.nix; then
+    _print "${YELLOW}Fixing partition table type to GPT...${NC}"
+    # Replace the entire disk config with a working GPT+BIOS configuration
+    cat > "$TMP_DISK_CONFIG" << 'EOF'
+# GPT with BIOS boot partition for maximum compatibility
+{
+  disko.devices = {
+    disk = {
+      main = {
+        device = "/dev/BOOTDISK";
+        type = "disk";
+        content = {
+          type = "gpt";
+          partitions = {
+            boot = {
+              size = "1M";
+              type = "EF02";  # BIOS boot partition for GPT on BIOS systems
+              priority = 1;
+            };
+            root = {
+              size = "100%";
+              priority = 2;
+              content = {
+                type = "filesystem";
+                format = "ext4";
+                mountpoint = "/";
+                mountOptions = [ "defaults" ];
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+}
+EOF
+    sed -i "s|/dev/BOOTDISK|/dev/${BOOT_DISK}|g" "$TMP_DISK_CONFIG"
+  else
+    # Just update the device path if config is already correct
+    sed "s|/dev/sda|/dev/${BOOT_DISK}|g" modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
+  fi
+  
+  # Show the configuration for debugging
   _print "${YELLOW}Disk configuration being used:${NC}"
-  cat "$TMP_DISK_CONFIG" | head -20
+  grep -E "device =|type =|size =|mountpoint =" "$TMP_DISK_CONFIG" | head -10
 
   _print "${BLUE}Running disko to partition and format the disk...${NC}"
   # Use nix to run disko with experimental features enabled
