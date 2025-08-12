@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
 
 # Color codes
 RED='\033[0;31m'
@@ -141,17 +141,29 @@ setup_disk() {
 
   # Ensure /mnt is not mounted from a previous attempt
   sudo umount -R /mnt 2>/dev/null || true
+  sudo mkdir -p /mnt
 
   # Create a temporary disko config with the selected boot disk
   TMP_DISK_CONFIG=/tmp/disk-config.nix
   sed "s|/dev/sda|/dev/${BOOT_DISK}|g" modules/server/disk-config.nix > "$TMP_DISK_CONFIG"
 
   _print "${BLUE}Running disko to partition and format the disk...${NC}"
-  # Use nix to run disko without requiring it to be pre-installed in the image
-  nix run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG" | sed 's/^/  /'
+  # Use nix to run disko with experimental features enabled
+  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG" | sed 's/^/  /'; then
+    _print "${RED}${ERROR} Disk partitioning failed.${NC}"
+    exit 1
+  fi
 
   _print "${BLUE}Mounting filesystems to /mnt...${NC}"
-  nix run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG" | sed 's/^/  /'
+  if ! sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount "$TMP_DISK_CONFIG" | sed 's/^/  /'; then
+    _print "${RED}${ERROR} Mounting filesystems failed.${NC}"
+    exit 1
+  fi
+
+  if ! findmnt /mnt >/dev/null 2>&1; then
+    _print "${RED}${ERROR} /mnt is not a mount point after disko mount.${NC}"
+    exit 1
+  fi
 
   _print "${GREEN}${SUCCESS} Disk partitioned and mounted successfully${NC}"
   _print "${BLUE}Mounted filesystems:${NC}"
@@ -160,7 +172,12 @@ setup_disk() {
 
 setup_files() {
   _print "${CYAN}${SERVER} Setting up NixOS files${NC}"
-  
+  # Ensure target is mounted before copying
+  if ! findmnt /mnt >/dev/null 2>&1; then
+    _print "${RED}${ERROR} /mnt is not mounted. Aborting file copy.${NC}"
+    exit 1
+  fi
+
   sudo mkdir -p /mnt/etc/nixos
   sudo cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
@@ -189,7 +206,7 @@ install_nixos() {
   _print "${YELLOW}Target: $FLAKE_TARGET${NC}"
   _print "${YELLOW}Current directory: $(pwd)${NC}"
   _print "${YELLOW}Available flake targets:${NC}"
-  nix flake show . 2>/dev/null || echo "Could not show flake targets"
+  nix --extra-experimental-features "nix-command flakes" flake show . 2>/dev/null || echo "Could not show flake targets"
   
   # Set memory limits to prevent out of memory errors
   # Optional: Set Nix concurrency for stability in low-memory environments
@@ -210,7 +227,7 @@ install_nixos() {
 
   # Capture all output for debugging
   _print "${BLUE}Starting installation with full output capture...${NC}"
-  if timeout 7200 sudo nixos-install --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
+  if timeout 7200 sudo nixos-install --extra-experimental-features "nix-command flakes" --flake .#$FLAKE_TARGET --no-root-passwd --no-channel-copy --verbose 2>&1 | tee /tmp/nixos-install.log; then
     _print "${GREEN}${SUCCESS} NixOS installation completed successfully${NC}"
     sudo chmod -R 775 /mnt/etc/nixos
     
