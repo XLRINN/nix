@@ -1,4 +1,6 @@
 _: {
+  # This formats the disk with the ext4 filesystem
+  # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
     disk = {
       main = {
@@ -7,15 +9,12 @@ _: {
         content = {
           type = "gpt";
           partitions = {
-            bios = {
-              size = "1M";
-              type = "EF02"; # for grub MBR
-            };
-            boot = {
+            ESP = {
+              type = "EF00";
               size = "100M";
               content = {
                 type = "filesystem";
-                format = "ext4";
+                format = "vfat";
                 mountpoint = "/boot";
                 mountOptions = [ "defaults" ];
               };

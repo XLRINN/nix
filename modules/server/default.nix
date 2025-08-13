@@ -8,13 +8,14 @@ let user = "david";
     ../shared
   ];
 
-  # Use GRUB boot loader for BIOS.
+  # Use the systemd-boot EFI boot loader.
   boot = {
     loader = {
-      grub = {
+      systemd-boot = {
         enable = true;
-        useOSProber = false;
+        configurationLimit = 42;
       };
+      efi.canTouchEfiVariables = true;
       # Faster boot
       timeout = 1;
     };
@@ -88,21 +89,39 @@ let user = "david";
     xserver.enable = false;
     
     # Enable SSH for remote access
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      settings = {
+        # Security settings
+        PasswordAuthentication = true;  # Allow password auth for initial setup
+        PermitRootLogin = "no";        # Disable root login
+        PubkeyAuthentication = true;   # Enable key-based auth
+        AuthorizedKeysFile = ".ssh/authorized_keys";
+        # Performance settings
+        UseDNS = false;                # Faster connections
+        GSSAPIAuthentication = false;  # Disable GSSAPI
+        # Connection settings
+        ClientAliveInterval = 60;      # Keep connections alive
+        ClientAliveCountMax = 3;
+        MaxStartups = "10:30:60";      # Limit concurrent connections
+      };
+    };
     
     # Enable getty for console access (TTY1-TTY6)
-    # getty is enabled by default in NixOS
+    getty = {
+      enable = true;
+    };
     
     # Enable fail2ban for security
     # fail2ban.enable = true;
   };
 
-  # Firewall disabled for live environment compatibility
-  # networking.firewall = {
-  #   enable = true;
-  #   allowedTCPPorts = [ 22 ];  # SSH only for now
-  #   allowedUDPPorts = [ ];
-  # };
+  # Enable built-in NixOS firewall
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];  # SSH only for now
+    allowedUDPPorts = [ ];
+  };
 
   # Turn on flag for proprietary software
   nix = {
@@ -116,8 +135,8 @@ let user = "david";
       max-jobs = "auto";
       cores = 0;
       builders-use-substitutes = true;
-      # Download buffer size (8MB)
-      download-buffer-size = 8388608;
+      # Increase download buffer for faster downloads
+      download-buffer-size = 134217728;
     };
 
     package = pkgs.nix;
