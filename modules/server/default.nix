@@ -8,13 +8,15 @@ let user = "david";
     ../shared
   ];
 
-  # Use GRUB boot loader for BIOS.
+  # Use GRUB boot loader for BIOS with GPT.
   boot = {
     loader = {
       grub = {
         enable = true;
         device = "/dev/sda";
         useOSProber = false;
+        efiSupport = false;  # BIOS mode
+        efiInstallAsRemovable = false;
       };
       # Faster boot
       timeout = 1;
@@ -89,23 +91,7 @@ let user = "david";
     xserver.enable = false;
     
     # Enable SSH for remote access
-    openssh = {
-      enable = true;
-      settings = {
-        # Security settings
-        PasswordAuthentication = true;  # Allow password auth for initial setup
-        PermitRootLogin = "no";        # Disable root login
-        PubkeyAuthentication = true;   # Enable key-based auth
-        AuthorizedKeysFile = ".ssh/authorized_keys";
-        # Performance settings
-        UseDNS = false;                # Faster connections
-        GSSAPIAuthentication = false;  # Disable GSSAPI
-        # Connection settings
-        ClientAliveInterval = 60;      # Keep connections alive
-        ClientAliveCountMax = 3;
-        MaxStartups = "10:30:60";      # Limit concurrent connections
-      };
-    };
+    openssh.enable = true;
     
     # Enable getty for console access (TTY1-TTY6)
     # getty is enabled by default in NixOS
