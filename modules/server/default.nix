@@ -92,24 +92,24 @@ let user = "david";
     openssh.enable = true;
     
     # Enable fail2ban for security
-    fail2ban.enable = true;
+    # fail2ban.enable = true;
   };
 
   # Enable built-in NixOS firewall
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [ 22 80 443 ];
-    allowedUDPPorts = [ ];
-  };
+  # networking.firewall = {
+  #   enable = true;
+  #   allowedTCPPorts = [ 22 80 443 ];
+  #   allowedUDPPorts = [ ];
+  # };
 
   # Turn on flag for proprietary software
   nix = {
-    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nix:/etc/nixos" ];
+    # nixPath = [ "nixos-config=/home/${user}/.local/share/src/nix:/etc/nixos" ];
     settings = {
       allowed-users = [ "${user}" ];
       trusted-users = [ "@admin" "${user}" ];
-      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
-      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+      # substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
+      # trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
       # Speed optimizations
       max-jobs = "auto";
       cores = 0;
@@ -123,17 +123,17 @@ let user = "david";
       experimental-features = nix-command flakes
     '';
 
-    gc = {
-      automatic = true;
-      dates = "14d";
-      options = "--delete-older-than 30d";
-    };
+    # gc = {
+    #   automatic = true;
+    #   dates = "14d";
+    #   options = "--delete-older-than 30d";
+    # };
   };
 
   # Manages keys and such
-  programs = {
-    gnupg.agent.enable = true;
-  };
+  # programs = {
+  #   gnupg.agent.enable = true;
+  # };
 
   environment.systemPackages = with pkgs; [
     gitAndTools.gitFull
@@ -143,39 +143,39 @@ let user = "david";
     htop
     tmux
     # Server-specific packages
-    nginx
-    certbot
+    # nginx
+    # certbot
     # Monitoring tools
-    iotop
-    nethogs
+    # iotop
+    # nethogs
     # Network tools
-    nmap
-    tcpdump
+    # nmap
+    # tcpdump
     # Development tools
-    nodejs
-    python3
+    # nodejs
+    # python3
     # Container tools
-    docker-compose
+    # docker-compose
     # Basic CLI tools
-    ripgrep
-    fd
-    bat
-    exa
-    fzf
-    zoxide
+    # ripgrep
+    # fd
+    # bat
+    # exa
+    # fzf
+    # zoxide
     # Terminal multiplexer
-    zellij
+    # zellij
     # Development tools
-    direnv
-    nix-direnv
+    # direnv
+    # nix-direnv
   ];
 
   # System optimizations for server
-  powerManagement.cpuFreqGovernor = "performance";
+  # powerManagement.cpuFreqGovernor = "performance";
   
   # Enable automatic security updates
-  system.autoUpgrade = {
-    enable = true;
-    channel = "https://nixos.org/channels/nixos-unstable";
-  };
+  # system.autoUpgrade = {
+  #   enable = true;
+  #   channel = "https://nixos.org/channels/nixos-unstable";
+  # };
 }

@@ -17,12 +17,12 @@ in
   # Only CLI imports - no GUI components
   imports = [
     # CLI tools
-    ../shared/config/terminal/git.nix
-    ../shared/config/terminal/zsh.nix
-    ../shared/config/terminal/neovim.nix
-    ../shared/config/terminal/tmux.nix
-    ../shared/config/terminal/zellij.nix
-    ../shared/config/terminal/direnv.nix
-    ../shared/config/terminal/monitoring.nix
+    # ../shared/config/terminal/git.nix
+    # ../shared/config/terminal/zsh.nix
+    # ../shared/config/terminal/neovim.nix
+    # ../shared/config/terminal/tmux.nix
+    # ../shared/config/terminal/zellij.nix
+    # ../shared/config/terminal/direnv.nix
+    # ../shared/config/terminal/monitoring.nix
   ];
 }
