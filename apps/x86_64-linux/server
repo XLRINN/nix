@@ -95,7 +95,7 @@ install_nixos() {
 
 
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 16777216 --option cores 0 --option max-jobs auto
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to user's home directory (like dustinlyons does)
