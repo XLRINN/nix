@@ -15,16 +15,12 @@ check_installer() {
   if [ -e /etc/NIXOS ]; then
     echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
     
-    # Enable SSH for remote access during installation
-    echo -e "\e[1;33mEnabling SSH for remote access...\e[0m"
-    sudo systemctl start ssh
-    sudo systemctl enable ssh
+    # Set password for nixos user
+    echo "nixos:nixos" | chpasswd
     
-    # Set password for nixos user if not already set
-    if ! sudo passwd -S nixos | grep -q "P"; then
-      echo -e "\e[1;33mSetting password for nixos user...\e[0m"
-      echo "nixos:nixos" | sudo chpasswd
-    fi
+    # Start SSH service
+    systemctl start ssh
+    systemctl enable ssh
     
     # Show IP address for SSH connection
     IP=$(ip route get 1.1.1.1 | awk '{print $7}')
