@@ -22,8 +22,8 @@ let user = "david";
     kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
     kernelModules = [ "uinput" ];
-    # Speed optimizations
-    kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
+    # Speed optimizations - Serial console for Proxmox
+    kernelParams = [ "console=ttyS0,115200" "console=ttyS0" "vga=normal" "nomodeset" ];
   };
 
   # Set your time zone.
@@ -56,8 +56,8 @@ let user = "david";
       ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;
-      # Set initial password (change this after first login)
-      initialPassword = "6!y2c87T";
+      # Set initial password to your user password
+      initialPassword = "david";
       # Create user directories with proper permissions
       createHome = true;
       home = "/home/${user}";
@@ -65,8 +65,8 @@ let user = "david";
 
     root = {
       openssh.authorizedKeys.keys = keys;
-      # Set initial root password (change this after first login)
-      initialPassword = "6!y2c87T";
+      # Set initial root password to your user password
+      initialPassword = "david";
     };
   };
 
@@ -89,18 +89,39 @@ let user = "david";
     xserver.enable = false;
     
     # Enable SSH for remote access
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      settings = {
+        # Security settings
+        PasswordAuthentication = true;  # Allow password auth for initial setup
+        PermitRootLogin = "no";        # Disable root login
+        PubkeyAuthentication = true;   # Enable key-based auth
+        AuthorizedKeysFile = ".ssh/authorized_keys";
+        # Performance settings
+        UseDNS = false;                # Faster connections
+        GSSAPIAuthentication = false;  # Disable GSSAPI
+        # Connection settings
+        ClientAliveInterval = 60;      # Keep connections alive
+        ClientAliveCountMax = 3;
+        MaxStartups = "10:30:60";      # Limit concurrent connections
+      };
+    };
+    
+    # Enable getty for console access (TTY1-TTY6)
+    getty = {
+      enable = true;
+    };
     
     # Enable fail2ban for security
     # fail2ban.enable = true;
   };
 
   # Enable built-in NixOS firewall
-  # networking.firewall = {
-  #   enable = true;
-  #   allowedTCPPorts = [ 22 80 443 ];
-  #   allowedUDPPorts = [ ];
-  # };
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];  # SSH only for now
+    allowedUDPPorts = [ ];
+  };
 
   # Turn on flag for proprietary software
   nix = {
@@ -178,4 +199,6 @@ let user = "david";
   #   enable = true;
   #   channel = "https://nixos.org/channels/nixos-unstable";
   # };
+
+
 }
