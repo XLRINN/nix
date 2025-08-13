@@ -79,7 +79,7 @@
         type = "app";
         program = "${(nixpkgs.legacyPackages.${system}.writeShellScriptBin scriptName (builtins.readFile ./apps/${system}/${scriptName}))}/bin/${scriptName}";
       };
-      mkLinuxApps = system: let pkgs = nixpkgs.legacyPackages.${system}; in {
+      mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
         "copy-keys" = mkApp "copy-keys" system;
@@ -88,12 +88,7 @@
         "install" = mkApp "install" system;
         "server" = mkApp "server" system;
         "sync-master" = mkApp "sync-master" system;
-        "install-minimal" = {
-          type = "app";
-          program = toString (pkgs.writeShellScript "install-minimal" ''
-            nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- --flake github:xlrinn/nix#x86_64-linux-server-minimal /dev/sda
-          '');
-        };
+
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -160,6 +155,7 @@
           system = "x86_64-linux";
           specialArgs = { inherit inputs claude-desktop; };
           modules = [
+            disko.nixosModules.disko
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;
@@ -174,6 +170,7 @@
           system = "aarch64-linux";
           specialArgs = { inherit inputs claude-desktop; };
           modules = [
+            disko.nixosModules.disko
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;
@@ -184,20 +181,7 @@
             ./hosts/server
           ];
         };
-               "x86_64-linux-server-minimal" = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs; };
-          modules = [
-            ./hosts/server-minimal
-          ];
-        };
-               "aarch64-linux-server-minimal" = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          specialArgs = { inherit inputs; };
-          modules = [
-            ./hosts/server-minimal
-          ];
-        };
+
 
      };
   };

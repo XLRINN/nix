@@ -1,30 +1,25 @@
 { config, inputs, pkgs, lib, ... }:
 
 let user = "david";
-  keys = [ 
+  keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p"
     # Add your SSH public key here
     # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
   ]; in
 {
-  # No imports - we'll handle everything manually
+  imports = [
+    ../../modules/server/disk-config.nix
+    ../../modules/shared
+  ];
 
-  # Manual filesystem configuration using device path (not label)
-  fileSystems."/" = {
-    device = "/dev/sda2";  # Root partition will be sda2 (after BIOS boot partition)
-    fsType = "ext4";
-    options = [ "defaults" "noatime" ];
-  };
-
-  # GRUB configuration for BIOS-only systems
+  # Use systemd-boot EFI boot loader (like the working desktop config)
   boot = {
     loader = {
-      grub = {
+      systemd-boot = {
         enable = true;
-        device = "/dev/sda";  # Install to MBR
-        useOSProber = false;
-        efiSupport = false;  # Explicitly disable EFI for BIOS systems
+        configurationLimit = 42;
       };
+      efi.canTouchEfiVariables = true;
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel
     initrd.availableKernelModules = [ "ahci" "sd_mod" "virtio" "virtio_pci" "virtio_blk" ];
@@ -36,8 +31,8 @@ let user = "david";
 
   networking = {
     hostName = "loki"; # Define your hostname.
-    useDHCP = lib.mkForce true;  # Use DHCP for simplicity
-    networkmanager.enable = false; # Disable NetworkManager for server
+    useDHCP = lib.mkForce false;  # Force false when using NetworkManager
+    networkmanager.enable = true; # Enable NetworkManager
     # Generic server firewall
     firewall.enable = true;
     firewall.allowedTCPPorts = [ 22 80 443 ]; # SSH, HTTP, HTTPS
@@ -83,15 +78,13 @@ let user = "david";
     }];
   };
 
-  services = { 
+  services = {
     openssh.enable = true;
     # Essential system services
     dbus.enable = true;
     # System utilities
     udev.enable = true;
   };
-
-
 
   # Turn on flag for proprietary software
   nix = {
@@ -114,8 +107,6 @@ let user = "david";
     # Minimum required packages for initial setup
     git
     openssh
-    vim
-    htop
   ];
 
   # Environment variables for API keys
@@ -128,8 +119,6 @@ let user = "david";
     GH_CONFIG_DIR = "/home/${user}/.config/gh";
   };
 
-
-
   # Minimal activation scripts
   system.activationScripts = {
     setupNixDir = ''
@@ -138,5 +127,5 @@ let user = "david";
     '';
   };
 
-  system.stateVersion = "24.05"; # Updated to current version
+  system.stateVersion = "21.05"; # Don't change this
 }
