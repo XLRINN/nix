@@ -1,20 +1,16 @@
-{ 
+{
   disko.devices.disk.main = {
     device = "/dev/sda";
     type = "disk";
     content = {
       type = "gpt";
       partitions = {
-        bios = {
-          size = "1M";
-          type = "EF02"; # BIOS boot partition for GPT
-        };
-        boot = {
+        efi = {
           size = "512M";
-          type = "8300"; # Linux filesystem
+          type = "EF00";
           content = {
             type = "filesystem";
-            format = "ext4";
+            format = "vfat";
             mountpoint = "/boot";
           };
         };
