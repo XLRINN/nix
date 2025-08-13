@@ -76,10 +76,10 @@ install_nixos() {
 
   case "$ARCH" in
     x86_64)
-      FLAKE_TARGET="x86_64-linux"
+      FLAKE_TARGET="x86_64-linux-server"
       ;;
     aarch64)
-      FLAKE_TARGET="aarch64-linux"
+      FLAKE_TARGET="aarch64-linux-server"
       ;;
     *)
       echo -e "${RED}Unsupported architecture: $ARCH${NC}"

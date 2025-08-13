@@ -89,7 +89,23 @@ let user = "david";
     xserver.enable = false;
     
     # Enable SSH for remote access
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      settings = {
+        # Security settings
+        PasswordAuthentication = true;  # Allow password auth for initial setup
+        PermitRootLogin = "no";        # Disable root login
+        PubkeyAuthentication = true;   # Enable key-based auth
+        AuthorizedKeysFile = ".ssh/authorized_keys";
+        # Performance settings
+        UseDNS = false;                # Faster connections
+        GSSAPIAuthentication = false;  # Disable GSSAPI
+        # Connection settings
+        ClientAliveInterval = 60;      # Keep connections alive
+        ClientAliveCountMax = 3;
+        MaxStartups = "10:30:60";      # Limit concurrent connections
+      };
+    };
     
     # Enable getty for console access (TTY1-TTY6)
     getty = {
@@ -100,12 +116,12 @@ let user = "david";
     # fail2ban.enable = true;
   };
 
-  # Firewall disabled for compatibility
-  # networking.firewall = {
-  #   enable = true;
-  #   allowedTCPPorts = [ 22 ];  # SSH only for now
-  #   allowedUDPPorts = [ ];
-  # };
+  # Enable built-in NixOS firewall
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];  # SSH only for now
+    allowedUDPPorts = [ ];
+  };
 
   # Turn on flag for proprietary software
   nix = {
