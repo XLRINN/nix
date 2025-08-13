@@ -244,25 +244,8 @@ main() {
     _check_root
     _check_nixos
     
-    # Get user confirmation
-    _print "${YELLOW}This will completely wipe the boot disk. Are you sure? (y/N)${NC}"
-    read -r response
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        _print "${YELLOW}Installation cancelled.${NC}"
-        exit 0
-    fi
-    
     # Detect boot disk
     _detect_boot_disk
-    
-    # Get final confirmation with disk info
-    _print "${RED}${ERROR} WARNING: This will completely wipe /dev/$BOOT_DISK${NC}"
-    _print "${YELLOW}Are you absolutely sure? Type 'YES' to continue:${NC}"
-    read -r final_response
-    if [[ "$final_response" != "YES" ]]; then
-        _print "${YELLOW}Installation cancelled.${NC}"
-        exit 0
-    fi
     
     # Execute installation steps
     _download_config
