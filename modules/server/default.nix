@@ -8,15 +8,13 @@ let user = "david";
     ../shared
   ];
 
-  # Use GRUB boot loader for BIOS with GPT.
+  # Use GRUB boot loader for BIOS.
   boot = {
     loader = {
       grub = {
         enable = true;
         device = "/dev/sda";
         useOSProber = false;
-        efiSupport = false;  # BIOS mode
-        efiInstallAsRemovable = false;
       };
       # Faster boot
       timeout = 1;
