@@ -1,0 +1,10 @@
+[33m0c59746[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mserver[m[33m, [m[1;31morigin/server[m[33m)[m refactor: remove simple disk configuration file and update disk-config.nix permissions for improved usability
+[33m34ecc7f[m refactor: streamline server installation process by removing minimal server configuration, enhancing disk setup with disko integration, and updating NixOS configuration for improved usability
+[33mfc2499a[m Make disk-config.nix universal for BIOS: adds ext4 /boot and bootable partition, works everywhere.
+[33mec9d5a2[m refactor: update disk configuration to use BIOS-specific settings and simplify disko integration
+[33m686bd99[m refactor: update GPT configuration to use disko's standard naming for improved clarity
+[33m9bd8db1[m refactor: update GPT configuration to clarify disk layout and remove boot loader settings
+[33mad89324[m refactor: update disk configuration to use explicit boot device and improve clarity in GPT setup
+[33mfadc9d0[m refactor: simplify GPT configuration in disk setup by allowing disko to manage file systems and remove explicit labels
+[33m4515b63[m fik
+[33m8fd133b[m enhance: update disk configuration to use GPT format with BIOS boot partition and improve debugging output
