@@ -31,7 +31,7 @@ let user = "david";
 
   networking = {
     hostName = "server"; # Define your hostname.
-    useDHCP = false;
+    useDHCP = true; # Enable DHCP for automatic IP assignment
     networkmanager.enable = true; # Enable NetworkManager
   };
 
@@ -93,15 +93,13 @@ let user = "david";
     
     # Enable fail2ban for security
     fail2ban.enable = true;
-    
-    # Enable firewall
-    ufw.enable = true;
-    ufw.default = "deny";
-    ufw.rules = {
-      "allow ssh" = "22/tcp";
-      "allow http" = "80/tcp";
-      "allow https" = "443/tcp";
-    };
+  };
+
+  # Enable built-in NixOS firewall
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 80 443 ];
+    allowedUDPPorts = [ ];
   };
 
   # Turn on flag for proprietary software
