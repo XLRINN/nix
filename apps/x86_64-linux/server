@@ -58,9 +58,30 @@ run_apply() {
 }
 
 run_disko() {
+  # Ask user for BIOS or UEFI
+  echo -e "${CYAN}${QUESTION} Choose boot type:${NC}"
+  echo -e "${YELLOW}1) BIOS (Legacy)${NC}"
+  echo -e "${YELLOW}2) UEFI${NC}"
+  read -p "Enter choice (1 or 2): " boot_choice
+  
+  case $boot_choice in
+    1)
+      echo -e "${GREEN}Using BIOS disk configuration${NC}"
+      DISK_CONFIG="./modules/server/disk-config.nix"
+      ;;
+    2)
+      echo -e "${GREEN}Using UEFI disk configuration${NC}"
+      DISK_CONFIG="./modules/nixos/disk-config.nix"
+      ;;
+    *)
+      echo -e "${RED}Invalid choice. Using BIOS configuration.${NC}"
+      DISK_CONFIG="./modules/server/disk-config.nix"
+      ;;
+  esac
+  
   nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
     --option cores 0 --option max-jobs auto \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/server/disk-config.nix
+    github:nix-community/disko -- --mode zap_create_mount $DISK_CONFIG
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 

@@ -8,14 +8,14 @@ let user = "david";
     ../shared
   ];
 
-  # Use the systemd-boot EFI boot loader.
+  # Use GRUB boot loader for BIOS.
   boot = {
     loader = {
-      systemd-boot = {
+      grub = {
         enable = true;
-        configurationLimit = 42;
+        device = "/dev/sda";
+        useOSProber = false;
       };
-      efi.canTouchEfiVariables = true;
       # Faster boot
       timeout = 1;
     };
