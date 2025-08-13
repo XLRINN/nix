@@ -83,6 +83,7 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "desktop" = mkApp "desktop" system;
+        "server" = mkApp "server" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
