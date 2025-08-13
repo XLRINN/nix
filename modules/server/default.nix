@@ -100,12 +100,12 @@ let user = "david";
     # fail2ban.enable = true;
   };
 
-  # Enable built-in NixOS firewall
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [ 22 ];  # SSH only for now
-    allowedUDPPorts = [ ];
-  };
+  # Firewall disabled for compatibility
+  # networking.firewall = {
+  #   enable = true;
+  #   allowedTCPPorts = [ 22 ];  # SSH only for now
+  #   allowedUDPPorts = [ ];
+  # };
 
   # Turn on flag for proprietary software
   nix = {
