@@ -55,24 +55,38 @@ _detect_boot_disk() {
     _print "${GREEN}${SUCCESS} Detected boot disk: /dev/$BOOT_DISK${NC}"
 }
 
-# Function to setup configuration
-_setup_config() {
-    _print "${BLUE}Setting up NixOS configuration...${NC}"
+# Function to download configuration
+_download_config() {
+    _print "${BLUE}Downloading NixOS configuration...${NC}"
     
-    # Check if we're already in a NixOS configuration directory
-    if [[ -f "flake.nix" && -d "hosts" && -d "modules" ]]; then
-        _print "${GREEN}${SUCCESS} Already in NixOS configuration directory!${NC}"
-        return 0
+    # Create temporary directory
+    TMP_DIR=$(mktemp -d)
+    cd "$TMP_DIR"
+    
+    # Download from GitHub using the correct URL format
+    _print "${YELLOW}Downloading from GitHub...${NC}"
+    curl -L -o nixos-config.tar.gz "https://github.com/xlrinn/nix/archive/main.tar.gz"
+    
+    # Extract
+    _print "${YELLOW}Extracting configuration...${NC}"
+    tar -xzf nixos-config.tar.gz
+    
+    # Move to expected location
+    sudo rm -rf /etc/nixos
+    sudo mv nix-main /etc/nixos
+    
+    # Verify extraction
+    _print "${YELLOW}Checking extracted contents...${NC}"
+    ls -la /etc/nixos/
+    
+    # Verify directory structure
+    _print "${YELLOW}Verifying directory structure...${NC}"
+    if [[ -d "/etc/nixos/hosts" && -d "/etc/nixos/modules" ]]; then
+        _print "${GREEN}${SUCCESS} Configuration downloaded and verified!${NC}"
+    else
+        _print "${RED}${ERROR} Configuration structure is invalid.${NC}"
+        exit 1
     fi
-    
-    # Check if configuration exists in /etc/nixos
-    if [[ -d "/etc/nixos" && -f "/etc/nixos/flake.nix" ]]; then
-        _print "${YELLOW}Using existing configuration from /etc/nixos${NC}"
-        return 0
-    fi
-    
-    _print "${RED}${ERROR} No NixOS configuration found. Please run this from your NixOS configuration directory.${NC}"
-    exit 1
 }
 
 # Function to setup disk
@@ -140,8 +154,8 @@ EOF
 _setup_nixos_files() {
     _print "${BLUE}🖥️ Setting up NixOS files${NC}"
     
-    # Copy current directory to mounted system
-    sudo cp -r . /mnt/etc/nixos/
+    # Copy configuration to mounted system
+    sudo cp -r /etc/nixos/* /mnt/etc/nixos/
     
     _print "${GREEN}${SUCCESS} Files copied to /mnt/etc/nixos${NC}"
 }
@@ -234,7 +248,7 @@ main() {
     _detect_boot_disk
     
     # Execute installation steps
-    _setup_config
+    _download_config
     _setup_disk
     _setup_nixos_files
     _install_nixos
