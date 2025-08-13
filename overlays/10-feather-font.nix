@@ -1,30 +1,29 @@
-# Icon Font Overlay - Using reliable alternatives to Feather Font
 self: super: with super; {
-  # Lucide Icons - Direct successor to Feather Icons
-  lucide-icons = stdenv.mkDerivation {
-    name = "lucide-icons-0.263.1";
-    
-    src = fetchFromGitHub {
-      owner = "lucide-icons";
-      repo = "lucide";
-      rev = "v0.263.1";
-      sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Will need to update this
+  feather-font = let
+    version = "1.0";
+    pname = "feather-font";
+  in stdenv.mkDerivation {
+    name = "${pname}-${version}";
+
+    src = fetchzip {
+      url = "https://github.com/dustinlyons/feather-font/archive/refs/tags/${version}.zip";
+      sha256 = "sha256-Zsz8/qn7XAG6BVp4XdqooEqioFRV7bLH0bQkHZvFbsg=";
     };
 
-    buildInputs = [ ];
+    buildInputs = [ unzip ];
     phases = [ "unpackPhase" "installPhase" ];
 
     installPhase = ''
       mkdir -p $out/share/fonts/truetype
-      # Copy any font files if they exist
-      find . -name "*.ttf" -o -name "*.otf" | xargs -I {} cp {} $out/share/fonts/truetype/ || true
+      cp $src/feather.ttf $out/share/fonts/truetype/
     '';
 
     meta = with lib; {
-      description = "Lucide Icons - Beautiful & consistent icon toolkit (Feather successor)";
-      homepage = "https://lucide.dev";
+      homepage = "https://www.feathericons.com/";
+      description = "Set of font icons from the open source collection Feather Icons";
       license = licenses.mit;
-      platforms = platforms.all;
+      maintainers = [ maintainers.dlyons ];
+      platforms = [ platforms.x86_64-linux platforms.x86_64-darwin ];
     };
   };
 }

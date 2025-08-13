@@ -51,17 +51,9 @@
         url = "github:dc-tec/nixvim";
         flake = false;
       };
-    claude-desktop = {
-      url = "github:k3d3/claude-desktop-linux-flake";
-      inputs = { 
-        nixpkgs.follows = "nixpkgs";
-        flake-utils.follows = "flake-utils";
-      };
-    };
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, claude-desktop, flake-utils } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf,nixvim, } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -77,7 +69,12 @@
       };
       mkApp = scriptName: system: {
         type = "app";
-        program = "${(nixpkgs.legacyPackages.${system}.writeShellScriptBin scriptName (builtins.readFile ./apps/${system}/${scriptName}))}/bin/${scriptName}";
+        program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin scriptName ''
+          #!/usr/bin/env bash
+          PATH=${nixpkgs.legacyPackages.${system}.git}/bin:$PATH
+          echo "Running ${scriptName} for ${system}"
+          exec ${self}/apps/${system}/${scriptName}
+        '')}/bin/${scriptName}";
       };
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
@@ -85,10 +82,7 @@
         "copy-keys" = mkApp "copy-keys" system;
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
-        "install" = mkApp "install" system;
-        "server" = mkApp "server" system;
-        "sync-master" = mkApp "sync-master" system;
-
+        "desktop" = mkApp "desktop" system;
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -134,7 +128,7 @@
 
       nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = { inherit inputs claude-desktop; };
+        specialArgs = inputs;
         modules = [
           disko.nixosModules.disko
           home-manager.nixosModules.home-manager {
@@ -149,40 +143,6 @@
 #        environment.variables = {
 #          EDITOR = "nvim";
 #        };
-     }) // {
-       # Server configuration (consolidated CLI-only functionality)
-               "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs claude-desktop; };
-          modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/server/home-manager.nix;
-              };
-            }
-            ./hosts/server
-          ];
-        };
-               "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          specialArgs = { inherit inputs claude-desktop; };
-          modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/server/home-manager.nix;
-              };
-            }
-            ./hosts/server
-          ];
-        };
-
-
-     };
+     });
   };
 }

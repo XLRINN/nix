@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-set -exu
+set -eu
 
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+
 
 check_installer() {
   if [ -e /etc/NIXOS ]; then
@@ -21,9 +25,9 @@ cleanup() {
 }
 
 download_config() {
-  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nixos-config-main.zip
+  curl -LJ0 https://github.com/xlrinn/nix/archive/desktop.zip -o nixos-config-main.zip
   unzip nixos-config-main.zip
-  mv nix-testing nixos-config
+  mv nix-desktop nixos-config
   cd nixos-config
 }
 
@@ -34,18 +38,21 @@ run_apply() {
     exit 1
   fi
   export USERNAME=$(cat /tmp/username.txt)
+  echo -e "${GREEN}✓ Configuration complete${NC}"
 }
 
 run_disko() {
   nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
     --option cores 0 --option max-jobs auto \
     github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
 setup_files() {
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
+  echo -e "${GREEN}✓ Files copied to system${NC}"
 }
 
 install_nixos() {
@@ -64,8 +71,23 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 16777216 --option cores 0 --option max-jobs auto
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto
   chmod -R 775 /mnt/etc/nixos
+  
+  # Copy config to user's home directory (like dustinlyons does)
+  export USERNAME=$(cat /tmp/username.txt)
+  mkdir -p /mnt/home/$USERNAME/.local/share/src
+  cp -r /mnt/etc/nixos /mnt/home/$USERNAME/.local/share/src/
+  
+  # Set up git remote for the user's config
+  chroot /mnt bash -c "cd /home/$USERNAME/.local/share/src/nixos && git init && git remote add origin https://github.com/xlrinn/nix.git"
+  
+  # Fix ownership after user is created
+  chroot /mnt bash -c "chown -R $USERNAME:users /home/$USERNAME/.local/share/src/nixos" || echo "Note: Ownership will be set correctly after first boot"
+  
+  echo -e "${GREEN}✓ NixOS installed successfully${NC}"
+  echo -e "${GREEN}✓ Configuration copied to /home/$USERNAME/.local/share/src/nixos${NC}"
+  echo -e "${GREEN}✓ Git remote configured${NC}"
 }
 
 prompt_reboot() {
