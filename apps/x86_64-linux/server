@@ -65,7 +65,7 @@ _download_config() {
     
     # Download from GitHub
     _print "${YELLOW}Downloading from GitHub...${NC}"
-    curl -L -o nixos-config.zip "https://github.com/xlrinn/nix/archive/main.zip"
+    curl -L -o nixos-config.zip "https://github.com/xlrinn/nix/archive/refs/heads/main.zip"
     
     # Extract
     _print "${YELLOW}Extracting configuration...${NC}"
