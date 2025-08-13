@@ -79,7 +79,7 @@
         type = "app";
         program = "${(nixpkgs.legacyPackages.${system}.writeShellScriptBin scriptName (builtins.readFile ./apps/${system}/${scriptName}))}/bin/${scriptName}";
       };
-      mkLinuxApps = system: {
+      mkLinuxApps = system: let pkgs = nixpkgs.legacyPackages.${system}; in {
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
         "copy-keys" = mkApp "copy-keys" system;
