@@ -143,6 +143,38 @@
 #        environment.variables = {
 #          EDITOR = "nvim";
 #        };
-     });
+     }) // {
+       # Server configurations
+       "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
+         system = "x86_64-linux";
+         specialArgs = inputs;
+         modules = [
+           disko.nixosModules.disko
+           home-manager.nixosModules.home-manager {
+             home-manager = {
+               useGlobalPkgs = true;
+               useUserPackages = true;
+               users.${user} = import ./modules/server/home-manager.nix;
+             };
+           }
+           ./modules/server
+         ];
+       };
+       "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
+         system = "aarch64-linux";
+         specialArgs = inputs;
+         modules = [
+           disko.nixosModules.disko
+           home-manager.nixosModules.home-manager {
+             home-manager = {
+               useGlobalPkgs = true;
+               useUserPackages = true;
+               users.${user} = import ./modules/server/home-manager.nix;
+             };
+           }
+           ./modules/server
+         ];
+       };
+     };
   };
 }

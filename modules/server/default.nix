@@ -1,0 +1,184 @@
+{ config, inputs, pkgs, ... }:
+
+let user = "david";
+  keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ]; in
+{
+  imports = [
+    ./disk-config.nix
+    ../shared
+  ];
+
+  # Use the systemd-boot EFI boot loader.
+  boot = {
+    loader = {
+      systemd-boot = {
+        enable = true;
+        configurationLimit = 42;
+      };
+      efi.canTouchEfiVariables = true;
+      # Faster boot
+      timeout = 1;
+    };
+    kernelPackages = pkgs.linuxPackages_latest;
+    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+    kernelModules = [ "uinput" ];
+    # Speed optimizations
+    kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
+  };
+
+  # Set your time zone.
+  time.timeZone = "America/New_York";
+
+  networking = {
+    hostName = "server"; # Define your hostname.
+    useDHCP = false;
+    networkmanager.enable = true; # Enable NetworkManager
+  };
+
+  hardware = {
+    enableAllFirmware = true; # Enable all firmware
+    graphics.enable = false; # Disable graphics for server
+    ledger.enable = true;
+    firmware = [ pkgs.linux-firmware ]; # Include firmware
+  };
+
+  virtualisation.docker.enable = true;
+
+  programs.zsh.enable = true; # Enable zsh
+
+  users.users = {
+    "${user}" = {
+      isNormalUser = true;
+      extraGroups = [
+        "wheel" # Enable 'sudo' for the user.
+        "docker"
+        "networkmanager"
+      ];
+      shell = pkgs.zsh;
+      openssh.authorizedKeys.keys = keys;
+      # Set initial password (change this after first login)
+      initialPassword = "6!y2c87T";
+      # Create user directories with proper permissions
+      createHome = true;
+      home = "/home/${user}";
+    };
+
+    root = {
+      openssh.authorizedKeys.keys = keys;
+      # Set initial root password (change this after first login)
+      initialPassword = "6!y2c87T";
+    };
+  };
+
+  security.sudo = {
+    enable = true;
+    extraRules = [{
+      commands = [
+        {
+          command = "${pkgs.systemd}/bin/reboot";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+      groups = [ "wheel" ];
+    }];
+  };
+
+  # Disable GUI components for server
+  services = { 
+    # Disable X server for server environment
+    xserver.enable = false;
+    
+    # Enable SSH for remote access
+    openssh.enable = true;
+    
+    # Enable fail2ban for security
+    fail2ban.enable = true;
+    
+    # Enable firewall
+    ufw.enable = true;
+    ufw.default = "deny";
+    ufw.rules = {
+      "allow ssh" = "22/tcp";
+      "allow http" = "80/tcp";
+      "allow https" = "443/tcp";
+    };
+  };
+
+  # Turn on flag for proprietary software
+  nix = {
+    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nix:/etc/nixos" ];
+    settings = {
+      allowed-users = [ "${user}" ];
+      trusted-users = [ "@admin" "${user}" ];
+      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
+      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+      # Speed optimizations
+      max-jobs = "auto";
+      cores = 0;
+      builders-use-substitutes = true;
+      # Increase download buffer for faster downloads
+      download-buffer-size = 134217728;
+    };
+
+    package = pkgs.nix;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+
+    gc = {
+      automatic = true;
+      dates = "14d";
+      options = "--delete-older-than 30d";
+    };
+  };
+
+  # Manages keys and such
+  programs = {
+    gnupg.agent.enable = true;
+  };
+
+  environment.systemPackages = with pkgs; [
+    gitAndTools.gitFull
+    vim
+    wget
+    curl
+    htop
+    tmux
+    # Server-specific packages
+    nginx
+    certbot
+    # Monitoring tools
+    htop
+    iotop
+    nethogs
+    # Network tools
+    nmap
+    tcpdump
+    # Development tools
+    nodejs
+    python3
+    # Container tools
+    docker-compose
+    # Basic CLI tools
+    ripgrep
+    fd
+    bat
+    exa
+    fzf
+    zoxide
+    # Terminal multiplexer
+    zellij
+    # Development tools
+    direnv
+    nix-direnv
+  ];
+
+  # System optimizations for server
+  powerManagement.cpuFreqGovernor = "performance";
+  
+  # Enable automatic security updates
+  system.autoUpgrade = {
+    enable = true;
+    channel = "https://nixos.org/channels/nixos-unstable";
+  };
+}
