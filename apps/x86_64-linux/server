@@ -84,21 +84,21 @@ _setup_disk() {
     sudo umount -R /mnt 2>/dev/null || true
     sudo mkdir -p /mnt
     
-    # Use the disk configuration from the NixOS config
-    _print "${YELLOW}Using disk configuration from modules/server/disk-config.nix...${NC}"
+    # Use the disk configuration from /etc/nixos
+    _print "${YELLOW}Using disk configuration from /etc/nixos/modules/server/disk-config.nix...${NC}"
     
-    # Check if disk config exists
-    if [[ ! -f "modules/server/disk-config.nix" ]]; then
-        _print "${RED}${ERROR} Disk configuration file not found: modules/server/disk-config.nix${NC}"
+    # Check if disk config exists in /etc/nixos
+    if [[ ! -f "/etc/nixos/modules/server/disk-config.nix" ]]; then
+        _print "${RED}${ERROR} Disk configuration file not found: /etc/nixos/modules/server/disk-config.nix${NC}"
         exit 1
     fi
     
     _print "${YELLOW}Disk configuration being used:${NC}"
-    cat modules/server/disk-config.nix
+    cat /etc/nixos/modules/server/disk-config.nix
     
-    # Run disko with the actual disk config file
+    # Run disko with the config from /etc/nixos
     _print "${YELLOW}Running disko to partition and format the disk...${NC}"
-    if nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko modules/server/disk-config.nix; then
+    if nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko /etc/nixos/modules/server/disk-config.nix; then
         _print "${GREEN}${SUCCESS} Disk setup completed successfully!${NC}"
     else
         _print "${RED}${ERROR} Disk partitioning failed.${NC}"
