@@ -119,8 +119,8 @@ let user = "david";
       max-jobs = "auto";
       cores = 0;
       builders-use-substitutes = true;
-      # Increase download buffer for faster downloads
-      download-buffer-size = 134217728;
+      # Download buffer size (8MB)
+      download-buffer-size = 8388608;
     };
 
     package = pkgs.nix;
