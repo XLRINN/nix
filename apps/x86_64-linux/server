@@ -98,7 +98,7 @@ _setup_disk() {
     
     # Run disko with the config from /etc/nixos
     _print "${YELLOW}Running disko to partition and format the disk...${NC}"
-    if nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko /etc/nixos/modules/server/disk-config.nix; then
+    if sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko /etc/nixos/modules/server/disk-config.nix; then
         _print "${GREEN}${SUCCESS} Disk setup completed successfully!${NC}"
     else
         _print "${RED}${ERROR} Disk partitioning failed.${NC}"
