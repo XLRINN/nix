@@ -31,13 +31,11 @@ let
     unrar
     unzip
     zsh-powerlevel10k
-    ripgrep   
     fd 
     lua
     lynx
     ueberzug
     # Development tools
-    colima
     docker
     docker-compose
     nodejs

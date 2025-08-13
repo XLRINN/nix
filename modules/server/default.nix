@@ -30,8 +30,8 @@ let user = "david";
   time.timeZone = "America/New_York";
 
   networking = {
-    hostName = "server"; # Define your hostname.
-    useDHCP = true; # Enable DHCP for automatic IP assignment
+    hostName = "loki"; # Define your hostname.
+    #useDHCP = true; # Enable DHCP for automatic IP assignment
     networkmanager.enable = true; # Enable NetworkManager
   };
 
@@ -146,7 +146,6 @@ let user = "david";
     nginx
     certbot
     # Monitoring tools
-    htop
     iotop
     nethogs
     # Network tools
