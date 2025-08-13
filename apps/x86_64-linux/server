@@ -51,16 +51,16 @@ run_disko() {
   
   case $boot_choice in
     1)
-      echo -e "${GREEN}Using BIOS disk configuration${NC}"
-      DISK_CONFIG="./modules/server/disk-config.nix"
+      echo -e "${GREEN}Using UEFI disk configuration for BIOS test${NC}"
+      DISK_CONFIG="./modules/nixos/disk-config.nix"
       ;;
     2)
       echo -e "${GREEN}Using UEFI disk configuration${NC}"
       DISK_CONFIG="./modules/nixos/disk-config.nix"
       ;;
     *)
-      echo -e "${RED}Invalid choice. Using BIOS configuration.${NC}"
-      DISK_CONFIG="./modules/server/disk-config.nix"
+      echo -e "${RED}Invalid choice. Using UEFI configuration.${NC}"
+      DISK_CONFIG="./modules/nixos/disk-config.nix"
       ;;
   esac
   
