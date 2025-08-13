@@ -108,9 +108,7 @@ let user = "david";
     };
     
     # Enable getty for console access (TTY1-TTY6)
-    getty = {
-      enable = true;
-    };
+    # getty is enabled by default in NixOS
     
     # Enable fail2ban for security
     # fail2ban.enable = true;
