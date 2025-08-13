@@ -98,6 +98,14 @@ install_nixos() {
   df -h /
   df -h /nix/store 2>/dev/null || echo "Nix store not mounted separately"
   
+  # Check mounted filesystems
+  echo -e "${BLUE}Mounted filesystems:${NC}"
+  mount | grep -E "(nix|store)" || echo "No nix store mounts found"
+  
+  # Check Nix store size
+  echo -e "${BLUE}Nix store size:${NC}"
+  du -sh /nix/store 2>/dev/null || echo "Cannot check nix store size"
+  
   # Clear Nix store if needed
   echo -e "${BLUE}Clearing Nix store...${NC}"
   nix store gc 2>/dev/null || true
@@ -105,8 +113,13 @@ install_nixos() {
   # Check space again
   echo -e "${BLUE}Space after cleanup:${NC}"
   df -h /
+  
+  # Check if target disk is properly mounted
+  echo -e "${BLUE}Target disk mount status:${NC}"
+  mount | grep "/mnt" || echo "No /mnt mounts found"
+  df -h /mnt 2>/dev/null || echo "Cannot check /mnt space"
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --fallback
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 16777216 --option cores 0 --option max-jobs auto
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to user's home directory (like dustinlyons does)
