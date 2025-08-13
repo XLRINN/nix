@@ -8,10 +8,11 @@
   boot.loader.grub = {
     enable = true;
     device = "/dev/sda";
+    efiSupport = false;  # Explicitly disable EFI for BIOS systems
   };
 
   fileSystems."/" = {
-    device = "/dev/sda1";
+    device = "/dev/sda2";  # Root partition will be sda2 (after BIOS boot partition)
     fsType = "ext4";
   };
 
@@ -37,7 +38,8 @@
   environment.systemPackages = with pkgs; [
     git
     vim
+    htop
   ];
 
-  system.stateVersion = "23.11";
+  system.stateVersion = "24.05";
 }

@@ -9,9 +9,9 @@ let user = "david";
 {
   # No imports - we'll handle everything manually
 
-  # Manual filesystem configuration using label
+  # Manual filesystem configuration using device path (not label)
   fileSystems."/" = {
-    device = "/dev/disk/by-label/nixos-root";  # Use filesystem label
+    device = "/dev/sda2";  # Root partition will be sda2 (after BIOS boot partition)
     fsType = "ext4";
     options = [ "defaults" "noatime" ];
   };
@@ -23,6 +23,7 @@ let user = "david";
         enable = true;
         device = "/dev/sda";  # Install to MBR
         useOSProber = false;
+        efiSupport = false;  # Explicitly disable EFI for BIOS systems
       };
     };
     kernelPackages = pkgs.linuxPackages;  # Use stable kernel
@@ -35,8 +36,8 @@ let user = "david";
 
   networking = {
     hostName = "loki"; # Define your hostname.
-    useDHCP = lib.mkForce false;  # Force false when using NetworkManager
-    networkmanager.enable = true; # Enable NetworkManager
+    useDHCP = lib.mkForce true;  # Use DHCP for simplicity
+    networkmanager.enable = false; # Disable NetworkManager for server
     # Generic server firewall
     firewall.enable = true;
     firewall.allowedTCPPorts = [ 22 80 443 ]; # SSH, HTTP, HTTPS
@@ -113,6 +114,8 @@ let user = "david";
     # Minimum required packages for initial setup
     git
     openssh
+    vim
+    htop
   ];
 
   # Environment variables for API keys
@@ -135,5 +138,5 @@ let user = "david";
     '';
   };
 
-  system.stateVersion = "21.05"; # Don't change this
+  system.stateVersion = "24.05"; # Updated to current version
 }

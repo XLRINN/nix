@@ -13,6 +13,6 @@
     enable = true;
     device = "/dev/sda";
     useOSProber = false;
-    efiSupport = false;
+    efiSupport = false;  # Explicitly disable EFI for BIOS systems
   };
 }

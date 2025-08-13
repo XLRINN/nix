@@ -4,13 +4,23 @@
   # User configuration
   home.username = "david";
   home.homeDirectory = "/home/david";
-  home.stateVersion = "23.11";
+  home.stateVersion = "24.05";
 
   # Let Home Manager install and manage itself
   programs.home-manager.enable = true;
 
   # Basic packages
   home.packages = with pkgs; [
-    # Add any basic packages you want here
+    # Essential tools
+    git
+    vim
+    htop
+    tree
+    wget
+    curl
+    # Development tools
+    direnv
+    # Monitoring
+    btop
   ];
 }

@@ -160,7 +160,6 @@
           system = "x86_64-linux";
           specialArgs = { inherit inputs claude-desktop; };
           modules = [
-            disko.nixosModules.disko
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;
@@ -175,7 +174,6 @@
           system = "aarch64-linux";
           specialArgs = { inherit inputs claude-desktop; };
           modules = [
-            disko.nixosModules.disko
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;
