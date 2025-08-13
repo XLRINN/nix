@@ -93,7 +93,20 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto
+  # Check available space
+  echo -e "${BLUE}Checking available space...${NC}"
+  df -h /
+  df -h /nix/store 2>/dev/null || echo "Nix store not mounted separately"
+  
+  # Clear Nix store if needed
+  echo -e "${BLUE}Clearing Nix store...${NC}"
+  nix store gc 2>/dev/null || true
+  
+  # Check space again
+  echo -e "${BLUE}Space after cleanup:${NC}"
+  df -h /
+
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --fallback
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to user's home directory (like dustinlyons does)
