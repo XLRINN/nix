@@ -55,34 +55,21 @@ _detect_boot_disk() {
     _print "${GREEN}${SUCCESS} Detected boot disk: /dev/$BOOT_DISK${NC}"
 }
 
-# Function to download configuration
-_download_config() {
-    _print "${BLUE}Downloading NixOS configuration...${NC}"
+# Function to setup configuration
+_setup_config() {
+    _print "${BLUE}Setting up NixOS configuration...${NC}"
     
-    # Create temporary directory
-    TMP_DIR=$(mktemp -d)
-    cd "$TMP_DIR"
+    # Create /etc/nixos directory if it doesn't exist
+    sudo mkdir -p /etc/nixos
     
-    # Download from GitHub using the correct URL format
-    _print "${YELLOW}Downloading from GitHub...${NC}"
-    curl -L -o nixos-config.tar.gz "https://github.com/xlrinn/nix/archive/server.tar.gz"
+    # Copy current configuration to /etc/nixos
+    _print "${YELLOW}Copying configuration files...${NC}"
+    sudo cp -r . /etc/nixos/
     
-    # Extract
-    _print "${YELLOW}Extracting configuration...${NC}"
-    tar -xzf nixos-config.tar.gz
-    
-    # Move to expected location
-    sudo rm -rf /etc/nixos
-    sudo mv nix-server /etc/nixos
-    
-    # Verify extraction
-    _print "${YELLOW}Checking extracted contents...${NC}"
-    ls -la /etc/nixos/
-    
-    # Verify directory structure
-    _print "${YELLOW}Verifying directory structure...${NC}"
+    # Verify configuration
+    _print "${YELLOW}Verifying configuration structure...${NC}"
     if [[ -d "/etc/nixos/hosts" && -d "/etc/nixos/modules" ]]; then
-        _print "${GREEN}${SUCCESS} Configuration downloaded and verified!${NC}"
+        _print "${GREEN}${SUCCESS} Configuration setup completed!${NC}"
     else
         _print "${RED}${ERROR} Configuration structure is invalid.${NC}"
         exit 1
@@ -97,57 +84,26 @@ _setup_disk() {
     sudo umount -R /mnt 2>/dev/null || true
     sudo mkdir -p /mnt
     
-    # Prepare disk configuration
-    _print "${YELLOW}Preparing disk configuration for /dev/$BOOT_DISK...${NC}"
+    # Use the disk configuration from the NixOS config
+    _print "${YELLOW}Using disk configuration from modules/server/disk-config.nix...${NC}"
     
-    # Create temporary disk config
-    TMP_DISK_CONFIG=$(mktemp)
-    cat > "$TMP_DISK_CONFIG" << 'EOF'
-# UEFI GPT configuration (matching working desktop config)
-{
-  disko.devices.disk.main = {
-    device = "/dev/sda";
-    type = "disk";
-    content = {
-      type = "gpt";
-      partitions = {
-        efi = {
-          size = "512M";
-          type = "EF00";
-          content = {
-            type = "filesystem";
-            format = "vfat";
-            mountpoint = "/boot";
-          };
-        };
-        root = {
-          size = "100%";
-          content = {
-            type = "filesystem";
-            format = "ext4";
-            mountpoint = "/";
-          };
-        };
-      };
-    };
-  };
-}
-EOF
+    # Check if disk config exists
+    if [[ ! -f "modules/server/disk-config.nix" ]]; then
+        _print "${RED}${ERROR} Disk configuration file not found: modules/server/disk-config.nix${NC}"
+        exit 1
+    fi
     
     _print "${YELLOW}Disk configuration being used:${NC}"
-    cat "$TMP_DISK_CONFIG"
+    cat modules/server/disk-config.nix
     
-    # Run disko
+    # Run disko with the actual disk config file
     _print "${YELLOW}Running disko to partition and format the disk...${NC}"
-    if nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko "$TMP_DISK_CONFIG"; then
+    if nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko modules/server/disk-config.nix; then
         _print "${GREEN}${SUCCESS} Disk setup completed successfully!${NC}"
     else
         _print "${RED}${ERROR} Disk partitioning failed.${NC}"
         exit 1
     fi
-    
-    # Clean up
-    rm -f "$TMP_DISK_CONFIG"
 }
 
 # Function to setup NixOS files
@@ -248,7 +204,7 @@ main() {
     _detect_boot_disk
     
     # Execute installation steps
-    _download_config
+    _setup_config
     _setup_disk
     _setup_nixos_files
     _install_nixos
