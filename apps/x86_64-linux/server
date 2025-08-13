@@ -65,7 +65,7 @@ _download_config() {
     
     # Download from GitHub using the correct URL format
     _print "${YELLOW}Downloading from GitHub...${NC}"
-    curl -L -o nixos-config.tar.gz "https://github.com/xlrinn/nix/archive/main.tar.gz"
+    curl -L -o nixos-config.tar.gz "https://github.com/xlrinn/nix/archive/server.tar.gz"
     
     # Extract
     _print "${YELLOW}Extracting configuration...${NC}"
@@ -73,7 +73,7 @@ _download_config() {
     
     # Move to expected location
     sudo rm -rf /etc/nixos
-    sudo mv nix-main /etc/nixos
+    sudo mv nix-server /etc/nixos
     
     # Verify extraction
     _print "${YELLOW}Checking extracted contents...${NC}"
