@@ -13,7 +13,6 @@ let user = "david";
     loader = {
       grub = {
         enable = true;
-        device = "/dev/sda";
         useOSProber = false;
       };
       # Faster boot
