@@ -14,18 +14,6 @@ NC='\033[0m' # No Color
 check_installer() {
   if [ -e /etc/NIXOS ]; then
     echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
-    
-    # Set password for nixos user
-    echo "nixos:nixos" | chpasswd
-    
-    # Start SSH service
-    systemctl start ssh
-    systemctl enable ssh
-    
-    # Show IP address for SSH connection
-    IP=$(ip route get 1.1.1.1 | awk '{print $7}')
-    echo -e "\e[1;32mSSH enabled! Connect with: ssh nixos@$IP\e[0m"
-    echo -e "\e[1;32mPassword: nixos\e[0m"
   else
     echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
     exit 1
