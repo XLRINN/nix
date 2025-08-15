@@ -83,15 +83,19 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "desktop" = mkApp "desktop" system;
+        "install" = mkApp "install" system;
         "server" = mkApp "server" system;
+        "install-minimal" = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "install-minimal" ''
+            nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- --flake github:xlrinn/nix#x86_64-linux-server-minimal /dev/sda
+          '');
+        };
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
         "build" = mkApp "build" system;
         "build-switch" = mkApp "build-switch" system;
-        "copy-keys" = mkApp "copy-keys" system;
-        "create-keys" = mkApp "create-keys" system;
-        "check-keys" = mkApp "check-keys" system;
         "rollback" = mkApp "rollback" system;
       };
     in
