@@ -56,7 +56,7 @@ in
     settings = {
       editor = "neovim";
       manager = {
-        ratio = [1, 4, 3];
+        ratio = [ 1 4 3 ];
         sort_by = "natural";
         sort_sensitive = true;
         sort_reverse = false;
@@ -74,7 +74,7 @@ in
         max_height = 900;
         cache_dir = "";
         ueberzug_scale = 1;
-        ueberzug_offset = [0, 0, 0, 0];
+        ueberzug_offset = [ 0 0 0 0 ];
         enable_image_previews = true;
       };
       tasks = {
