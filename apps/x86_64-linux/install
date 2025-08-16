@@ -69,16 +69,15 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --no-root-passwd
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 268435456 --option cores 0 --option max-jobs auto --no-root-passwd 2>&1 | grep -v "security hole"
   chmod -R 775 /mnt/etc/nixos
   
-  # Force home-manager to apply configurations on first boot
-  mkdir -p /mnt/home/david/.config/home-manager
-  echo "#!/bin/bash" > /mnt/home/david/.config/home-manager/apply-configs.sh
-  echo "cd /home/david/nix" >> /mnt/home/david/.config/home-manager/apply-configs.sh
-  echo "nixos-rebuild switch --flake .#x86_64-linux" >> /mnt/home/david/.config/home-manager/apply-configs.sh
-  chmod +x /mnt/home/david/.config/home-manager/apply-configs.sh
-  chown -R 1000:1000 /mnt/home/david/.config
+  # Force home-manager to apply configurations immediately
+  echo "Applying home-manager configurations..."
+  chroot /mnt /run/current-system/sw/bin/bash -c "
+    cd /home/david/nix
+    nixos-rebuild switch --flake .#x86_64-linux
+  "
 }
 
 prompt_reboot() {
