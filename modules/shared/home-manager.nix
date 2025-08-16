@@ -222,7 +222,7 @@ in
       }
       {
           name = "powerlevel10k-config";
-          src = lib.cleanSource ./config;
+          src = ./config;
           file = "shell/p10k.zsh";
       }];
     shellAliases = {
