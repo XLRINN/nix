@@ -71,6 +71,14 @@ install_nixos() {
 
   nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --no-root-passwd
   chmod -R 775 /mnt/etc/nixos
+  
+  # Force home-manager to apply configurations on first boot
+  mkdir -p /mnt/home/david/.config/home-manager
+  echo "#!/bin/bash" > /mnt/home/david/.config/home-manager/apply-configs.sh
+  echo "cd /home/david/nix" >> /mnt/home/david/.config/home-manager/apply-configs.sh
+  echo "nixos-rebuild switch --flake .#x86_64-linux" >> /mnt/home/david/.config/home-manager/apply-configs.sh
+  chmod +x /mnt/home/david/.config/home-manager/apply-configs.sh
+  chown -R 1000:1000 /mnt/home/david/.config
 }
 
 prompt_reboot() {
