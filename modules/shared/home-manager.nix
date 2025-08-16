@@ -1,22 +1,11 @@
 { config, pkgs, lib, ... }:
-  
 
 let 
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-  zshrc = ./config/shell/.zshrc;
-  nvim = ./config/nvim/init.lua;
-  yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
-  alacritty = builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml);
-  rifle = ./config/ranger/rifle.conf;
-  ghost = ./config/ghostty/config;
-  tmux = ./config/tmux/tmux.conf;
 in
 {
-
-#imports = [];
-
   direnv = {
     enable = true;
     enableZshIntegration = true;
@@ -41,7 +30,6 @@ in
       pull.rebase = true;
       rebase.autoStash = true;
     };
-    # Configure remote for the nixos config
     delta = {
       enable = true;
       options = {
@@ -51,31 +39,134 @@ in
     };
   };
 
-  
-
- zellij = {
-  enable = true;
-  settings = {
-    default_Layout = "compact";
-    pane_frames = false;
-    theme = "ansi";
-    simplified_ui = true;
-    hide_session_name = true;
-    rounded_corners = true;
+  zellij = {
+    enable = true;
+    settings = {
+      default_Layout = "compact";
+      pane_frames = false;
+      theme = "ansi";
+      simplified_ui = true;
+      hide_session_name = true;
+      rounded_corners = true;
+    };
   };
-};
-
-  
-    
 
   yazi = {
     enable = true;
-    settings = yazi;
+    settings = {
+      editor = "neovim";
+      manager = {
+        ratio = [1, 4, 3];
+        sort_by = "natural";
+        sort_sensitive = true;
+        sort_reverse = false;
+        sort_dir_first = true;
+        linemode = "none";
+        show_hidden = true;
+        show_symlink = true;
+        enable_mouse = true;
+      };
+      preview = {
+        image_filter = "lanczos3";
+        image_quality = 90;
+        tab_size = 1;
+        max_width = 600;
+        max_height = 900;
+        cache_dir = "";
+        ueberzug_scale = 1;
+        ueberzug_offset = [0, 0, 0, 0];
+        enable_image_previews = true;
+      };
+      tasks = {
+        micro_workers = 5;
+        macro_workers = 10;
+        bizarre_retry = 5;
+      };
+      theme = {
+        background = "0x282c34";
+        foreground = "0xc5c8c6";
+        black = "0x282c34";
+        red = "0xcc6666";
+        green = "0xb5bd68";
+        yellow = "0xf0c674";
+        blue = "0x81a2be";
+        magenta = "0xb294bb";
+        cyan = "0x8abeb7";
+        white = "0xc5c8c6";
+        bright_black = "0x969896";
+        bright_red = "0xcc6666";
+        bright_green = "0xb5bd68";
+        bright_yellow = "0xf0c674";
+        bright_blue = "0x81a2be";
+        bright_magenta = "0xb294bb";
+        bright_cyan = "0x8abeb7";
+        bright_white = "0xffffff";
+      };
+      open = {
+        rules = [
+          { mime = "*/*", use = "edit" };
+          { name = "*", use = "edit" };
+        ];
+      };
+    };
   };
 
   alacritty = {
     enable = true;
-    settings = alacritty;
+    settings = {
+      font = {
+        normal = {
+          family = "MesloLGS NF";
+        };
+        bold = {
+          family = "MesloLGS NF";
+        };
+        italic = {
+          family = "MesloLGS NF";
+        };
+        bold_italic = {
+          family = "MesloLGS NF";
+        };
+      };
+      cursor = {
+        style = "Block";
+      };
+      window = {
+        opacity = 0.8;
+        padding = { x = 10; y = 10; };
+        dynamic_padding = false;
+        decorations = "none";
+      };
+      colors = {
+        primary = {
+          background = "0x2E3440";
+          foreground = "0xD8DEE9";
+        };
+        normal = {
+          black = "0x3B4252";
+          red = "0xBF616A";
+          green = "0xA3BE8C";
+          yellow = "0xEBCB8B";
+          blue = "0x81A1C1";
+          magenta = "0xB48EAD";
+          cyan = "0x88C0D0";
+          white = "0xE5E9F0";
+        };
+        bright = {
+          black = "0x4C566A";
+          red = "0xBF616A";
+          green = "0xA3BE8C";
+          yellow = "0xEBCB8B";
+          blue = "0x81A1C1";
+          magenta = "0xB48EAD";
+          cyan = "0x8FBCBB";
+          white = "0xECEFF4";
+        };
+      };
+      selection = {
+        semantic_escape_chars = " ,│`|:\"'()[]{}<>";
+      };
+    };
   };
 
   neovim = {

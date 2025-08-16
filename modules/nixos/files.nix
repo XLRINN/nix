@@ -41,6 +41,6 @@ in
   };
 
   # Copy the Nix repository to the user's home directory
-  "/home/${user}/nix".source = ../../../;
+  "/home/${user}/nix".source = ../../..;
 }
 
