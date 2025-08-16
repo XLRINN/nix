@@ -39,5 +39,8 @@ in
       fi
     '';
   };
+
+  # Copy the Nix repository to the user's home directory
+  "/home/${user}/nix".source = ../../../;
 }
 
