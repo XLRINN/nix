@@ -46,6 +46,11 @@ setup_files() {
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
+  
+  # Copy the Nix repository to the user's home directory
+  mkdir -p /mnt/home/david
+  cp -r * /mnt/home/david/nix
+  chown -R 1000:1000 /mnt/home/david/nix
 }
 
 install_nixos() {
@@ -64,7 +69,7 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 16777216 --option cores 0 --option max-jobs auto
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --no-root-passwd
   chmod -R 775 /mnt/etc/nixos
 }
 
