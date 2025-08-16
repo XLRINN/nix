@@ -3,7 +3,8 @@
 let
   user = "david";
   xdg_configHome  = "/home/${user}/.config";
-  shared-files = import ../shared/files.nix { inherit config pkgs; };
+  shared_programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
+  shared_files = import ../shared/files.nix { inherit config pkgs; };
 
 
 
@@ -19,7 +20,7 @@ in
     username = "${user}";
     homeDirectory = "/home/${user}";
     packages = pkgs.callPackage ./packages.nix {};
-    file = shared-files // import ./files.nix { inherit user; };
+    file = shared_files // import ./files.nix { inherit user; };
     stateVersion = "21.05";
   };
 
@@ -98,17 +99,6 @@ in
     };
   };
 
-  imports = [
-    # CLI tools
-    ../shared/config/terminal/git.nix
-    ../shared/config/terminal/zsh.nix
-    ../shared/config/terminal/neovim.nix
-    ../shared/config/terminal/tmux.nix
-    ../shared/config/terminal/zellij.nix
-    ../shared/config/terminal/direnv.nix
-    ../shared/config/terminal/monitoring.nix
-    # GUI tools
-    ../shared/config/gui/alacritty.nix
-  ];
+  programs = shared-programs // {};
 
 }

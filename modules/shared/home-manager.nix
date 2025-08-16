@@ -5,7 +5,7 @@ let
   name = "david";
   user = "david";
   email = "xlrin.morgan@gmail.com"; 
-  zshrc = config/shell/.zshrc;
+  zshrc = ./config/shell/.zshrc;
   nvim = ./config/nvim/init.lua;
   yazi = builtins.fromTOML (builtins.readFile ./config/yazi/yazi.toml);
   alacritty = builtins.fromTOML (builtins.readFile ./config/alacritty/alacritty.toml);
