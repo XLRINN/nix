@@ -104,8 +104,8 @@ in
       };
       open = {
         rules = [
-          { mime = "*/*", use = "edit" };
-          { name = "*", use = "edit" };
+          { mime = "*/*"; use = "edit"; }
+          { name = "*"; use = "edit"; }
         ];
       };
     };
