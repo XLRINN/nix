@@ -8,12 +8,8 @@ let
 in
 {
   # Copy configuration files to user's home directory
-  ".config/nvim/init.lua".source = ./config/nvim/init.lua;
-  ".config/nvim/default.nix".source = ./config/nvim/default.nix;
-  
-  ".config/yazi/yazi.toml".source = ./config/yazi/yazi.toml;
-  
-  ".config/alacritty/alacritty.toml".source = ./config/alacritty/alacritty.toml;
+  # Note: Programs managed by home-manager (alacritty, neovim, yazi, zellij) are not copied here
+  # as they are managed through the programs configuration to avoid conflicts
   
   ".config/ranger/rifle.conf".source = ./config/ranger/rifle.conf;
   
@@ -33,9 +29,6 @@ in
   ".config/shell/p10k.zsh".source = ./config/shell/p10k.zsh;
   
   ".config/power10k/p10k.zsh".source = ./config/power10k/p10k.zsh;
-  
-  # Copy zellij configuration
-  ".config/zellij/config.kdl".source = ./config/zellij.nix;
   
   # Copy Oh My Posh themes
   ".config/posh/".source = ./config/posh;
