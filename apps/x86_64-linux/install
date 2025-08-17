@@ -69,7 +69,7 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 536870912 --option cores 0 --option max-jobs auto --no-root-passwd 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto --no-root-passwd 2>&1 | grep -v "security hole" | grep -v "⚠️"
   chmod -R 775 /mnt/etc/nixos
   
   # Force home-manager to apply configurations immediately
