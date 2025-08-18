@@ -11,12 +11,28 @@ NC='\033[0m' # No Color
 
 
 
-check_installer() {
+ensure_nix() {
   if [ -e /etc/NIXOS ]; then
-    echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
+    echo -e "${GREEN}Running in the NixOS installer environment.${NC}"
   else
-    echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
-    exit 1
+    echo -e "${YELLOW}NixOS installer environment not detected. Checking for Nix...${NC}"
+    if ! command -v nix >/dev/null 2>&1; then
+      echo -e "${CYAN}Installing Nix using Determinate Systems installer...${NC}"
+      if curl -fsSL https://install.determinate.systems/nix | sh -s -- install --yes; then
+        . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
+        if command -v nix >/dev/null 2>&1; then
+          echo -e "${GREEN}✓ Nix installed successfully${NC}"
+        else
+          echo -e "${RED}Nix installation completed but nix command not found${NC}"
+          exit 1
+        fi
+      else
+        echo -e "${RED}Failed to run Determinate Systems installer${NC}"
+        exit 1
+      fi
+    else
+      echo -e "${GREEN}✓ Nix is already installed${NC}"
+    fi
   fi
 }
 
@@ -99,7 +115,7 @@ prompt_reboot() {
 }
 
 cleanup
-check_installer
+ensure_nix
 download_config
 run_apply
 run_disko
