@@ -147,7 +147,7 @@
        # Server configurations
        "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "x86_64-linux";
-         specialArgs = { inherit inputs claude-desktop; };
+         specialArgs = { inherit inputs; };
          modules = [
            disko.nixosModules.disko
            home-manager.nixosModules.home-manager {
@@ -162,7 +162,7 @@
        };
        "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "aarch64-linux";
-         specialArgs = { inherit inputs claude-desktop; };
+         specialArgs = { inherit inputs; };
          modules = [
            disko.nixosModules.disko
            home-manager.nixosModules.home-manager {
