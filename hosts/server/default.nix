@@ -1,0 +1,163 @@
+{ config, inputs, pkgs, lib, ... }:
+
+let user = "david";
+  keys = [ 
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p"
+    # Add your SSH public key here
+    # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
+  ]; in
+{
+    # Import the server modules and disk configuration
+  imports = [
+    ../../modules/server/disk-config.nix
+    ../../modules/server/packages.nix
+    ../../modules/server/files.nix
+    ../../modules/server/home-manager.nix
+    ../../modules/shared
+  ];
+
+  # Disko will handle disk configuration - no manual filesystem needed
+
+  # GRUB configuration for BIOS-only systems  
+  boot = {
+    loader = {
+      grub = {
+        enable = true;
+        device = "/dev/sda";  # Install to MBR - matches install script
+        useOSProber = false;
+        efiSupport = false;  # Ensure BIOS mode
+      };
+    };
+    kernelPackages = pkgs.linuxPackages;  # Use stable kernel
+    initrd.availableKernelModules = [ "ahci" "sd_mod" "virtio" "virtio_pci" "virtio_blk" ];
+    kernelModules = [ ];
+  };
+
+  # Set your time zone.
+  time.timeZone = "America/New_York";
+
+  networking = {
+    hostName = "loki"; # Define your hostname.
+    useDHCP = lib.mkForce false;  # Force false when using NetworkManager
+    networkmanager.enable = true; # Enable NetworkManager
+    # Generic server firewall
+    firewall.enable = true;
+    firewall.allowedTCPPorts = [ 22 80 443 ]; # SSH, HTTP, HTTPS
+  };
+
+  hardware = {
+    enableAllFirmware = true; # Enable firmware for better hardware compatibility
+  };
+
+  # Enable Docker for server workloads
+  virtualisation.docker.enable = true;
+
+  # Enable zsh for better shell experience
+  programs.zsh.enable = true;
+
+  # programs.zsh.enable = true; # Disable zsh to reduce memory usage
+
+  users.users = {
+    "${user}" = {
+      isNormalUser = true;
+      extraGroups = [
+        "wheel" # Enable 'sudo' for the user.
+        "networkmanager"
+        "docker" # Add docker group access
+      ];
+      shell = pkgs.zsh; # Use zsh instead of bash
+      openssh.authorizedKeys.keys = keys;
+      # Create user directories with proper permissions
+      createHome = true;
+      home = "/home/${user}";
+    };
+
+    root = {
+      openssh.authorizedKeys.keys = keys;
+    };
+  };
+
+  security.sudo = {
+    enable = true;
+    extraRules = [{
+      commands = [
+        {
+          command = "${pkgs.systemd}/bin/reboot";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+      groups = [ "wheel" ];
+    }];
+  };
+
+  services = { 
+    openssh.enable = true;
+    # Essential system services
+    dbus.enable = true;
+    # System utilities
+    udev.enable = true;
+  };
+
+
+
+  # Turn on flag for proprietary software
+  nix = {
+    settings = {
+      allowed-users = [ "${user}" ];
+      trusted-users = [ "${user}" ];
+    };
+    package = pkgs.nix;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+  };
+
+  # Minimal programs
+  programs = {
+    # gnupg.agent.enable = true; # Disable to reduce memory usage
+  };
+
+  environment.systemPackages = with pkgs; [
+    # Essential packages for server operation
+    git
+    openssh
+    curl
+    wget
+    vim
+    nano
+    htop
+    tree
+    # Network utilities
+    nettools
+    iproute2
+    # System utilities
+    lsof
+    psmisc
+    procps
+    # File utilities
+    rsync
+    unzip
+  ];
+
+  # Environment variables for API keys
+  environment.variables = {
+    # Add your API keys here
+    # GITHUB_TOKEN = "your-github-token";
+    # DOCKER_API_KEY = "your-docker-key";
+    # CUSTOM_API_KEY = "your-api-key";
+    # GitHub CLI configuration
+    GH_CONFIG_DIR = "/home/${user}/.config/gh";
+  };
+
+
+
+  # Minimal activation scripts
+  system.activationScripts = {
+    setupNixDir = ''
+      mkdir -p /home/${user}
+      chown ${user}:users /home/${user}
+    '';
+  };
+
+  system.stateVersion = "21.05"; # Don't change this
+}
