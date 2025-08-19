@@ -33,11 +33,8 @@ download_config() {
 
 run_apply() {
   ./apps/x86_64-linux/apply
-  if [ ! -f /tmp/username.txt ]; then
-    echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
-    exit 1
-  fi
-  export USERNAME=$(cat /tmp/username.txt)
+  # Hardcoded username - no need to read from /tmp/username.txt
+  export USERNAME="david"
   echo -e "${GREEN}✓ Configuration complete${NC}"
 }
 
@@ -74,19 +71,18 @@ install_nixos() {
   nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto
   chmod -R 775 /mnt/etc/nixos
   
-  # Copy config to user's home directory (like dustinlyons does)
-  export USERNAME=$(cat /tmp/username.txt)
-  mkdir -p /mnt/home/$USERNAME/.local/share/src
-  cp -r /mnt/etc/nixos /mnt/home/$USERNAME/.local/share/src/
+  # Copy config to david's home directory
+  mkdir -p /mnt/home/david/.local/share/src
+  cp -r /mnt/etc/nixos /mnt/home/david/.local/share/src/
   
-  # Set up git remote for the user's config
-  chroot /mnt bash -c "cd /home/$USERNAME/.local/share/src/nixos && git init && git remote add origin https://github.com/xlrinn/nix.git"
+  # Set up git remote for david's config
+  chroot /mnt bash -c "cd /home/david/.local/share/src/nixos && git init && git remote add origin https://github.com/xlrinn/nix.git"
   
-  # Fix ownership after user is created
-  chroot /mnt bash -c "chown -R $USERNAME:users /home/$USERNAME/.local/share/src/nixos" || echo "Note: Ownership will be set correctly after first boot"
+  # Fix ownership after user is created (hardcoded UID 1000 for david)
+  chroot /mnt bash -c "chown -R 1000:1000 /home/david/.local/share/src/nixos" || echo "Note: Ownership will be set correctly after first boot"
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
-  echo -e "${GREEN}✓ Configuration copied to /home/$USERNAME/.local/share/src/nixos${NC}"
+  echo -e "${GREEN}✓ Configuration copied to /home/david/.local/share/src/nixos${NC}"
   echo -e "${GREEN}✓ Git remote configured${NC}"
 }
 
