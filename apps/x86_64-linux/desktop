@@ -29,6 +29,8 @@ download_config() {
   curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nixos-config-main.zip
   unzip nixos-config-main.zip
   mv nix-testing nixos-config
+  # Store the absolute path for later use
+  export ORIGINAL_CONFIG_PATH="$(pwd)/nixos-config"
   cd nixos-config
   echo -e "${GREEN}✓ Configuration downloaded and extracted${NC}"
 }
@@ -68,13 +70,13 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET
+  nixos-install --flake .#$FLAKE_TARGET 2>&1 | grep -v "security hole" | grep -v "⚠️"
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to david's home directory as a proper git repo (dustinlyons approach)
   mkdir -p /mnt/home/david/.local/share/src
-  # Copy the original downloaded configuration (not the system copy) and rename to nixos-config
-  cp -r ../nixos-config /mnt/home/david/.local/share/src/nixos-config
+  # Copy the original downloaded configuration using the stored path
+  cp -r "$ORIGINAL_CONFIG_PATH" /mnt/home/david/.local/share/src/nixos-config
   
   # Set up git remote for david's config (after first boot when bash is available)
   # Create a setup script that will run on first boot
