@@ -41,8 +41,7 @@ run_apply() {
 }
 
 run_disko() {
-  nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./modules/nixos/disk-config.nix
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
@@ -69,7 +68,7 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  nixos-install --flake .#$FLAKE_TARGET
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to david's home directory as a proper git repo (dustinlyons approach)
