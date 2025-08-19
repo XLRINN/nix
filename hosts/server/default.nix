@@ -7,10 +7,9 @@ let user = "david";
     # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
   ]; in
 {
-    # Import the server modules and disk configuration
+    # Import the server modules and disk configuration (NOT packages.nix - that's used in environment.systemPackages)
   imports = [
     ../../modules/server/disk-config.nix
-    ../../modules/server/packages.nix
     ../../modules/server/files.nix
     ../../modules/server/home-manager.nix
     ../../modules/shared
@@ -118,27 +117,7 @@ let user = "david";
     git.enable = true; # Enable git globally
   };
 
-  environment.systemPackages = with pkgs; [
-    # Essential packages for server operation
-    git
-    openssh
-    curl
-    wget
-    vim
-    nano
-    htop
-    tree
-    # Network utilities
-    nettools
-    iproute2
-    # System utilities
-    lsof
-    psmisc
-    procps
-    # File utilities
-    rsync
-    unzip
-  ];
+  environment.systemPackages = (import ../../modules/server/packages.nix { inherit pkgs; });
 
   # Environment variables for API keys
   environment.variables = {
