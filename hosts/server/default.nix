@@ -112,9 +112,10 @@ let user = "david";
     '';
   };
 
-  # Minimal programs
+  # Enable useful programs for server environment
   programs = {
-    # gnupg.agent.enable = true; # Disable to reduce memory usage
+    gnupg.agent.enable = true; # Enable GPG agent for security
+    git.enable = true; # Enable git globally
   };
 
   environment.systemPackages = with pkgs; [
