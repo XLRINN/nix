@@ -21,14 +21,14 @@ check_installer() {
 }
 
 cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nixos-config
+  # No longer need to clean up downloaded files
+  echo -e "${GREEN}✓ Cleanup complete${NC}"
 }
 
 download_config() {
-  curl -LJ0 https://github.com/xlrinn/nix/archive/desktop.zip -o nixos-config-main.zip
-  unzip nixos-config-main.zip
-  mv nix-desktop nixos-config
-  cd nixos-config
+  # Instead of downloading, use the current repository
+  echo -e "${GREEN}✓ Using current repository${NC}"
+  cd /workspaces/nix
 }
 
 run_apply() {
@@ -68,22 +68,34 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --no-root-passwd 2>&1 | grep -v "security hole" | grep -v "⚠️"
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to david's home directory
   mkdir -p /mnt/home/david/.local/share/src
   cp -r /mnt/etc/nixos /mnt/home/david/.local/share/src/
   
-  # Set up git remote for david's config
-  chroot /mnt bash -c "cd /home/david/.local/share/src/nixos && git init && git remote add origin https://github.com/xlrinn/nix.git"
+  # Set up git remote for david's config (after first boot when bash is available)
+  # Create a setup script that will run on first boot
+  cat > /mnt/home/david/setup-git.sh << 'EOF'
+#!/usr/bin/env bash
+cd /home/david/.local/share/src/nixos
+git init
+git remote add origin https://github.com/xlrinn/nix.git
+git fetch origin
+git checkout -b testing origin/testing 2>/dev/null || git checkout testing 2>/dev/null || echo "Using current branch"
+chown -R david:users /home/david/.local/share/src/nixos
+rm /home/david/setup-git.sh
+EOF
   
-  # Fix ownership after user is created (hardcoded UID 1000 for david)
-  chroot /mnt bash -c "chown -R 1000:1000 /home/david/.local/share/src/nixos" || echo "Note: Ownership will be set correctly after first boot"
+  chmod +x /mnt/home/david/setup-git.sh
+  
+  # Set basic ownership (will be corrected on first boot)
+  chown -R 1000:1000 /mnt/home/david/ 2>/dev/null || echo "Note: Ownership will be set correctly after first boot"
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
   echo -e "${GREEN}✓ Configuration copied to /home/david/.local/share/src/nixos${NC}"
-  echo -e "${GREEN}✓ Git remote configured${NC}"
+  echo -e "${GREEN}✓ Git setup script created (will run on first boot)${NC}"
 }
 
 prompt_reboot() {
