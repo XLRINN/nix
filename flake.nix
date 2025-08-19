@@ -86,12 +86,6 @@
         "install" = mkApp "install" system;
         "server" = mkApp "server" system;
         "sync-master" = mkApp "sync-master" system;
-        "install-minimal" = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-minimal" ''
-            nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- --flake github:xlrinn/nix#x86_64-linux-server-minimal /dev/sda
-          '');
-        };
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -153,7 +147,7 @@
        # Server configurations
        "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "x86_64-linux";
-         specialArgs = inputs;
+         specialArgs = { inherit inputs claude-desktop; };
          modules = [
            disko.nixosModules.disko
            home-manager.nixosModules.home-manager {
@@ -163,12 +157,12 @@
                users.${user} = import ./modules/server/home-manager.nix;
              };
            }
-           ./modules/server
+           ./hosts/server
          ];
        };
        "aarch64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "aarch64-linux";
-         specialArgs = inputs;
+         specialArgs = { inherit inputs claude-desktop; };
          modules = [
            disko.nixosModules.disko
            home-manager.nixosModules.home-manager {
@@ -178,7 +172,7 @@
                users.${user} = import ./modules/server/home-manager.nix;
              };
            }
-           ./modules/server
+           ./hosts/server
          ];
        };
      };
