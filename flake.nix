@@ -126,7 +126,10 @@
         }
       );
 
-      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: nixpkgs.lib.nixosSystem {
+      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: let
+        user = "david";
+      in 
+        nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = inputs;
         modules = [
