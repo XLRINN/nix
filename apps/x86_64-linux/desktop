@@ -21,14 +21,16 @@ check_installer() {
 }
 
 cleanup() {
-  # No longer need to clean up downloaded files
-  echo -e "${GREEN}✓ Cleanup complete${NC}"
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config
 }
 
 download_config() {
-  # Instead of downloading, use the current repository
-  echo -e "${GREEN}✓ Using current repository${NC}"
-  cd /workspaces/nix
+  # Download the repository from the testing branch
+  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nixos-config-main.zip
+  unzip nixos-config-main.zip
+  mv nix-testing nixos-config
+  cd nixos-config
+  echo -e "${GREEN}✓ Configuration downloaded and extracted${NC}"
 }
 
 run_apply() {
