@@ -70,23 +70,26 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto --no-root-passwd 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
   chmod -R 775 /mnt/etc/nixos
   
-  # Copy config to david's home directory
+  # Copy config to david's home directory as a proper git repo (dustinlyons approach)
   mkdir -p /mnt/home/david/.local/share/src
-  cp -r /mnt/etc/nixos /mnt/home/david/.local/share/src/
+  # Copy the original downloaded configuration (not the system copy) and rename to nixos-config
+  cp -r ../nixos-config /mnt/home/david/.local/share/src/nixos-config
   
   # Set up git remote for david's config (after first boot when bash is available)
   # Create a setup script that will run on first boot
   cat > /mnt/home/david/setup-git.sh << 'EOF'
 #!/usr/bin/env bash
-cd /home/david/.local/share/src/nixos
+cd /home/david/.local/share/src/nixos-config
 git init
 git remote add origin https://github.com/xlrinn/nix.git
+git add .
+git commit -m "Initial installation configuration"
 git fetch origin
-git checkout -b testing origin/testing 2>/dev/null || git checkout testing 2>/dev/null || echo "Using current branch"
-chown -R david:users /home/david/.local/share/src/nixos
+git branch --set-upstream-to=origin/testing testing 2>/dev/null || echo "Branch setup will be completed on first pull"
+chown -R david:users /home/david/.local/share/src/nixos-config
 rm /home/david/setup-git.sh
 EOF
   
@@ -96,16 +99,14 @@ EOF
   chown -R 1000:1000 /mnt/home/david/ 2>/dev/null || echo "Note: Ownership will be set correctly after first boot"
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
-  echo -e "${GREEN}✓ Configuration copied to /home/david/.local/share/src/nixos${NC}"
+  echo -e "${GREEN}✓ Configuration copied to /home/david/.local/share/src/nixos-config${NC}"
   echo -e "${GREEN}✓ Git setup script created (will run on first boot)${NC}"
 }
 
 prompt_reboot() {
-  read -p "Do you want to reboot now? (y/yes) " choice
-  case "$choice" in
-  y|Y|yes|YES ) echo -e "\e[1;32mRebooting...\e[0m" && reboot;;
-  * ) echo -e "\e[1;33mReboot skipped.\e[0m";;
-  esac
+  echo -e "\e[1;32mRebooting in 5 seconds...\e[0m"
+  sleep 5
+  reboot
 }
 
 cleanup
