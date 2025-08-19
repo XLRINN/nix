@@ -64,7 +64,7 @@ shared-packages ++ [
   #google-chrome
 
   # PDF viewer
-  zathura
+  # zathura  # Temporarily disabled - was causing installation hangs
 
   # Music and entertainment
   #spotify
