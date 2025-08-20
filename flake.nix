@@ -157,7 +157,6 @@
             ./hosts/nixos
           ];
         };
-               };
        # Server configurations
        "x86_64-linux-server" = nixpkgs.lib.nixosSystem {
          system = "x86_64-linux";
