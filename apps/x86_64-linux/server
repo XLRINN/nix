@@ -42,9 +42,7 @@ run_apply() {
 }
 
 run_disko() {
-  nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    --option cores 0 --option max-jobs auto \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./modules/nixos/disk-config.nix
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
@@ -71,7 +69,7 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size 134217728 --option cores 0 --option max-jobs auto
+  nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1
   chmod -R 775 /mnt/etc/nixos
   
   # Copy config to user's home directory (like dustinlyons does)
