@@ -11,7 +11,7 @@ let user = "david";
   imports = [
     ../../modules/server/disk-config.nix
     ../../modules/server/files.nix
-    ../../modules/server/home-manager.nix
+    # ../../modules/server/home-manager.nix  # This is imported via flake home-manager config
     ../../modules/shared
   ];
 
