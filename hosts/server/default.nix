@@ -7,29 +7,27 @@ let user = "david";
     # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
   ]; in
 {
-    # Import the server modules and disk configuration (NOT packages.nix - that's used in environment.systemPackages)
   imports = [
-    ../../modules/server/disk-config.nix
-    ../../modules/server/files.nix
-    # ../../modules/server/home-manager.nix  # This is imported via flake home-manager config
-    ../../modules/shared
+    ../../modules/nixos/disk-config.nix  # Use same EFI disk config as desktop
+    ../../modules/shared  # Only shared terminal configs, no desktop stuff
   ];
 
-  # Disko will handle disk configuration - no manual filesystem needed
-
-  # GRUB configuration for BIOS-only systems  
+  # Use the systemd-boot EFI boot loader (same as desktop)
   boot = {
     loader = {
-      grub = {
+      systemd-boot = {
         enable = true;
-        device = "/dev/sda";  # Install to MBR - matches install script
-        useOSProber = false;
-        efiSupport = false;  # Ensure BIOS mode
+        configurationLimit = 42;
       };
+      efi.canTouchEfiVariables = true;
+      # Faster boot
+      timeout = 1;
     };
-    kernelPackages = pkgs.linuxPackages;  # Use stable kernel
-    initrd.availableKernelModules = [ "ahci" "sd_mod" "virtio" "virtio_pci" "virtio_blk" ];
+    kernelPackages = pkgs.linuxPackages_latest;
+    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
     kernelModules = [ ];
+    # Speed optimizations
+    kernelParams = [ "quiet" "loglevel=3" ];
   };
 
   # Set your time zone.
