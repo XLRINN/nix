@@ -1,11 +1,7 @@
-{ config, inputs, pkgs, lib, ... }:
+{ config, inputs, pkgs, ... }:
 
 let user = "david";
-  keys = [ 
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p"
-    # Add your SSH public key here
-    # "ssh-ed25519 YOUR_PUBLIC_KEY_HERE"
-  ]; in
+  keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ]; in
 {
   imports = [
     ../../modules/nixos/disk-config.nix  # Use same EFI disk config as desktop
@@ -35,35 +31,31 @@ let user = "david";
 
   networking = {
     hostName = "loki"; # Define your hostname.
-    useDHCP = lib.mkForce false;  # Force false when using NetworkManager
+    useDHCP = false;
     networkmanager.enable = true; # Enable NetworkManager
-    # Generic server firewall
-    firewall.enable = true;
-    firewall.allowedTCPPorts = [ 22 80 443 ]; # SSH, HTTP, HTTPS
   };
 
   hardware = {
-    enableAllFirmware = true; # Enable firmware for better hardware compatibility
+    enableAllFirmware = true; # Enable all firmware
+    firmware = [ pkgs.linux-firmware ]; # Include firmware
   };
 
-  # Enable Docker for server workloads
   virtualisation.docker.enable = true;
 
-  # Enable zsh for better shell experience
-  programs.zsh.enable = true;
-
-  # programs.zsh.enable = true; # Disable zsh to reduce memory usage
+  programs.zsh.enable = true; # Enable zsh
 
   users.users = {
     "${user}" = {
       isNormalUser = true;
       extraGroups = [
         "wheel" # Enable 'sudo' for the user.
+        "docker"
         "networkmanager"
-        "docker" # Add docker group access
       ];
-      shell = pkgs.zsh; # Use zsh instead of bash
+      shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;
+      # Set initial password (change this after first login)
+      initialPassword = "6!y2c87T";
       # Create user directories with proper permissions
       createHome = true;
       home = "/home/${user}";
@@ -71,6 +63,8 @@ let user = "david";
 
     root = {
       openssh.authorizedKeys.keys = keys;
+      # Set initial root password (change this after first login)
+      initialPassword = "6!y2c87T";
     };
   };
 
@@ -87,6 +81,7 @@ let user = "david";
     }];
   };
 
+  # Server services (no desktop environment)
   services = { 
     openssh.enable = true;
     # Essential system services
@@ -99,14 +94,22 @@ let user = "david";
 
   # Turn on flag for proprietary software
   nix = {
+    nixPath = [ "nixos-config=/home/${user}/.local/share/src/nixos-config:/etc/nixos" ];
     settings = {
       allowed-users = [ "${user}" ];
-      trusted-users = [ "${user}" ];
+      trusted-users = [ "@admin" "${user}" ];
+      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
+      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
     };
     package = pkgs.nix;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';
+    gc = {
+      automatic = true;
+      dates = "14d";
+      options = "--delete-older-than 30d";
+    };
   };
 
   # Enable useful programs for server environment
@@ -116,26 +119,6 @@ let user = "david";
   };
 
   environment.systemPackages = (import ../../modules/server/packages.nix { inherit pkgs; });
-
-  # Environment variables for API keys
-  environment.variables = {
-    # Add your API keys here
-    # GITHUB_TOKEN = "your-github-token";
-    # DOCKER_API_KEY = "your-docker-key";
-    # CUSTOM_API_KEY = "your-api-key";
-    # GitHub CLI configuration
-    GH_CONFIG_DIR = "/home/${user}/.config/gh";
-  };
-
-
-
-  # Minimal activation scripts
-  system.activationScripts = {
-    setupNixDir = ''
-      mkdir -p /home/${user}
-      chown ${user}:users /home/${user}
-    '';
-  };
 
   system.stateVersion = "21.05"; # Don't change this
 }
