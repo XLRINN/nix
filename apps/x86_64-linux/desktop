@@ -11,7 +11,6 @@ NC='\033[0m' # No Color
 
 
 
-
 check_installer() {
   if [ -e /etc/NIXOS ]; then
     echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
@@ -22,7 +21,7 @@ check_installer() {
 }
 
 cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-testing
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config
 }
 
 download_config() {
@@ -35,36 +34,25 @@ download_config() {
 }
 
 run_apply() {
-  chmod +x ./apps/x86_64-linux/apply
   ./apps/x86_64-linux/apply
-  # Check if username file was created
-  if [ ! -f /tmp/username.txt ]; then
-    echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
-    exit 1
-  fi
-  export USERNAME=$(cat /tmp/username.txt)
+  # Hardcoded username - no need to read from /tmp/username.txt
+  export USERNAME="david"
   echo -e "${GREEN}✓ Configuration complete${NC}"
 }
 
 run_disko() {
-  nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./modules/nixos/disk-config.nix
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
 setup_files() {
   mkdir -p /mnt/etc/nixos
-  cp -r ./* /mnt/etc/nixos
-  
-  # Clone a fresh copy of the nix repository to the user's home directory
-  mkdir -p /mnt/home/david
-  git clone https://github.com/xlrinn/nix.git /mnt/home/david/nix
-  chown -R 1000:1000 /mnt/home/david/nix
+  cp -r * /mnt/etc/nixos
+  cd /mnt/etc/nixos
   echo -e "${GREEN}✓ Files copied to system${NC}"
 }
 
 install_nixos() {
-  cd /mnt/etc/nixos  # Ensure we're in the right directory
-  
   ARCH=$(uname -m)
 
   case "$ARCH" in
@@ -80,16 +68,8 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option max-jobs 1
+  nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1
   chmod -R 775 /mnt/etc/nixos
-  
-  # Set root password to match user password (both set to "6!y2c87T")
-  echo -e "${GREEN}🔐 Setting root password...${NC}"
-  echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
-  
-  # Set user password
-  echo -e "${GREEN}🔐 Setting user password...${NC}"
-  echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
