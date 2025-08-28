@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-set -exu
+
+# Check for verbose flag
+VERBOSE=false
+if [[ "$1" == "--verbose" || "$1" == "-v" ]]; then
+  VERBOSE=true
+  set -exu
+  echo -e "\e[1;33mVerbose mode enabled\e[0m"
+else
+  set -eu
+  echo -e "\e[1;32mQuiet mode - use --verbose or -v for detailed output\e[0m"
+fi
 
 # Color codes
 RED='\033[0;31m'
@@ -8,9 +18,21 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# Output function that respects verbose mode
+output() {
+  if [[ "$VERBOSE" == true ]]; then
+    echo -e "$1"
+  fi
+}
+
+# Progress function that always shows
+progress() {
+  echo -e "\e[1;36m$1\e[0m"
+}
+
 check_installer() {
   if [ -e /etc/NIXOS ]; then
-    echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
+    progress "✓ Running in the NixOS installer environment."
   else
     echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
     exit 1
@@ -18,17 +40,25 @@ check_installer() {
 }
 
 cleanup() {
+  output "Cleaning up temporary files..."
   rm -rf nixos-config-main.zip nixos-config-main nixos-config
 }
 
 download_config() {
-  curl -LJ0 https://github.com/xlrinn/nix/archive/desktop.zip -o nixos-config-main.zip
-  unzip nixos-config-main.zip
+  progress "📦 Downloading configuration..."
+  if [[ "$VERBOSE" == true ]]; then
+    curl -LJ0 https://github.com/xlrinn/nix/archive/desktop.zip -o nixos-config-main.zip
+    unzip nixos-config-main.zip
+  else
+    curl -sLJ0 https://github.com/xlrinn/nix/archive/desktop.zip -o nixos-config-main.zip
+    unzip -q nixos-config-main.zip
+  fi
   mv nix-desktop nixos-config
   cd nixos-config
 }
 
 run_apply() {
+  progress "⚙️  Applying configuration..."
   ./apps/x86_64-linux/apply
   if [ ! -f /tmp/username.txt ]; then
     echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
@@ -38,24 +68,40 @@ run_apply() {
 }
 
 run_disko() {
-  nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
-    --option cores 0 --option max-jobs auto \
-    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  progress "💾 Partitioning disk..."
+  if [[ "$VERBOSE" == true ]]; then
+    nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+      --option cores 0 --option max-jobs auto \
+      github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+  else
+    nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+      --option cores 0 --option max-jobs auto \
+      github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix > /dev/null 2>&1
+  fi
 }
 
 setup_files() {
+  progress "📁 Setting up files..."
   mkdir -p /mnt/etc/nixos
+  output "Copying configuration to /mnt/etc/nixos"
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
   
   # Clone a fresh copy of the nix repository to the user's home directory
+  output "Cloning fresh repository to user home directory"
   mkdir -p /mnt/home/david
   cd /mnt/home/david
-  git clone https://github.com/xlrinn/nix.git
+  if [[ "$VERBOSE" == true ]]; then
+    git clone https://github.com/xlrinn/nix.git
+  else
+    git clone -q https://github.com/xlrinn/nix.git
+  fi
   chown -R 1000:1000 /mnt/home/david/nix
 }
 
 install_nixos() {
+  progress "🚀 Installing NixOS..."
+  
   ARCH=$(uname -m)
 
   case "$ARCH" in
@@ -71,23 +117,39 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  if [[ "$VERBOSE" == true ]]; then
+    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  else
+    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto > /dev/null 2>&1
+  fi
+  
   chmod -R 775 /mnt/etc/nixos
   
-  # Set root password to match user password (both set to "password")
-  echo "Setting root password..."
-  echo "root:password" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
+  # Set root password to match user password (both set to "6!y2c87T")
+  progress "🔐 Setting root password..."
+  echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
+  
+  # Set user password
+  progress "🔐 Setting user password..."
+  echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
   
   # Force home-manager to apply configurations immediately
-  echo "Applying home-manager configurations..."
-  chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "
-    cd /home/david/nix
-    nixos-rebuild switch --flake .#x86_64-linux
-  "
+  progress "🏠 Applying home-manager configurations..."
+  if [[ "$VERBOSE" == true ]]; then
+    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "
+      cd /home/david/nix
+      nixos-rebuild switch --flake .#x86_64-linux
+    "
+  else
+    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "
+      cd /home/david/nix
+      nixos-rebuild switch --flake .#x86_64-linux
+    " > /dev/null 2>&1
+  fi
 }
 
 auto_reboot() {
-  echo -e "\e[1;32mInstallation complete! Rebooting in 5 seconds...\e[0m"
+  progress "✅ Installation complete! Rebooting in 5 seconds..."
   sleep 5
   reboot
 }

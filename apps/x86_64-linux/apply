@@ -58,7 +58,7 @@ echo "    ██╔██╗ ██║ ╚████╔╝  ╚███╔╝
 echo "    ██║╚██╗██║  ╚██╔╝   ██╔██╗ "
 echo "    ██║ ╚████║   ██║   ██╔╝ ██╗"
 echo "    ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝"
-echo "                @XLRINN"
+echo "              --XLRINN--"
 echo
 echo "═══════════════════════════════════════════════════════════"
 echo
@@ -97,15 +97,7 @@ select_drive() {
     drive_info=$(lsblk -d -n -o NAME,SIZE,MODEL /dev/${drives[$i]} | head -1)
     drive_size=$(echo "$drive_info" | awk '{print $2}')
     drive_model=$(echo "$drive_info" | awk '{for(i=3;i<=NF;i++) printf "%s ", $i; print ""}' | sed 's/ *$//')
-    _print "  ${YELLOW}[$((i+1))]${NC} /dev/${drives[$i]} - ${GREEN}Size: $drive_size${NC} - ${CYAN}Model: $drive_model${NC}"
-  done
-  
-  # Show additional drive details
-  _print "\n${CYAN}Detailed drive information:${NC}"
-  for i in "${!drives[@]}"; do
-    _print "\n${YELLOW}Drive [$((i+1))] - /dev/${drives[$i]}:${NC}"
-    lsblk -d -o NAME,SIZE,MODEL,SERIAL,MOUNTPOINT /dev/${drives[$i]}
-    echo ""
+    _print "  ${YELLOW}[$((i+1))]${NC} /dev/${drives[$i]} - ${GREEN}$drive_size${NC} - ${CYAN}$drive_model${NC}"
   done
   
   while true; do
