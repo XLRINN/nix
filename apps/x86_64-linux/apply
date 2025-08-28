@@ -40,7 +40,7 @@ _prompt() {
   local message="$1"
   local variable="$2"
 
-  _print "$message"
+  echo -n -e "$message"
   read -r $variable
 }
 
@@ -129,8 +129,8 @@ select_drive() {
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
   _print "${CYAN}${COMPUTER} Please enter a hostname for your system:${NC}"
-  _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
-  _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
+ # _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
+ # _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
   
   select_drive
 fi
