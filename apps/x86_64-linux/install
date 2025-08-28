@@ -48,9 +48,10 @@ setup_files() {
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
   
-  # Copy the Nix repository to the user's home directory
+  # Clone a fresh copy of the nix repository to the user's home directory
   mkdir -p /mnt/home/david
-  cp -r * /mnt/home/david/nix
+  cd /mnt/home/david
+  git clone https://github.com/xlrinn/nix.git
   chown -R 1000:1000 /mnt/home/david/nix
 }
 
@@ -70,8 +71,12 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto --no-root-passwd 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
   chmod -R 775 /mnt/etc/nixos
+  
+  # Set root password to match user password (both set to "password")
+  echo "Setting root password..."
+  echo "root:password" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
   
   # Force home-manager to apply configurations immediately
   echo "Applying home-manager configurations..."
@@ -81,12 +86,10 @@ install_nixos() {
   "
 }
 
-prompt_reboot() {
-  read -p "Do you want to reboot now? (y/yes) " choice
-  case "$choice" in
-  y|Y|yes|YES ) echo -e "\e[1;32mRebooting...\e[0m" && reboot;;
-  * ) echo -e "\e[1;33mReboot skipped.\e[0m";;
-  esac
+auto_reboot() {
+  echo -e "\e[1;32mInstallation complete! Rebooting in 5 seconds...\e[0m"
+  sleep 5
+  reboot
 }
 
 cleanup
@@ -97,4 +100,4 @@ run_disko
 setup_files
 install_nixos
 cleanup
-prompt_reboot 
+auto_reboot 

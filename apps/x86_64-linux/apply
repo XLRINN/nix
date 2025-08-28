@@ -100,9 +100,6 @@ select_drive() {
     _print "  ${YELLOW}[$((i+1))]${NC} /dev/${drives[$i]} - ${GREEN}Size: $drive_size${NC} - ${CYAN}Model: $drive_model${NC}"
   done
   
-  _print "\n${YELLOW}${WARNING} WARNING: This will completely erase the selected drive!${NC}"
-  _print "${RED}Make sure you have backed up any important data!${NC}"
-  
   # Show additional drive details
   _print "\n${CYAN}Detailed drive information:${NC}"
   for i in "${!drives[@]}"; do
@@ -116,18 +113,13 @@ select_drive() {
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#drives[@]}" ]; then
       selected_drive="/dev/${drives[$((choice-1))]}"
       _print "\n${GREEN}Selected drive: $selected_drive${NC}"
-      _prompt "${YELLOW}Are you sure you want to install NixOS on $selected_drive? (yes/no): ${NC}" confirm
-      if [[ "$confirm" == "yes" ]]; then
-        # Update the disk-config.nix file with the selected drive
-        sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
-        _print "\n${GREEN}${CHECK} Drive configuration updated!${NC}"
-        _print "${GREEN}${CHECK} NixOS will be installed on: $selected_drive${NC}"
-        _print "${YELLOW}Proceeding with installation...${NC}"
-        export BOOT_DISK=$(basename $selected_drive)
-        break
-      else
-        _print "${YELLOW}Drive selection cancelled. Please try again.${NC}"
-      fi
+      # Update the disk-config.nix file with the selected drive
+      sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
+      _print "${GREEN}${CHECK} Drive configuration updated!${NC}"
+      _print "${GREEN}${CHECK} NixOS will be installed on: $selected_drive${NC}"
+      _print "${YELLOW}Proceeding with installation...${NC}"
+      export BOOT_DISK=$(basename $selected_drive)
+      break
     else
       _print "${RED}Invalid selection. Please enter a number between 1 and ${#drives[@]}.${NC}"
     fi
