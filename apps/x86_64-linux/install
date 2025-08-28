@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+set -exu
+
+# Color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+check_installer() {
+  if [ -e /etc/NIXOS ]; then
+    echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
+  else
+    echo -e "\e[1;31mNot running in the NixOS installer environment.\e[0m"
+    exit 1
+  fi
+}
+
+select_drive() {
+  echo -e "\n${YELLOW}=== Available Drives ===${NC}"
+  echo "Scanning for available drives..."
+  
+  # Get list of drives (excluding loop devices and partitions)
+  drives=($(lsblk -d -n -o NAME,SIZE,MODEL | grep -E '^(sd[a-z]|nvme[0-9]+n[0-9]+|hd[a-z])' | awk '{print $1}'))
+  
+  # Try to identify the live USB drive to exclude it
+  live_usb=""
+  if [ -f /proc/cmdline ]; then
+    cmdline=$(cat /proc/cmdline)
+    if echo "$cmdline" | grep -q "boot=live"; then
+      # This is a live USB, try to identify it
+      live_usb=$(lsblk -d -n -o NAME,MOUNTPOINT | grep "/run/archiso/bootmnt\|/run/archiso/airootfs\|/run/archiso/iso" | head -1 | awk '{print $1}')
+    fi
+  fi
+  
+  if [ ${#drives[@]} -eq 0 ]; then
+    echo -e "${RED}No suitable drives found!${NC}"
+    exit 1
+  fi
+  
+  # Warn about live USB if detected
+  if [ -n "$live_usb" ]; then
+    echo -e "\n${YELLOW}⚠️  Live USB detected: /dev/$live_usb${NC}"
+    echo -e "${YELLOW}Make sure you don't select this drive for installation!${NC}"
+  fi
+  
+  echo -e "\n${GREEN}Available drives:${NC}"
+  for i in "${!drives[@]}"; do
+    drive_info=$(lsblk -d -n -o NAME,SIZE,MODEL /dev/${drives[$i]} | head -1)
+    drive_size=$(echo "$drive_info" | awk '{print $2}')
+    drive_model=$(echo "$drive_info" | awk '{for(i=3;i<=NF;i++) printf "%s ", $i; print ""}' | sed 's/ *$//')
+    echo -e "  ${YELLOW}[$((i+1))]${NC} /dev/${drives[$i]} - ${GREEN}Size: $drive_size${NC} - ${CYAN}Model: $drive_model${NC}"
+  done
+  
+  echo -e "\n${YELLOW}WARNING: This will completely erase the selected drive!${NC}"
+  echo -e "${RED}Make sure you have backed up any important data!${NC}"
+  
+  # Show additional drive details
+  echo -e "\n${CYAN}Detailed drive information:${NC}"
+  for i in "${!drives[@]}"; do
+    echo -e "\n${YELLOW}Drive [$((i+1))] - /dev/${drives[$i]}:${NC}"
+    lsblk -d -o NAME,SIZE,MODEL,SERIAL,MOUNTPOINT /dev/${drives[$i]}
+    echo ""
+  done
+  
+  while true; do
+    read -p "Select drive number (1-${#drives[@]}): " choice
+    if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#drives[@]}" ]; then
+      selected_drive="/dev/${drives[$((choice-1))]}"
+      echo -e "\n${GREEN}Selected drive: $selected_drive${NC}"
+      echo -e "${YELLOW}Are you sure you want to install NixOS on $selected_drive? (yes/no):${NC}"
+      read -p "" confirm
+      if [[ "$confirm" == "yes" ]]; then
+        # Update the disk-config.nix file with the selected drive
+        sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
+        echo -e "\n${GREEN}✓ Drive configuration updated!${NC}"
+        echo -e "${GREEN}✓ NixOS will be installed on: $selected_drive${NC}"
+        echo -e "${YELLOW}Proceeding with installation...${NC}"
+        break
+      else
+        echo -e "${YELLOW}Drive selection cancelled. Please try again.${NC}"
+      fi
+    else
+      echo -e "${RED}Invalid selection. Please enter a number between 1 and ${#drives[@]}.${NC}"
+    fi
+  done
+}
+
+cleanup() {
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config
+}
+
+download_config() {
+  curl -LJ0 https://github.com/xlrinn/nix/archive/desktop.zip -o nixos-config-main.zip
+  unzip nixos-config-main.zip
+  mv nix-desktop nixos-config
+  cd nixos-config
+}
+
+run_apply() {
+  ./apps/x86_64-linux/apply
+  if [ ! -f /tmp/username.txt ]; then
+    echo -e "\e[1;31mError: /tmp/username.txt does not exist.\e[0m"
+    exit 1
+  fi
+  export USERNAME=$(cat /tmp/username.txt)
+}
+
+run_disko() {
+  nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
+    --option cores 0 --option max-jobs auto \
+    github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
+}
+
+setup_files() {
+  mkdir -p /mnt/etc/nixos
+  cp -r * /mnt/etc/nixos
+  cd /mnt/etc/nixos
+  
+  # Copy the Nix repository to the user's home directory
+  mkdir -p /mnt/home/david
+  cp -r * /mnt/home/david/nix
+  chown -R 1000:1000 /mnt/home/david/nix
+}
+
+install_nixos() {
+  ARCH=$(uname -m)
+
+  case "$ARCH" in
+    x86_64)
+      FLAKE_TARGET="x86_64-linux"
+      ;;
+    aarch64)
+      FLAKE_TARGET="aarch64-linux"
+      ;;
+    *)
+      echo -e "${RED}Unsupported architecture: $ARCH${NC}"
+      exit 1
+      ;;
+  esac
+
+  nixos-install --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto --no-root-passwd 2>&1 | grep -v "security hole" | grep -v "⚠️"
+  chmod -R 775 /mnt/etc/nixos
+  
+  # Force home-manager to apply configurations immediately
+  echo "Applying home-manager configurations..."
+  chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "
+    cd /home/david/nix
+    nixos-rebuild switch --flake .#x86_64-linux
+  "
+}
+
+prompt_reboot() {
+  read -p "Do you want to reboot now? (y/yes) " choice
+  case "$choice" in
+  y|Y|yes|YES ) echo -e "\e[1;32mRebooting...\e[0m" && reboot;;
+  * ) echo -e "\e[1;33mReboot skipped.\e[0m";;
+  esac
+}
+
+cleanup
+check_installer
+download_config
+select_drive
+run_apply
+run_disko
+setup_files
+install_nixos
+cleanup
+prompt_reboot 
