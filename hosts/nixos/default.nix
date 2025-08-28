@@ -20,10 +20,9 @@ let user = "david";
       timeout = 1;
     };
     kernelPackages = pkgs.linuxPackages_latest;
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
-    kernelModules = [ "uinput" "iwlwifi" ];
-    # Speed optimizations
-    kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
+    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" "virtio_gpu" "virtio_pci" "virtio_balloon" ];
+    kernelModules = [ "uinput" "iwlwifi" "virtio_gpu" ];
+
   };
 
   # Set your time zone.
@@ -83,13 +82,17 @@ let user = "david";
     }];
   };
 
-  # Enable Hyprland
-  programs.hyprland.enable = true;
+  # Enable Hyprland (disabled temporarily for VM compatibility)
+  programs.hyprland.enable = false;
 
   services = { 
     xserver = {
       enable = true;
-      displayManager.gdm.enable = true;
+      videoDrivers = [ "modesetting" ];  # Generic fallback driver for VMs
+      displayManager.gdm = {
+        enable = true;
+        wayland = false;  # Force X11 in VMs for better compatibility
+      };
       desktopManager.gnome.enable = true;
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
