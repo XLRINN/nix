@@ -74,9 +74,10 @@ run_disko() {
       --option cores 0 --option max-jobs auto \
       github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix
   else
+    # Show basic disko progress in quiet mode
     nix run --extra-experimental-features nix-command --extra-experimental-features flakes \
       --option cores 0 --option max-jobs auto \
-      github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix > /dev/null 2>&1
+      github:nix-community/disko -- --mode zap_create_mount ./modules/nixos/disk-config.nix 2>&1 | grep -E "creating|formatting|mounting|partition|disk" || true
   fi
 }
 
@@ -84,17 +85,15 @@ setup_files() {
   progress "📁 Setting up files..."
   mkdir -p /mnt/etc/nixos
   output "Copying configuration to /mnt/etc/nixos"
-  cp -r * /mnt/etc/nixos
-  cd /mnt/etc/nixos
+  cp -r ./* /mnt/etc/nixos
   
   # Clone a fresh copy of the nix repository to the user's home directory
   output "Cloning fresh repository to user home directory"
   mkdir -p /mnt/home/david
-  cd /mnt/home/david
   if [[ "$VERBOSE" == true ]]; then
-    git clone https://github.com/xlrinn/nix.git
+    git clone https://github.com/xlrinn/nix.git /mnt/home/david/nix
   else
-    git clone -q https://github.com/xlrinn/nix.git
+    git clone -q https://github.com/xlrinn/nix.git /mnt/home/david/nix
   fi
   chown -R 1000:1000 /mnt/home/david/nix
 }
@@ -120,7 +119,8 @@ install_nixos() {
   if [[ "$VERBOSE" == true ]]; then
     nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
   else
-    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto > /dev/null 2>&1
+    # In quiet mode, show basic progress but hide verbose output
+    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -E "copying|building|installing|activating|setting up|finished|progress|%" || true
   fi
   
   chmod -R 775 /mnt/etc/nixos

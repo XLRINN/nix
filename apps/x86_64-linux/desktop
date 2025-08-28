@@ -11,6 +11,7 @@ NC='\033[0m' # No Color
 
 
 
+
 check_installer() {
   if [ -e /etc/NIXOS ]; then
     echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
@@ -21,7 +22,7 @@ check_installer() {
 }
 
 cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nixos-config
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-testing
 }
 
 download_config() {
@@ -52,13 +53,11 @@ run_disko() {
 
 setup_files() {
   mkdir -p /mnt/etc/nixos
-  cp -r * /mnt/etc/nixos
-  cd /mnt/etc/nixos
+  cp -r ./* /mnt/etc/nixos
   
   # Clone a fresh copy of the nix repository to the user's home directory
   mkdir -p /mnt/home/david
-  cd /mnt/home/david
-  git clone https://github.com/xlrinn/nix.git
+  git clone https://github.com/xlrinn/nix.git /mnt/home/david/nix
   chown -R 1000:1000 /mnt/home/david/nix
   echo -e "${GREEN}✓ Files copied to system${NC}"
 }
