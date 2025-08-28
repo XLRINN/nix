@@ -117,10 +117,10 @@ install_nixos() {
   esac
 
   if [[ "$VERBOSE" == true ]]; then
-    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
+    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=1073741824 --option cores=0 --option max-jobs=auto 2>&1 | grep -v "security hole" | grep -v "⚠️"
   else
     # In quiet mode, show basic progress but hide verbose output
-    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=536870912 --option cores=0 --option max-jobs=auto 2>&1 | grep -E "copying|building|installing|activating|setting up|finished|progress|%" || true
+    nixos-install --no-root-passwd --flake .#$FLAKE_TARGET --option download-buffer-size=1073741824 --option cores=0 --option max-jobs=auto 2>&1 | grep -E "copying|building|installing|activating|setting up|finished|progress|%" || true
   fi
   
   chmod -R 775 /mnt/etc/nixos
@@ -132,6 +132,14 @@ install_nixos() {
   # Set user password
   progress "🔐 Setting user password..."
   echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
+  
+  # Force home-manager to apply configurations immediately
+  progress "🏠 Applying home-manager configurations..."
+  if [[ "$VERBOSE" == true ]]; then
+    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "cd /etc/nixos && nixos-rebuild switch --flake .#x86_64-linux"
+  else
+    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "cd /etc/nixos && nixos-rebuild switch --flake .#x86_64-linux" > /dev/null 2>&1
+  fi
 }
 
 auto_reboot() {
