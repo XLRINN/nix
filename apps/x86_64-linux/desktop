@@ -64,6 +64,8 @@ setup_files() {
 }
 
 install_nixos() {
+  cd /mnt/etc/nixos  # Ensure we're in the right directory
+  
   ARCH=$(uname -m)
 
   case "$ARCH" in
