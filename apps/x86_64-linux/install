@@ -132,20 +132,6 @@ install_nixos() {
   # Set user password
   progress "🔐 Setting user password..."
   echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
-  
-  # Force home-manager to apply configurations immediately
-  progress "🏠 Applying home-manager configurations..."
-  if [[ "$VERBOSE" == true ]]; then
-    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "
-      cd /home/david/nix
-      nixos-rebuild switch --flake .#x86_64-linux
-    "
-  else
-    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "
-      cd /home/david/nix
-      nixos-rebuild switch --flake .#x86_64-linux
-    " > /dev/null 2>&1
-  fi
 }
 
 auto_reboot() {
