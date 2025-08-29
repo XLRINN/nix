@@ -40,164 +40,164 @@ in
       };
     };
 
-  zellij = {
-    enable = true;
-    settings = {
-      default_Layout = "compact";
-      pane_frames = false;
-      theme = "ansi";
-      simplified_ui = true;
-      hide_session_name = true;
-      rounded_corners = true;
-    };
-  };
-
-  yazi = {
-    enable = true;
-    settings = {
-      editor = "neovim";
-      manager = {
-        ratio = [ 1 4 3 ];
-        sort_by = "natural";
-        sort_sensitive = true;
-        sort_reverse = false;
-        sort_dir_first = true;
-        linemode = "none";
-        show_hidden = true;
-        show_symlink = true;
-        enable_mouse = true;
-      };
-      preview = {
-        image_filter = "lanczos3";
-        image_quality = 90;
-        tab_size = 1;
-        max_width = 600;
-        max_height = 900;
-        cache_dir = "";
-        ueberzug_scale = 1;
-        ueberzug_offset = [ 0 0 0 0 ];
-        enable_image_previews = true;
-      };
-      tasks = {
-        micro_workers = 5;
-        macro_workers = 10;
-        bizarre_retry = 5;
-      };
-      theme = {
-        background = "0x282c34";
-        foreground = "0xc5c8c6";
-        black = "0x282c34";
-        red = "0xcc6666";
-        green = "0xb5bd68";
-        yellow = "0xf0c674";
-        blue = "0x81a2be";
-        magenta = "0xb294bb";
-        cyan = "0x8abeb7";
-        white = "0xc5c8c6";
-        bright_black = "0x969896";
-        bright_red = "0xcc6666";
-        bright_green = "0xb5bd68";
-        bright_yellow = "0xf0c674";
-        bright_blue = "0x81a2be";
-        bright_magenta = "0xb294bb";
-        bright_cyan = "0x8abeb7";
-        bright_white = "0xffffff";
-      };
-      open = {
-        rules = [
-          { mime = "*/*"; use = "edit"; }
-          { name = "*"; use = "edit"; }
-        ];
+    zellij = {
+      enable = true;
+      settings = {
+        default_Layout = "compact";
+        pane_frames = false;
+        theme = "ansi";
+        simplified_ui = true;
+        hide_session_name = true;
+        rounded_corners = true;
       };
     };
-  };
 
-  alacritty = {
-    enable = true;
-    settings = {
-      font = {
-        normal = {
-          family = "MesloLGS NF";
+    yazi = {
+      enable = true;
+      settings = {
+        editor = "neovim";
+        manager = {
+          ratio = [ 1 4 3 ];
+          sort_by = "natural";
+          sort_sensitive = true;
+          sort_reverse = false;
+          sort_dir_first = true;
+          linemode = "none";
+          show_hidden = true;
+          show_symlink = true;
+          enable_mouse = true;
         };
-        bold = {
-          family = "MesloLGS NF";
+        preview = {
+          image_filter = "lanczos3";
+          image_quality = 90;
+          tab_size = 1;
+          max_width = 600;
+          max_height = 900;
+          cache_dir = "";
+          ueberzug_scale = 1;
+          ueberzug_offset = [ 0 0 0 0 ];
+          enable_image_previews = true;
         };
-        italic = {
-          family = "MesloLGS NF";
+        tasks = {
+          micro_workers = 5;
+          macro_workers = 10;
+          bizarre_retry = 5;
         };
-        bold_italic = {
-          family = "MesloLGS NF";
+        theme = {
+          background = "0x282c34";
+          foreground = "0xc5c8c6";
+          black = "0x282c34";
+          red = "0xcc6666";
+          green = "0xb5bd68";
+          yellow = "0xf0c674";
+          blue = "0x81a2be";
+          magenta = "0xb294bb";
+          cyan = "0x8abeb7";
+          white = "0xc5c8c6";
+          bright_black = "0x969896";
+          bright_red = "0xcc6666";
+          bright_green = "0xb5bd68";
+          bright_yellow = "0xf0c674";
+          bright_blue = "0x81a2be";
+          bright_magenta = "0xb294bb";
+          bright_cyan = "0x8abeb7";
+          bright_white = "0xffffff";
         };
-      };
-      cursor = {
-        style = "Block";
-      };
-      window = {
-        opacity = 0.8;
-        padding = { x = 10; y = 10; };
-        dynamic_padding = false;
-        decorations = "none";
-      };
-      colors = {
-        primary = {
-          background = "0x2E3440";
-          foreground = "0xD8DEE9";
+        open = {
+          rules = [
+            { mime = "*/*"; use = "edit"; }
+            { name = "*"; use = "edit"; }
+          ];
         };
-        normal = {
-          black = "0x3B4252";
-          red = "0xBF616A";
-          green = "0xA3BE8C";
-          yellow = "0xEBCB8B";
-          blue = "0x81A1C1";
-          magenta = "0xB48EAD";
-          cyan = "0x88C0D0";
-          white = "0xE5E9F0";
-        };
-        bright = {
-          black = "0x4C566A";
-          red = "0xBF616A";
-          green = "0xA3BE8C";
-          yellow = "0xEBCB8B";
-          blue = "0x81A1C1";
-          magenta = "0xB48EAD";
-          cyan = "0x8FBCBB";
-          white = "0xECEFF4";
-        };
-      };
-      selection = {
-        semantic_escape_chars = " ,│`|:\"'()[]{}<>";
       };
     };
-  };
 
-  neovim = {
-    enable = true;
-    defaultEditor = true;
-    extraPackages = with pkgs; [
-      stylua
-      ripgrep
-      curl
-    ];
-    extraConfig = ''
-      set number
-      set relativenumber
-      set expandtab
-      set tabstop=2
-      set softtabstop=2
-      set shiftwidth=2
-      set smartindent
-      set mouse=a
-      set termguicolors
-      set background=dark
-      set clipboard=unnamedplus
-      set termguicolors
-      " Keybindings to toggle NERDTree
-      nnoremap <leader>n :NERDTreeToggle<CR>
+    alacritty = {
+      enable = true;
+      settings = {
+        font = {
+          normal = {
+            family = "MesloLGS NF";
+          };
+          bold = {
+            family = "MesloLGS NF";
+          };
+          italic = {
+            family = "MesloLGS NF";
+          };
+          bold_italic = {
+            family = "MesloLGS NF";
+          };
+        };
+        cursor = {
+          style = "Block";
+        };
+        window = {
+          opacity = 0.8;
+          padding = { x = 10; y = 10; };
+          dynamic_padding = false;
+          decorations = "none";
+        };
+        colors = {
+          primary = {
+            background = "0x2E3440";
+            foreground = "0xD8DEE9";
+          };
+          normal = {
+            black = "0x3B4252";
+            red = "0xBF616A";
+            green = "0xA3BE8C";
+            yellow = "0xEBCB8B";
+            blue = "0x81A1C1";
+            magenta = "0xB48EAD";
+            cyan = "0x88C0D0";
+            white = "0xE5E9F0";
+          };
+          bright = {
+            black = "0x4C566A";
+            red = "0xBF616A";
+            green = "0xA3BE8C";
+            yellow = "0xEBCB8B";
+            blue = "0x81A1C1";
+            magenta = "0xB48EAD";
+            cyan = "0x8FBCBB";
+            white = "0xECEFF4";
+          };
+        };
+        selection = {
+          semantic_escape_chars = " ,│`|:\"'()[]{}<>";
+        };
+      };
+    };
 
-      " Plugin management using lazy.nvim
-      lua << EOF
-      -- bootstrap lazy.nvim
-      local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+    neovim = {
+      enable = true;
+      defaultEditor = true;
+      extraPackages = with pkgs; [
+        stylua
+        ripgrep
+        curl
+      ];
+      extraConfig = ''
+        set number
+        set relativenumber
+        set expandtab
+        set tabstop=2
+        set softtabstop=2
+        set shiftwidth=2
+        set smartindent
+        set mouse=a
+        set termguicolors
+        set background=dark
+        set clipboard=unnamedplus
+        set termguicolors
+        " Keybindings to toggle NERDTree
+        nnoremap <leader>n :NERDTreeToggle<CR>
+
+        " Plugin management using lazy.nvim
+        lua << EOF
+        -- bootstrap lazy.nvim
+        local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
       if not vim.loop.fs_stat(lazypath) then
         vim.fn.system({
           "git",
@@ -298,45 +298,45 @@ in
       })
       EOF
     '';
-  };
-
-  zsh = {
-    enable = true;
-    autocd = false;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-    cdpath = [ "~/.local/share/src" ];
-    plugins = [ {
-          name = "powerlevel10k";
-          src = pkgs.zsh-powerlevel10k;
-          file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-      }
-      {
-          name = "powerlevel10k-config";
-          src = ./config;
-          file = "shell/p10k.zsh";
-      }];
-    shellAliases = {
-      pf = "pfetch";
-      bs = "nix run .#build-switch";
-      bss = "nix run .#build-switch && source ~/.zshrc";
-      fmu = "clear && nix run .#build-switch && source ~/.zshrc";
-      sauce = "source ~/.zshrc";
-      addcask = "nvim ~/nix/modules/darwin/casks.nix";
-      cbs = "clear && bs";
-      gc = "nix-collect-garbage -d";
-      pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
-      pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
     };
-  
-    initExtra = ''
-      if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
-        export ZELLIJ_RUNNING=1
-        zellij
-      fi
 
-    '';
-  };
-  }; # End of programs block
+    zsh = {
+      enable = true;
+      autocd = false;
+      enableCompletion = true;
+      autosuggestion.enable = true;
+      syntaxHighlighting.enable = true;
+      cdpath = [ "~/.local/share/src" ];
+      plugins = [ {
+            name = "powerlevel10k";
+            src = pkgs.zsh-powerlevel10k;
+            file = "share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+        }
+        {
+            name = "powerlevel10k-config";
+            src = ./config;
+            file = "shell/p10k.zsh";
+        }];
+      shellAliases = {
+        pf = "pfetch";
+        bs = "nix run .#build-switch";
+        bss = "nix run .#build-switch && source ~/.zshrc";
+        fmu = "clear && nix run .#build-switch && source ~/.zshrc";
+        sauce = "source ~/.zshrc";
+        addcask = "nvim ~/nix/modules/darwin/casks.nix";
+        cbs = "clear && bs";
+        gc = "nix-collect-garbage -d";
+        pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
+        pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
+      };
+    
+      initExtra = ''
+        if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
+          export ZELLIJ_RUNNING=1
+          zellij
+        fi
+
+      '';
+    };
+  } # End of programs block
 }
