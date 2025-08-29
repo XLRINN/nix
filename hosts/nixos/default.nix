@@ -1,4 +1,4 @@
-{ config, inputs, pkgs, ... }:
+q{ config, inputs, pkgs, ... }:
 
 let user = "david";
   keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ]; in
@@ -126,8 +126,9 @@ let user = "david";
       max-jobs = "auto";
       cores = 0;
       builders-use-substitutes = true;
-                # Increase download buffer for faster downloads
-          download-buffer-size = 134217728;
+        # Increase download buffer for faster downloads
+      # increased from 128MiB to 256MiB to improve large substitute fetches
+      download-buffer-size = 268435456;
     };
 
     package = pkgs.nix;
