@@ -99,6 +99,7 @@ in
     };
   };
 
-  programs = shared_programs // {};
+  # Import shared programs directly from the programs attribute
+  programs = shared_programs.programs;
 
 }

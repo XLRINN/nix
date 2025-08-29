@@ -23,24 +23,28 @@ check_installer() {
 
 cleanup() {
   progress "🧹 Cleaning up temporary files..."
-  rm -rf nixos-config-main.zip nix-testing
+  rm -rf nixos-config-main.zip nix-*
 }
 
 download_config() {
   progress "📦 Downloading configuration..."
-  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nixos-config-main.zip
+  # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'testing'
+  NIX_REF=${NIX_REF:-testing}
+  curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
   unzip -q nixos-config-main.zip
-  
-  if [ ! -d "nix-testing" ]; then
-      echo -e "${RED}Error: Expected directory 'nix-testing' not found after download.${NC}"
-      exit 1
+
+  # Find the extracted directory (GitHub uses nix-<refOrSha>)
+  SRC_DIR=$(find . -maxdepth 1 -type d -name "nix-*" | head -n1)
+  if [ -z "$SRC_DIR" ] || [ ! -d "$SRC_DIR" ]; then
+    echo -e "${RED}Error: Extracted directory not found after download.${NC}"
+    exit 1
   fi
 }
 
 run_apply() {
   progress "⚙️  Applying configuration..."
-  chmod +x ./nix-testing/apps/x86_64-linux/apply
-  ./nix-testing/apps/x86_64-linux/apply
+  chmod +x "${SRC_DIR}/apps/x86_64-linux/apply"
+  "${SRC_DIR}/apps/x86_64-linux/apply"
 
   if [ ! -f /tmp/username.txt ]; then
     echo -e "${RED}Error: /tmp/username.txt does not exist.${NC}"
@@ -51,7 +55,7 @@ run_apply() {
 run_disko() {
   progress "💾 Partitioning disk..."
   nix run --extra-experimental-features "nix-command flakes" \
-    github:nix-community/disko -- --mode zap_create_mount ./nix-testing/modules/nixos/disk-config.nix
+    github:nix-community/disko -- --mode zap_create_mount "${SRC_DIR}/modules/nixos/disk-config.nix"
 }
 
 setup_files() {
@@ -59,7 +63,7 @@ setup_files() {
   
   progress "Copying configuration to /mnt/etc/nixos"
   mkdir -p /mnt/etc/nixos
-  cp -r ./nix-testing/* /mnt/etc/nixos/
+  cp -r "${SRC_DIR}"/* /mnt/etc/nixos/
   
   progress "Setting up user nix configuration in ~/nix"
   mkdir -p /mnt/home/david
