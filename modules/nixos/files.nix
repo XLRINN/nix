@@ -40,7 +40,7 @@ in
     '';
   };
 
-  # Copy the Nix repository to the user's home directory
-  "/home/${user}/nix".source = ../../..;
+  # Intentionally do not copy the entire flake into the user's home.
+  # The installer clones the git repository to ~/nix explicitly.
 }
 

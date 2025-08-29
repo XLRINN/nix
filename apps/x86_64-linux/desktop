@@ -21,15 +21,21 @@ check_installer() {
 }
 
 cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nixos-config
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-*
 }
 
 download_config() {
-  # Download the repository from the testing branch
-  curl -LJ0 https://github.com/xlrinn/nix/archive/testing.zip -o nixos-config-main.zip
-  unzip nixos-config-main.zip
-  mv nix-testing nixos-config
-  cd nixos-config
+  # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'testing'
+  NIX_REF=${NIX_REF:-testing}
+  curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
+  unzip -q nixos-config-main.zip
+  # Find extracted directory (nix-<refOrSha>) and enter
+  SRC_DIR=$(find . -maxdepth 1 -type d -name "nix-*" | head -n1)
+  if [ -z "$SRC_DIR" ] || [ ! -d "$SRC_DIR" ]; then
+    echo -e "${RED}Error: Extracted directory not found after download.${NC}"
+    exit 1
+  fi
+  cd "$SRC_DIR"
   echo -e "${GREEN}✓ Configuration downloaded and extracted${NC}"
 }
 
@@ -50,6 +56,15 @@ setup_files() {
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
   echo -e "${GREEN}✓ Files copied to system${NC}"
+
+  # Ensure a clean ~/nix git clone for the first boot
+  mkdir -p /mnt/home/david
+  if [ -d "/mnt/home/david/nix" ]; then
+    rm -rf /mnt/home/david/nix
+  fi
+  git clone --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  chown -R 1000:1000 /mnt/home/david/nix
+  chmod -R 755 /mnt/home/david/nix
 }
 
 install_nixos() {
