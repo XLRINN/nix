@@ -39,6 +39,32 @@ in
     };
   };
 
+  # Ensure local clone of nixos-config exists and points to the correct remote/branch
+  home.activation.ensure-nixos-config = {
+    text = ''
+      #!/bin/sh
+      set -euo pipefail
+  REPO_DIR="$HOME/nix"
+  REMOTE_URL="https://github.com/xlrinn/nix.git"
+  BRANCH="master"
+
+      if [ ! -d "$HOME" ]; then
+        mkdir -p "$HOME"
+      fi
+
+      if [ ! -d "$REPO_DIR/.git" ]; then
+        echo "Cloning $REMOTE_URL into $REPO_DIR"
+        git clone --filter=blob:none --depth 1 --branch "$BRANCH" "$REMOTE_URL" "$REPO_DIR"
+      else
+        echo "Updating existing repo at $REPO_DIR"
+        (cd "$REPO_DIR" && git remote set-url origin "$REMOTE_URL" || true)
+        (cd "$REPO_DIR" && git fetch --depth 1 origin "$BRANCH" || true)
+        (cd "$REPO_DIR" && git checkout "$BRANCH" || true)
+        (cd "$REPO_DIR" && git reset --hard "origin/$BRANCH" || true)
+      fi
+    '';
+  };
+
   zellij = {
     enable = true;
     settings = {
