@@ -100,14 +100,6 @@ select_drive() {
     _print "  ${YELLOW}[$((i+1))]${NC} /dev/${drives[$i]} - ${GREEN}Size: $drive_size${NC} - ${CYAN}Model: $drive_model${NC}"
   done
   
-  # Show additional drive details
-  _print "\n${CYAN}Detailed drive information:${NC}"
-  for i in "${!drives[@]}"; do
-    _print "\n${YELLOW}Drive [$((i+1))] - /dev/${drives[$i]}:${NC}"
-    lsblk -d -o NAME,SIZE,MODEL,SERIAL,MOUNTPOINT /dev/${drives[$i]}
-    echo ""
-  done
-  
   while true; do
     _prompt "${YELLOW}${QUESTION} Select drive number (1-${#drives[@]}): ${NC}" choice
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#drives[@]}" ]; then
@@ -128,9 +120,8 @@ select_drive() {
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
-  _print "${CYAN}${COMPUTER} Please enter a hostname for your system:${NC}"
- # _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
- # _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
+  _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
+  _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
   
   select_drive
 fi
