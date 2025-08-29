@@ -61,14 +61,24 @@ setup_files() {
   mkdir -p /mnt/etc/nixos
   cp -r ./nix-testing/* /mnt/etc/nixos/
   
-  progress "Cloning fresh repository to user home directory"
+  progress "Setting up user nix configuration in ~/nix"
   mkdir -p /mnt/home/david
-  # Ensure the target directory is empty before cloning
+  
+  # Remove any existing nix directory to ensure clean clone
   if [ -d "/mnt/home/david/nix" ]; then
       rm -rf /mnt/home/david/nix
   fi
-  git clone https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  
+  # Clone the repository to ~/nix with proper branch
+  git clone --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  
+  # Set proper ownership (1000:1000 is the default UID:GID for first user)
   chown -R 1000:1000 /mnt/home/david/nix
+  
+  # Ensure the directory is accessible
+  chmod -R 755 /mnt/home/david/nix
+  
+  progress "✓ Repository cloned to /mnt/home/david/nix"
 }
 
 install_nixos() {
