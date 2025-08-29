@@ -338,5 +338,5 @@ in
 
       '';
     };
-  } # End of programs block
+  }; # End of programs block
 }
