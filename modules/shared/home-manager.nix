@@ -6,13 +6,18 @@ let
   email = "xlrin.morgan@gmail.com"; 
 in
 {
-  direnv = {
-    enable = true;
-    enableZshIntegration = true;
-    nix-direnv.enable = true;
-  };
+      };
 
-  git = {
+    zellij = {
+
+  programs = {
+    direnv = {
+      enable = true;
+      enableZshIntegration = true;
+      nix-direnv.enable = true;
+    };
+
+    git = {
     enable = true;
     ignores = [ "*.swp" ];
     userName = name;
@@ -363,4 +368,5 @@ in
 
     '';
   };
+  }; # End of programs block
 }
