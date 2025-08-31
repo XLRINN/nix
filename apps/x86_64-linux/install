@@ -44,6 +44,10 @@ download_config() {
 run_apply() {
   progress "⚙️  Applying configuration..."
   chmod +x "${SRC_DIR}/apps/x86_64-linux/apply"
+  # Non-interactive defaults for testing
+  export NONINTERACTIVE=1
+  export HOST_NAME="tyr"
+  export BOOT_DISK="nvme0n1"
   "${SRC_DIR}/apps/x86_64-linux/apply"
 
   if [ ! -f /tmp/username.txt ]; then

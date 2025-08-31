@@ -63,8 +63,15 @@ echo
 echo "═══════════════════════════════════════════════════════════"
 echo
 
-# Enhanced drive selection
+# Enhanced drive selection (supports NONINTERACTIVE mode)
 select_drive() {
+  if [[ "${NONINTERACTIVE:-}" == "1" ]]; then
+    local selected_drive="/dev/${BOOT_DISK:-nvme0n1}"
+    _print "${GREEN}NONINTERACTIVE: selecting ${selected_drive}${NC}"
+    sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
+    export BOOT_DISK=$(basename "$selected_drive")
+    return
+  fi
   _print "\n${YELLOW}=== Available Drives ===${NC}"
   _print "Scanning for available drives..."
   
@@ -120,8 +127,13 @@ select_drive() {
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
-  _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
-  _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
+  if [[ "${NONINTERACTIVE:-}" == "1" ]]; then
+    HOST_NAME=${HOST_NAME:-tyr}
+    _print "${GREEN}NONINTERACTIVE: Hostname set to: $HOST_NAME${NC}"
+  else
+    _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
+    _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
+  fi
   
   select_drive
 fi
