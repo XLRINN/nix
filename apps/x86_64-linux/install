@@ -75,6 +75,24 @@ setup_files() {
   
   # Clone the repository to ~/nix with proper branch
   git clone --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+
+  # Configure git remotes and identity
+  if [ -f /tmp/git_name.txt ]; then GIT_NAME=$(cat /tmp/git_name.txt); fi
+  if [ -f /tmp/git_email.txt ]; then GIT_EMAIL=$(cat /tmp/git_email.txt); fi
+  if [ -n "${GIT_NAME:-}" ]; then
+    git -C /mnt/home/david/nix config user.name "$GIT_NAME"
+  fi
+  if [ -n "${GIT_EMAIL:-}" ]; then
+    git -C /mnt/home/david/nix config user.email "$GIT_EMAIL"
+  fi
+  # Hardcode your canonical remote
+  HARD_REMOTE="git@github.com:xlrinn/nix.git"
+  progress "🔗 Ensuring origin remote: $HARD_REMOTE"
+  git -C /mnt/home/david/nix remote remove origin >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix remote add origin "$HARD_REMOTE"
+  git -C /mnt/home/david/nix fetch --all --prune
+  git -C /mnt/home/david/nix fetch --unshallow >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix branch --set-upstream-to origin/master master >/dev/null 2>&1 || true
   
   # Set proper ownership (1000:1000 is the default UID:GID for first user)
   chown -R 1000:1000 /mnt/home/david/nix
@@ -99,7 +117,7 @@ install_nixos() {
   esac
 
   progress "Installing NixOS from /mnt/etc/nixos"
-  nixos-install --no-root-passwd --flake "/mnt/etc/nixos#$FLAKE_TARGET"
+  nixos-install --no-root-passwd --flake "/mnt/etc/nixos#$FLAKE_TARGET" --no-write-lock-file
   
   chmod -R 775 /mnt/etc/nixos
   
@@ -108,7 +126,7 @@ install_nixos() {
   echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
   
   progress "🏠 Applying home-manager configurations..."
-  chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "nixos-rebuild switch --flake '/etc/nixos#$FLAKE_TARGET'"
+  chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "nixos-rebuild switch --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file"
 }
 
 auto_reboot() {

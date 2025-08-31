@@ -63,6 +63,35 @@ setup_files() {
     rm -rf /mnt/home/david/nix
   fi
   git clone --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  # Configure git remotes and identity
+  if [ -f /tmp/git_name.txt ]; then GIT_NAME=$(cat /tmp/git_name.txt); fi
+  if [ -f /tmp/git_email.txt ]; then GIT_EMAIL=$(cat /tmp/git_email.txt); fi
+  if [ -n "${GIT_NAME:-}" ]; then
+    git -C /mnt/home/david/nix config user.name "$GIT_NAME"
+  fi
+  if [ -n "${GIT_EMAIL:-}" ]; then
+    git -C /mnt/home/david/nix config user.email "$GIT_EMAIL"
+  fi
+  HARD_REMOTE="git@github.com:xlrinn/nix.git"
+  echo -e "${GREEN}Ensuring origin remote: $HARD_REMOTE${NC}"
+  git -C /mnt/home/david/nix remote remove origin >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix remote add origin "$HARD_REMOTE"
+  git -C /mnt/home/david/nix fetch --all --prune
+  # Configure git remotes and identity
+  if [ -f /tmp/git_name.txt ]; then GIT_NAME=$(cat /tmp/git_name.txt); fi
+  if [ -f /tmp/git_email.txt ]; then GIT_EMAIL=$(cat /tmp/git_email.txt); fi
+  if [ -n "${GIT_NAME:-}" ]; then
+    git -C /mnt/home/david/nix config user.name "$GIT_NAME"
+  fi
+  if [ -n "${GIT_EMAIL:-}" ]; then
+    git -C /mnt/home/david/nix config user.email "$GIT_EMAIL"
+  fi
+  if [ -z "${NIX_REMOTE:-}" ] && [ -f /tmp/nix_remote.txt ]; then NIX_REMOTE=$(cat /tmp/nix_remote.txt); fi
+  if [ -n "${NIX_REMOTE:-}" ]; then
+    echo -e "${GREEN}Setting custom git remote origin: $NIX_REMOTE${NC}"
+    git -C /mnt/home/david/nix remote set-url origin "$NIX_REMOTE" || git -C /mnt/home/david/nix remote add origin "$NIX_REMOTE"
+    git -C /mnt/home/david/nix fetch --all --prune
+  fi
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
 }

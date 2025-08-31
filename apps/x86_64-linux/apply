@@ -157,4 +157,7 @@ export -f replace_tokens
 find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
 
 echo "$USERNAME" > /tmp/username.txt
+# Persist git identity for installer phase
+echo -n "$GIT_NAME" > /tmp/git_name.txt
+echo -n "$GIT_EMAIL" > /tmp/git_email.txt
 _print "${GREEN}${PARTY} Ready!${NC}"
