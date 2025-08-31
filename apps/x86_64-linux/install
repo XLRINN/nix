@@ -85,12 +85,20 @@ setup_files() {
   if [ -n "${GIT_EMAIL:-}" ]; then
     git -C /mnt/home/david/nix config user.email "$GIT_EMAIL"
   fi
-  # Hardcode your canonical remote
-  HARD_REMOTE="git@github.com:xlrinn/nix.git"
-  progress "🔗 Ensuring origin remote: $HARD_REMOTE"
-  git -C /mnt/home/david/nix remote remove origin >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix remote add origin "$HARD_REMOTE"
-  git -C /mnt/home/david/nix fetch --all --prune
+  # Prefer SSH remote when available; fall back to HTTPS in live envs without keys
+  HARD_REMOTE_SSH="git@github.com:xlrinn/nix.git"
+  HARD_REMOTE_HTTPS="https://github.com/xlrinn/nix.git"
+  progress "🔗 Checking SSH access for: $HARD_REMOTE_SSH"
+  if GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new" git ls-remote "$HARD_REMOTE_SSH" >/dev/null 2>&1; then
+    progress "✅ SSH available; setting origin to SSH"
+    git -C /mnt/home/david/nix remote set-url origin "$HARD_REMOTE_SSH"
+  else
+    progress "ℹ️ SSH not available; keeping HTTPS origin"
+    git -C /mnt/home/david/nix remote set-url origin "$HARD_REMOTE_HTTPS" >/dev/null 2>&1 || true
+  fi
+  # Always prefer SSH for pushes if/when keys are added later
+  git -C /mnt/home/david/nix remote set-url --push origin "$HARD_REMOTE_SSH" >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix fetch --all --prune || true
   git -C /mnt/home/david/nix fetch --unshallow >/dev/null 2>&1 || true
   git -C /mnt/home/david/nix branch --set-upstream-to origin/master master >/dev/null 2>&1 || true
   
