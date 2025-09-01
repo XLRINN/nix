@@ -45,7 +45,8 @@
       laptopDefaults = lib.mkIf config.my.hardware.isLaptop {
         services.fwupd.enable = true;
         powerManagement.powertop.enable = true;
-        services.tlp.enable = lib.mkDefault true;
+        # Prefer power-profiles-daemon (many vendor profiles enable it); don't enable TLP by default
+        services.tlp.enable = lib.mkDefault false;
         services.logind.lidSwitch = lib.mkDefault "suspend";
       };
 
