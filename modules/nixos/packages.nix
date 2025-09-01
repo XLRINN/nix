@@ -9,6 +9,7 @@ shared-packages ++ [
   keepassxc
   vscode
   bitwarden
+
   firefox
   alacritty
 
