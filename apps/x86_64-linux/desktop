@@ -45,7 +45,7 @@ run_apply() {
   export HOST_NAME="tyr"
   export BOOT_DISK="nvme0n1"
   ./apps/x86_64-linux/apply
-  # Hardcoded username - no need to read from /tmp/username.txt
+  ## Hardcoded username - no need to read from /tmp/username.txt
   export USERNAME="david"
   echo -e "${GREEN}✓ Configuration complete${NC}"
 }
