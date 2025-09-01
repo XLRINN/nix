@@ -16,7 +16,14 @@ _: {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-                mountOptions = [ "defaults" ];
+                # Secure the ESP so systemd-boot random seed isn't world-accessible
+                # On vfat, permissions are emulated; set root ownership and 0700 perms
+                mountOptions = [
+                  "uid=0" "gid=0"    # root owns files
+                  "umask=0077"        # files/dirs mode 0700
+                  "shortname=winnt"   # sane 8.3 handling
+                  "nodev" "nosuid" "noexec"
+                ];
               };
             };
             root = {
