@@ -23,18 +23,18 @@ check_installer() {
 
 cleanup() {
   progress "🧹 Cleaning up temporary files..."
-  rm -rf nixos-config-main.zip nix-*
+  rm -rf nixos-config-main.zip nix-* nyx-*
 }
 
 download_config() {
   progress "📦 Downloading configuration..."
   # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'testing'
-  NIX_REF=${NIX_REF:-testing}
-  curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
+    NIX_REF=${NIX_REF:-testing}
+    curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
   unzip -q nixos-config-main.zip
 
   # Find the extracted directory (GitHub uses nix-<refOrSha>)
-  SRC_DIR=$(find . -maxdepth 1 -type d -name "nix-*" | head -n1)
+    SRC_DIR=$(find . -maxdepth 1 -type d -name "nix-*" | head -n1)
   if [ -z "$SRC_DIR" ] || [ ! -d "$SRC_DIR" ]; then
     echo -e "${RED}Error: Extracted directory not found after download.${NC}"
     exit 1
@@ -77,8 +77,16 @@ setup_files() {
       rm -rf /mnt/home/david/nix
   fi
   
-  # Clone the repository to ~/nix with proper branch
-  git clone --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  # Clone the repository to ~/nix with desired branch (default: testing, fallback: master)
+  BRANCH="${NIX_BRANCH:-testing}"
+  REMOTE_HTTPS="https://github.com/xlrinn/nix.git"
+  if git ls-remote --heads "$REMOTE_HTTPS" "$BRANCH" >/dev/null 2>&1; then
+    progress "📥 Cloning branch $BRANCH..."
+  else
+    progress "ℹ️ Branch $BRANCH not found; falling back to master"
+    BRANCH="master"
+  fi
+  git clone --origin nyx --depth 1 --branch "$BRANCH" "$REMOTE_HTTPS" /mnt/home/david/nix
 
   # Configure git remotes and identity
   if [ -f /tmp/git_name.txt ]; then GIT_NAME=$(cat /tmp/git_name.txt); fi
@@ -89,13 +97,16 @@ setup_files() {
   if [ -n "${GIT_EMAIL:-}" ]; then
     git -C /mnt/home/david/nix config user.email "$GIT_EMAIL"
   fi
-    # Force HTTPS-only origin (no SSH) for reliability in live envs
-    HARD_REMOTE_HTTPS="https://github.com/xlrinn/nix.git"
-    progress "🔗 Setting origin remote (HTTPS): $HARD_REMOTE_HTTPS"
-    git -C /mnt/home/david/nix remote set-url origin "$HARD_REMOTE_HTTPS" >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix fetch --all --prune || true
-  git -C /mnt/home/david/nix fetch --unshallow >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix branch --set-upstream-to origin/master master >/dev/null 2>&1 || true
+    # Force HTTPS-only remote (named 'nyx') for reliability in live envs
+  HARD_REMOTE_HTTPS="https://github.com/xlrinn/nix.git"
+    progress "🔗 Ensuring 'nyx' remote (HTTPS): $HARD_REMOTE_HTTPS"
+    git -C /mnt/home/david/nix remote set-url nyx "$HARD_REMOTE_HTTPS" >/dev/null 2>&1 || true
+  # Ensure all branches are fetched by default from 'nyx'
+  git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
+  git -C /mnt/home/david/nix remote set-branches nyx '*' || true
+  git -C /mnt/home/david/nix fetch nyx --prune --tags || true
+  git -C /mnt/home/david/nix fetch nyx --unshallow >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix branch --set-upstream-to "nyx/$BRANCH" "$BRANCH" >/dev/null 2>&1 || true
   
   # Set proper ownership (1000:1000 is the default UID:GID for first user)
   chown -R 1000:1000 /mnt/home/david/nix

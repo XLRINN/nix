@@ -33,6 +33,10 @@ let user = "david";
     hostName = "hodr"; # Define your hostname.
     useDHCP = false;
     networkmanager.enable = true; # Enable NetworkManager
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 22 ];
+    };
   };
 
   hardware = {
@@ -95,7 +99,13 @@ let user = "david";
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = true;
+        KbdInteractiveAuthentication = false;
+      };
+    };
 
     gvfs.enable = true;
     tumbler.enable = true;

@@ -21,7 +21,7 @@ check_installer() {
 }
 
 cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-*
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-* nyx-*
 }
 
 download_config() {
@@ -40,6 +40,10 @@ download_config() {
 }
 
 run_apply() {
+  # Non-interactive defaults for testing
+  export NONINTERACTIVE=1
+  export HOST_NAME="tyr"
+  export BOOT_DISK="nvme0n1"
   ./apps/x86_64-linux/apply
   # Hardcoded username - no need to read from /tmp/username.txt
   export USERNAME="david"
@@ -62,13 +66,17 @@ setup_files() {
   if [ -d "/mnt/home/david/nix" ]; then
     rm -rf /mnt/home/david/nix
   fi
-  git clone --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
   # Minimal identity passthrough (optional)
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
   # Enforce HTTPS-only origin
-  git -C /mnt/home/david/nix remote set-url origin https://github.com/xlrinn/nix.git >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix fetch --all --prune || true
+  # Ensure 'nyx' remote uses HTTPS and fetches all branches
+  git -C /mnt/home/david/nix remote set-url nyx https://github.com/xlrinn/nix.git >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
+  git -C /mnt/home/david/nix remote set-branches nyx '*' || true
+  git -C /mnt/home/david/nix fetch nyx --prune --tags || true
+  git -C /mnt/home/david/nix fetch nyx --unshallow >/dev/null 2>&1 || true
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
 }
@@ -89,8 +97,12 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1 --no-write-lock-file
+  nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1 --no-write-lock-file --no-root-passwd
   chmod -R 775 /mnt/etc/nixos
+  
+  # Set root and user passwords non-interactively
+  echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
+  echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
