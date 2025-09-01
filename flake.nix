@@ -55,7 +55,7 @@
       };
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf,nixvim, } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, ... } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
