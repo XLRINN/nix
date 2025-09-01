@@ -1,6 +1,7 @@
-{ config, inputs, lib, ... }:
+{ inputs, lib, ... }:
 let
-	path = config.my.hardware.profilePath;
+	# Set by installer or manually edited. Keep null to disable.
+	path = null;
 in
 {
 	imports = lib.optionals (path != null) [ (inputs.nixos-hardware + "/" + path) ];
