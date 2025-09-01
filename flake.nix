@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
+  # Hardware-specific modules for NixOS machines (e.g., Framework laptops)
+  nixos-hardware.url = "github:NixOS/nixos-hardware";
     darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";

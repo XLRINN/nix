@@ -1,10 +1,11 @@
-{ config, inputs, pkgs, ... }:
+{ config, inputs, pkgs, lib, ... }:
 
 let user = "david";
   keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ]; in
 {
   imports = [
     ../../modules/nixos/disk-config.nix
+  ../../modules/nixos/hardware.nix
     ../../modules/shared
   ];
 
@@ -44,6 +45,15 @@ let user = "david";
     graphics.enable = true; # Update from opengl.enable to graphics.enable
     ledger.enable = true;
     firmware = [ pkgs.linux-firmware ]; # Include firmware
+  };
+
+  # Optional: nixos-hardware profile for specific machines.
+  # For Framework laptops examples:
+  #  - my.hardware.profilePath = "framework/13-inch/intel";
+  #  - my.hardware.profilePath = "framework/13-inch/amd/7040";
+  my.hardware = {
+    isLaptop = true;
+    profilePath = lib.mkDefault null;
   };
 
   virtualisation.docker.enable = true;

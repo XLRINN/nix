@@ -138,6 +138,36 @@ if [[ "$OS" != "Darwin" ]]; then
   select_drive
 fi
 
+# Auto-detect Framework laptop and set nixos-hardware profile
+configure_hardware_profile() {
+  if [[ "$OS" == "Darwin" ]]; then return; fi
+  local profile=""
+
+  if command -v dmidecode >/dev/null 2>&1; then
+    local vendor product
+    vendor=$(dmidecode -s system-manufacturer 2>/dev/null || true)
+    product=$(dmidecode -s system-product-name 2>/dev/null || true)
+    if echo "$vendor" | grep -qi "framework" || echo "$product" | grep -qi "framework"; then
+      # detect CPU vendor
+      if command -v lscpu >/dev/null 2>&1 && lscpu | grep -qi amd; then
+        profile="framework/13-inch/amd/7040"
+      else
+        profile="framework/13-inch/intel"
+      fi
+    fi
+  fi
+
+  if [[ -n "$profile" ]]; then
+    _print "${GREEN}${INFO} Detected Framework laptop; applying nixos-hardware profile: ${profile}${NC}"
+    sed -i -E "s#(profilePath\s*=\s*)lib.mkDefault\s+null;#\\1\"${profile}\";#" ./hosts/nixos/default.nix || true
+  else
+    _print "${CYAN}${INFO} No vendor-specific hardware profile applied.${NC}"
+  fi
+}
+
+# Run hardware configuration before applying token replacements
+configure_hardware_profile
+
 # Show installation starting
 echo
 _print "${CYAN}${INFO} Starting installation...${NC}"
