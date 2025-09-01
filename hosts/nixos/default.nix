@@ -45,7 +45,7 @@ in
 
   networking = {
     hostName = "hodr"; # Define your hostname.
-    useDHCP = false;
+    useDHCP = lib.mkDefault true;
     networkmanager.enable = true; # Enable NetworkManager
     firewall = {
       enable = true;
@@ -58,7 +58,6 @@ in
     enableAllFirmware = true; # Enable all firmware
     graphics.enable = true; # Update from opengl.enable to graphics.enable
     ledger.enable = true;
-    firmware = [ pkgs.linux-firmware ]; # Include firmware
   };
 
   # Optional: nixos-hardware profile for specific machines.
