@@ -104,6 +104,18 @@ in
           command = "${pkgs.systemd}/bin/reboot";
           options = [ "NOPASSWD" ];
         }
+        {
+          command = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "${pkgs.nix}/bin/nix-collect-garbage";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "ALL";
+          options = [ "NOPASSWD" ];
+        }
       ];
       groups = [ "wheel" ];
     }];
