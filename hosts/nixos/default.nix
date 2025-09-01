@@ -33,9 +33,8 @@ in
       # Faster boot
       timeout = 1;
     };
-    kernelPackages = pkgs.linuxPackages_latest;
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
-    kernelModules = [ "uinput" "iwlwifi" ];
+    kernelModules = [ "uinput" "iwlwifi" "cfg80211" "mac80211" ];
     # Speed optimizations
     kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
   };
@@ -189,6 +188,7 @@ in
     inetutils
     neovim
     noto-fonts-emoji
+    pciutils  # Provides lspci for hardware diagnostics
   ];
 
 
