@@ -10,7 +10,7 @@ shared-packages ++ [
   vscode
   bitwarden
 
-  firefox
+  firefox  # Already using unstable channel from flake.nix
   alacritty
 
   # App and package management
