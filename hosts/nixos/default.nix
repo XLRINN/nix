@@ -6,11 +6,11 @@ let
 
   # Probe for available Framework modules to avoid version-specific errors and deprecations.
   fwMods = inputs.nixos-hardware.nixosModules or {};
-  # List of modern, non-deprecated candidates for 10th-gen Intel.
+  # For 10th-gen Intel, try 11th-gen as closest match, then fallbacks
   fwCandidates = [
-    "framework-10th-gen-intel"
-    "framework-13-inch-common"
-    "framework-13-intel"
+    "framework-11th-gen-intel"
+    "framework-13th-gen-intel"
+    "framework-12th-gen-intel"
   ];
   availableFw = builtins.filter (name: builtins.hasAttr name fwMods) fwCandidates;
   fwModule = if availableFw == [] then null else (builtins.getAttr (builtins.head availableFw) fwMods);
@@ -33,8 +33,8 @@ in
       # Faster boot
       timeout = 1;
     };
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "iwlwifi" ];
-    kernelModules = [ "uinput" "iwlwifi" "cfg80211" "mac80211" ];
+    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+    kernelModules = [ "uinput" ];
     # Speed optimizations
     kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
   };
