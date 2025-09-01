@@ -51,6 +51,7 @@ in
       enable = true;
       allowedTCPPorts = [ 22 ];
     };
+    wireless.enable = false; # Make sure NetworkManager is managing wifi, not wpa_supplicant
   };
 
   hardware = {
