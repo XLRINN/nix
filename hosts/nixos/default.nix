@@ -4,12 +4,13 @@ let
   user = "david";
   keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ];
 
-  # Probe for available Framework modules to avoid version-specific errors
+  # Probe for available Framework modules to avoid version-specific errors and deprecations.
   fwMods = inputs.nixos-hardware.nixosModules or {};
+  # List of modern, non-deprecated candidates for 10th-gen Intel.
   fwCandidates = [
+    "framework-10th-gen-intel"
     "framework-13-inch-common"
     "framework-13-intel"
-    "framework"
   ];
   availableFw = builtins.filter (name: builtins.hasAttr name fwMods) fwCandidates;
   fwModule = if availableFw == [] then null else (builtins.getAttr (builtins.head availableFw) fwMods);
