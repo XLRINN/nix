@@ -27,7 +27,7 @@ in
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 42;
+        configurationLimit = 10;  # Keep fewer boot entries
       };
       efi.canTouchEfiVariables = true;
       # Faster boot
@@ -182,8 +182,8 @@ in
 
     gc = {
       automatic = true;
-      dates = "14d";
-      options = "--delete-older-than 30d";
+      dates = "daily";
+      options = "--delete-older-than 7d";
     };
   };
 
