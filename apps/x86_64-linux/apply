@@ -159,7 +159,18 @@ configure_hardware_profile() {
 
   if [[ -n "$profile" ]]; then
     _print "${GREEN}${INFO} Detected Framework laptop; applying nixos-hardware profile: ${profile}${NC}"
-    sed -i -E "s#(profilePath\s*=\s*)lib.mkDefault\s+null;#\\1\"${profile}\";#" ./hosts/nixos/default.nix || true
+    # Write into the host-level hardware-profile.nix which imports nixos-hardware based on profilePath
+    if grep -q "my.hardware" ./hosts/nixos/default.nix; then
+      sed -i -E "s#(profilePath\s*=\s*)lib.mkDefault\s+null;#\\1\"${profile}\";#" ./hosts/nixos/default.nix || true
+    fi
+    # Ensure hardware-profile.nix sees the profilePath from config; if not set statically,
+    # we can embed a minimal module here to set it.
+    if ! grep -q "profilePath" ./hosts/nixos/default.nix; then
+      echo '{ lib, ... }: { my.hardware.profilePath = "'"${profile}"'"; }' > ./hosts/nixos/hardware-profile.nix
+    else
+      # hardware-profile.nix already imports from inputs; leave as is
+      :
+    fi
   else
     _print "${CYAN}${INFO} No vendor-specific hardware profile applied.${NC}"
   fi

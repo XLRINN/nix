@@ -1,4 +1,4 @@
-{ lib, inputs, config, pkgs, ... }:
+{ lib, config, pkgs, ... }:
 
 {
   options.my.hardware = {
@@ -11,7 +11,7 @@
 
     # Import any nixos-hardware profile by relative path within the repo, e.g.:
     #   "framework/13-inch/amd/7040" or "framework/13-inch/intel"
-    profilePath = lib.mkOption {
+  profilePath = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
       example = "framework/13-inch/amd/7040";
@@ -38,21 +38,9 @@
 
   config =
     let
-      # Highest priority: explicit profilePath string
-      chosenProfile = lib.mkIf (config.my.hardware.profilePath != null) {
-        imports = [ (inputs.nixos-hardware + "/" + config.my.hardware.profilePath) ];
-      };
-
-      # Fallback: vendor/model mapping for Framework
-      frameworkProfile =
-        let m = config.my.hardware.model or "common"; in
-        lib.mkIf (config.my.hardware.profilePath == null && config.my.hardware.vendor == "framework") {
-          imports = [
-            (if m == "amd-7040" then inputs.nixos-hardware.nixosModules.framework-13-7040-amd
-             else if m == "intel-13" then inputs.nixos-hardware.nixosModules.framework-13-intel
-             else inputs.nixos-hardware.nixosModules.framework)
-          ];
-        };
+  # No direct importing here; host-level hardware-profile.nix will handle profile imports.
+  chosenProfile = {};
+  frameworkProfile = {};
 
       laptopDefaults = lib.mkIf config.my.hardware.isLaptop {
         services.fwupd.enable = true;
@@ -67,5 +55,5 @@
         boot.initrd.checkJournalingFS = false;
       };
     in
-  lib.mkMerge [ chosenProfile frameworkProfile laptopDefaults ssdDefaults ];
+  lib.mkMerge [ laptopDefaults ssdDefaults ];
 }

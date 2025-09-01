@@ -6,6 +6,7 @@ let user = "david";
   imports = [
     ../../modules/nixos/disk-config.nix
   ../../modules/nixos/hardware.nix
+  ./hardware-profile.nix
     ../../modules/shared
   ];
 
