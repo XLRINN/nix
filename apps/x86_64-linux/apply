@@ -181,6 +181,21 @@ configure_hardware_profile
 echo
 _print "${CYAN}${INFO} Starting installation...${NC}"
 
+# Ensure Firefox nightly in NixOS package list
+ensure_firefox_nightly() {
+  if [[ "$OS" == "Darwin" ]]; then return; fi
+  local file="./modules/nixos/packages.nix"
+  if [[ -f "$file" ]]; then
+    if grep -qE "\\bfirefox-nightly-bin\\b" "$file"; then
+      _print "${CYAN}${INFO} Firefox already set to nightly in ${file}.${NC}"
+    else
+      _print "${BLUE}${INFO} Switching Firefox package to nightly...${NC}"
+      sed -i -E 's/(^\s*)firefox(\s*(#.*)?$)/\1firefox-nightly-bin\2/' "$file"
+      _print "${GREEN}${CHECK} Firefox set to nightly in ${file}.${NC}"
+    fi
+  fi
+}
+
 # Function to replace tokens in each file
 replace_tokens() {
   local file="$1"
@@ -203,6 +218,7 @@ replace_tokens() {
 }
 
 # Apply configuration
+ensure_firefox_nightly
 _print "${BLUE}${GEAR} Applying configuration...${NC}"
 export -f replace_tokens
 find . -type f -exec bash -c 'replace_tokens "$0"' {} \;

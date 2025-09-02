@@ -10,7 +10,7 @@ shared-packages ++ [
   vscode
   bitwarden
 
-  firefox  # Already using unstable channel from flake.nix
+  firefox-nightly-bin  # Use upstream nightly build for latest Firefox
   alacritty
 
   # App and package management
