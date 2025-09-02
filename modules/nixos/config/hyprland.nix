@@ -10,12 +10,13 @@
         # Monitor Configuration
         monitor=,preferred,auto,auto
 
-        # Auto-start applications
+  # Auto-start applications
         exec-once = polybar
         exec-once = dunst
         exec-once = wl-paste --watch cliphist store
         exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland
         exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland
+  exec-once = swaybg -m fill -i ~/.local/share/backgrounds/login-wallpaper.png
 
         # Application variables
         $terminal = kitty

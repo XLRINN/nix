@@ -10,7 +10,7 @@ shared-packages ++ [
   vscode
   bitwarden
 
-  firefox  # Already using unstable channel from flake.nix
+  firefox-nightly-bin
   alacritty
 
   # App and package management
@@ -43,6 +43,7 @@ shared-packages ++ [
 
   # Text and terminal utilities
   feh # Manage wallpapers
+  swaybg
   screenkey
   tree
   unixtools.ifconfig

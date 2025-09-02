@@ -58,7 +58,7 @@ echo "    ██╔██╗ ██║ ╚████╔╝  ╚███╔╝
 echo "    ██║╚██╗██║  ╚██╔╝   ██╔██╗ "
 echo "    ██║ ╚████║   ██║   ██╔╝ ██╗"
 echo "    ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝"
-echo "                --XLRINN--"
+echo "            --XLRINN--"
 echo
 echo "═══════════════════════════════════════════════════════════"
 echo
@@ -131,10 +131,23 @@ if [[ "$OS" != "Darwin" ]]; then
     HOST_NAME=${HOST_NAME:-tyr}
     _print "${GREEN}NONINTERACTIVE: Hostname set to: $HOST_NAME${NC}"
   else
-    _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
-    _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
+    while true; do
+      _prompt "${YELLOW}${QUESTION} Hostname: ${NC}" HOST_NAME
+      if [[ -z "$HOST_NAME" ]]; then
+        _print "${RED}Hostname cannot be empty. Please enter a hostname.${NC}"
+        continue
+      fi
+      # Optional: basic validation; allow a-z0-9- and dots, start/end with alnum
+      if [[ ! "$HOST_NAME" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$ ]]; then
+        _print "${RED}${WARNING} Hostname contains unusual characters.${NC}"
+        # Ask to re-enter
+        continue
+      fi
+      _print "${GREEN}${CHECK} Hostname set to: $HOST_NAME${NC}"
+      break
+    done
   fi
-  
+
   select_drive
 fi
 

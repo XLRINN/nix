@@ -5,6 +5,7 @@ let
   xdg_configHome  = "/home/${user}/.config";
   shared_programs = import ../shared/home-manager.nix { inherit config pkgs lib; };
   shared_files = import ../shared/files.nix { inherit config pkgs; };
+  wallpaperPath = "/home/${user}/.local/share/backgrounds/login-wallpaper.png";
 
 
 
@@ -22,6 +23,21 @@ in
     packages = pkgs.callPackage ./packages.nix {};
     file = shared_files // import ./files.nix { inherit user; };
     stateVersion = "21.05";
+  };
+
+  # Ensure wallpaper file is present in the user's home
+  home.file.".local/share/backgrounds/login-wallpaper.png".source = ./config/login-wallpaper.png;
+
+  # Configure GNOME to use the wallpaper
+  dconf.settings = {
+    "org/gnome/desktop/background" = {
+      picture-uri = "file://${wallpaperPath}";
+      picture-uri-dark = "file://${wallpaperPath}";
+      picture-options = "zoom";
+    };
+    "org/gnome/desktop/screensaver" = {
+      picture-uri = "file://${wallpaperPath}";
+    };
   };
 
   # Use a dark theme
