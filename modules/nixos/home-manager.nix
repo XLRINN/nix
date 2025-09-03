@@ -12,8 +12,8 @@ let
 in
 {
   imports = [
-    ./config/polybar.nix
-    ./config/hyprland.nix
+    #./config/polybar.nix
+    #./config/hyprland.nix
   ];
 
   home = {
