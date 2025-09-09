@@ -13,8 +13,9 @@
       # For a full list, see the wiki
       #
 
-      # See https://wiki.hyprland.org/Configuring/Monitors/
-      monitor=,preferred,auto,auto
+    # Monitors: let Hyprland autodetect (removed explicit monitor line)
+    # For manual config, re-add lines like:
+    # monitor=DP-1,1920x1080@144,0x0,1
 
 
       # See https://wiki.hyprland.org/Configuring/Keywords/ for more
@@ -136,14 +137,16 @@
       $mainMod = SUPER
 
       # Example binds, see https://wiki.hyprland.org/Configuring/Binds/ for more
-      bind = $mainMod, Q, exec, kitty
-      bind = $mainMod, C, killactive, 
-      bind = $mainMod, M, exit, 
-      bind = $mainMod, E, exec, dolphin
-      bind = $mainMod, V, togglefloating, 
-      bind = $mainMod, R, exec, wofi --show drun
-      bind = $mainMod, P, pseudo, # dwindle
-      bind = $mainMod, J, togglesplit, # dwindle
+    bind = $mainMod, Q, exec, alacritty
+    bind = $mainMod, C, killactive
+    bind = $mainMod, M, exit
+    bind = $mainMod, E, exec, dolphin
+    bind = $mainMod, V, togglefloating
+    bind = $mainMod, R, exec, wofi --show drun
+    # Pseudo (dwindle)
+    bind = $mainMod, P, pseudo
+    # Toggle split (dwindle)
+    bind = $mainMod, J, togglesplit
 
       # Move focus with mainMod + arrow keys
       bind = $mainMod, left, movefocus, l

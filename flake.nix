@@ -53,9 +53,10 @@
         url = "github:dc-tec/nixvim";
         flake = false;
       };
+    nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, ... } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, nixos-cosmic, ... } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];

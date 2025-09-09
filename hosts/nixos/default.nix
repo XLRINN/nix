@@ -20,6 +20,7 @@ in
     ../../modules/nixos/disk-config.nix
     ../../modules/nixos/hardware.nix
     ../../modules/shared
+  inputs.nixos-cosmic.nixosModules.cosmic
   ] ++ lib.optionals (fwModule != null) [ fwModule ];
 
   # Use the systemd-boot EFI boot loader.
@@ -132,6 +133,8 @@ in
     };
     displayManager.gdm.enable = true;
     desktopManager.gnome.enable = true;
+  # Enable Cosmic desktop (experimental) alongside GNOME; choose session at login.
+  desktopManager.cosmic.enable = true;
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh = {
       enable = true;
