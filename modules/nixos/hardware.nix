@@ -47,7 +47,7 @@
         powerManagement.powertop.enable = true;
         # Prefer power-profiles-daemon (many vendor profiles enable it); don't enable TLP by default
         services.tlp.enable = lib.mkDefault false;
-        services.logind.lidSwitch = lib.mkDefault "suspend";
+  services.logind.settings.Login.HandleLidSwitch = lib.mkDefault "suspend";
       };
 
       ssdDefaults = {

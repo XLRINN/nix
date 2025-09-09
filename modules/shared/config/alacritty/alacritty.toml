@@ -11,8 +11,10 @@ style = "Block"
 [window]
 opacity = 0.8
 padding = { x = 10, y = 10 }
-dynamic_padding = false
-decorations = "none"
+dynamic_padding = true
+decorations = "full"
+startup_mode = "Windowed"
+resize_increments = true
 
 [colors]
 # Nordic theme

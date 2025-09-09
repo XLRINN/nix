@@ -49,6 +49,7 @@ in
         simplified_ui = true;
         hide_session_name = true;
         rounded_corners = true;
+        show_startup_tips = false;
       };
     };
 
@@ -330,9 +331,10 @@ in
         pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
       };
     
-      initExtra = ''
+      initContent = ''
         if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
           export ZELLIJ_RUNNING=1
+          export ZELLIJ_DISABLE_TIPS=1
           zellij
         fi
 

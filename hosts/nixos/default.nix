@@ -127,11 +127,11 @@ in
   services = { 
     xserver = {
       enable = true;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh = {
       enable = true;
@@ -213,6 +213,9 @@ in
     NIX_BUILD_CORES = "0";
     NIX_OPTIONS = "--cores 0";
   };
+
+  # Home Manager configuration
+  home-manager.backupFileExtension = "backup";
 
   system.stateVersion = "21.05"; # Don't change this
 }

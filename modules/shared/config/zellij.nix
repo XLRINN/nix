@@ -1,4 +1,3 @@
-
 {
   enable = true;
 
@@ -8,6 +7,9 @@
     default_layout = "compact";
 
     theme = "gruvbox-dark";
+
+    # Disable startup tips
+    show_startup_tips = false;
 
     themes = {
       gruvbox-dark = {

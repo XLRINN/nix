@@ -10,7 +10,7 @@ shared-packages ++ [
   vscode
   bitwarden
 
-  firefox-nightly-bin
+  firefox
   alacritty
 
   # App and package management

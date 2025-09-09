@@ -13,20 +13,23 @@ in
 {
   imports = [
     #./config/polybar.nix
-    #./config/hyprland.nix
+    ./config/hyprland.nix
   ];
+
 
   home = {
     enableNixpkgsReleaseCheck = false;
     username = "${user}";
     homeDirectory = "/home/${user}";
     packages = pkgs.callPackage ./packages.nix {};
-    file = shared_files // import ./files.nix { inherit user; };
+    file = (shared_files // import ./files.nix { inherit user; }) // {
+      ".local/share/backgrounds/login-wallpaper.png".source = ./config/login-wallpaper.png;
+      ".config/hypr/hyprland.conf".text = config.hyprland.config;
+    };
     stateVersion = "21.05";
   };
 
-  # Ensure wallpaper file is present in the user's home
-  home.file.".local/share/backgrounds/login-wallpaper.png".source = ./config/login-wallpaper.png;
+
 
   # Configure GNOME to use the wallpaper
   dconf.settings = {
@@ -37,6 +40,19 @@ in
     };
     "org/gnome/desktop/screensaver" = {
       picture-uri = "file://${wallpaperPath}";
+    };
+    # Enable fractional scaling and set scale to 1.25
+    "org/gnome/mutter" = {
+      experimental-features = [ "scale-monitor-framebuffer" ];
+    };
+    "org/gnome/desktop/interface" = {
+      # 1.25 is not always available, but 1.25 is represented as 1.25 in GNOME
+      # If not available, try 1.2 or 1.3
+      scaling-factor = 1;
+      # For Wayland fractional scaling
+      text-scaling-factor = 1.0;
+      color-scheme = "prefer-dark";
+      gtk-theme = "Adwaita-dark";
     };
   };
 
