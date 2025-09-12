@@ -40,12 +40,10 @@ download_config() {
 }
 
 run_apply() {
-  # Non-interactive defaults for testing
-  export NONINTERACTIVE=1
-  export HOST_NAME="tyr"
-  export BOOT_DISK="nvme0n1"
+  # Interactive by default; set NONINTERACTIVE=1 externally only if desired.
+  : "${HOST_NAME:=}"  # allow pre-seeding
+  : "${BOOT_DISK:=}"
   ./apps/x86_64-linux/apply
-  ## Hardcoded username - no need to read from /tmp/username.txt
   export USERNAME="david"
   echo -e "${GREEN}✓ Configuration complete${NC}"
 }

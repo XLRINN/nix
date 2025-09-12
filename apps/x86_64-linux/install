@@ -42,14 +42,11 @@ download_config() {
 }
 
 run_apply() {
-  progress "⚙️  Applying configuration..."
+  progress "⚙️  Applying configuration (interactive)..."
   chmod +x "${SRC_DIR}/apps/x86_64-linux/apply"
-  # Non-interactive defaults for testing
-  export NONINTERACTIVE=1
-  export HOST_NAME="tyr"
-  export BOOT_DISK="nvme0n1"
+  : "${HOST_NAME:=}"  # allow pre-seeding externally
+  : "${BOOT_DISK:=}"
   "${SRC_DIR}/apps/x86_64-linux/apply"
-
   if [ ! -f /tmp/username.txt ]; then
     echo -e "${RED}Error: /tmp/username.txt does not exist.${NC}"
     exit 1
