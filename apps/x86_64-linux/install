@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -exu
 
+cd /tmp || { echo -e "${RED}Cannot cd to /tmp${NC}"; exit 1; }
+
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'

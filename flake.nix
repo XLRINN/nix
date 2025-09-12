@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     # Add sopswarden for Bitwarden secrets management
-    sopswarden.url = "github:pfassina/sopswarden/impure-implementation";
+    sopswarden.url = "github:pfassina/sopswarden/main";
   # Hardware-specific modules for NixOS machines (e.g., Framework laptops)
   nixos-hardware.url = "github:NixOS/nixos-hardware";
     darwin = {
