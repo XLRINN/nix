@@ -4,6 +4,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
+    # Add sopswarden for Bitwarden secrets management
+    sopswarden.url = "github:pfassina/sopswarden/impure-implementation";
   # Hardware-specific modules for NixOS machines (e.g., Framework laptops)
   nixos-hardware.url = "github:NixOS/nixos-hardware";
     darwin = {
@@ -56,7 +58,7 @@
     nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, nixos-cosmic, ... } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, nixos-cosmic, sopswarden, ... } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -106,8 +108,13 @@
       in
         darwin.lib.darwinSystem {
           inherit system;
-          specialArgs = { inherit inputs; };
+          specialArgs = { 
+            inherit inputs; 
+            # Note: sopswarden may not support Darwin, commenting out for now
+            # secrets = sopswarden.secrets.${system};
+          };
           modules = [
+            # sopswarden.darwinModules.default  # Commenting out until we confirm Darwin support
             home-manager.darwinModules.home-manager
             nix-homebrew.darwinModules.nix-homebrew
             {
@@ -134,9 +141,13 @@
       in 
         nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = { inherit inputs; };
+          specialArgs = { 
+            inherit inputs; 
+            secrets = sopswarden.secrets.${system};
+          };
           modules = [
             disko.nixosModules.disko
+            sopswarden.nixosModules.default
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;

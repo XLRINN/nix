@@ -302,4 +302,114 @@ if [ -z "${BW_SKIP_LOGIN:-}" ] && [ -t 0 ] && command -v bw >/dev/null 2>&1; the
   else
     _print "${GREEN}${CHECK} Bitwarden already unlocked; skipping.${NC}"
   fi
+  
+  # Fetch secrets from Bitwarden if session is available
+  if [ -n "${BW_SESSION:-}" ] || [ -f "$HOME/.cache/bw-session" ]; then
+    _print "${GREEN}${INFO} Discovering and fetching secrets from Bitwarden...${NC}"
+    
+    # Load session if not already loaded
+    if [ -z "${BW_SESSION:-}" ] && [ -f "$HOME/.cache/bw-session" ]; then
+      export BW_SESSION="$(cat "$HOME/.cache/bw-session")"
+    fi
+    
+    # First, let's discover what items exist in Bitwarden
+    _print "${YELLOW}Scanning Bitwarden for potential secrets...${NC}"
+    
+    # Get all items and look for common patterns
+    if BW_ITEMS=$(bw list items --session "$BW_SESSION" 2>/dev/null); then
+      
+      # Look for Tailscale-related items
+      _print "${YELLOW}Looking for Tailscale authentication...${NC}"
+      TAILSCALE_FOUND=false
+      
+      # Try various common patterns for Tailscale
+      for pattern in "tailscale" "Tailscale" "TAILSCALE" "ts" "TS"; do
+        if TS_ITEM=$(echo "$BW_ITEMS" | jq -r ".[] | select(.name | test(\"$pattern\"; \"i\")) | .id" | head -1) && [ -n "$TS_ITEM" ]; then
+          # Found a potential Tailscale item, now look for auth key
+          if TS_KEY=$(bw get item "$TS_ITEM" --session "$BW_SESSION" 2>/dev/null | jq -r '.fields[]? | select(.name | test("auth|key|token"; "i")) | .value' | head -1) && [ -n "$TS_KEY" ]; then
+            mkdir -p "$HOME/.local/share/src/nixos-config/modules/shared/config/tailscale"
+            echo "$TS_KEY" > "$HOME/.local/share/src/nixos-config/modules/shared/config/tailscale/key"
+            chmod 600 "$HOME/.local/share/src/nixos-config/modules/shared/config/tailscale/key"
+            _print "${GREEN}${CHECK} Tailscale key found and saved from item: $(echo "$BW_ITEMS" | jq -r ".[] | select(.id==\"$TS_ITEM\") | .name")${NC}"
+            TAILSCALE_FOUND=true
+            break
+          fi
+        fi
+      done
+      
+      if [ "$TAILSCALE_FOUND" = false ]; then
+        # Show what Tailscale-like items were found for user guidance
+        TAILSCALE_CANDIDATES=$(echo "$BW_ITEMS" | jq -r '.[] | select(.name | test("tail|scale|ts|vpn"; "i")) | .name' | head -3)
+        if [ -n "$TAILSCALE_CANDIDATES" ]; then
+          _print "${YELLOW}${WARNING} No Tailscale auth key found. Potential candidates found:${NC}"
+          echo "$TAILSCALE_CANDIDATES" | while read item; do
+            _print "${YELLOW}  - $item${NC}"
+          done
+          _print "${YELLOW}Add a field named 'auth-key' or 'key' to one of these items${NC}"
+        else
+          _print "${YELLOW}${WARNING} No Tailscale items found. Create item with 'tailscale' in name and 'auth-key' field${NC}"
+        fi
+      fi
+      
+      # Look for API keys
+      _print "${YELLOW}Looking for API keys...${NC}"
+      API_CONFIG_DIR="$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys"
+      mkdir -p "$API_CONFIG_DIR"
+      
+      # Initialize empty keys
+      ANTHROPIC_KEY=""
+      OPENAI_KEY=""
+      GITHUB_TOKEN=""
+      
+      # Search for Anthropic/Claude keys
+      for pattern in "anthropic" "claude" "Anthropic" "Claude" "ANTHROPIC" "CLAUDE"; do
+        if ANTHROPIC_ITEM=$(echo "$BW_ITEMS" | jq -r ".[] | select(.name | test(\"$pattern\"; \"i\")) | .id" | head -1) && [ -n "$ANTHROPIC_ITEM" ]; then
+          if ANTHROPIC_KEY=$(bw get item "$ANTHROPIC_ITEM" --session "$BW_SESSION" 2>/dev/null | jq -r '.fields[]? | select(.name | test("api|key|token"; "i")) | .value' | head -1) && [ -n "$ANTHROPIC_KEY" ]; then
+            _print "${GREEN}${CHECK} Anthropic API key found from: $(echo "$BW_ITEMS" | jq -r ".[] | select(.id==\"$ANTHROPIC_ITEM\") | .name")${NC}"
+            break
+          fi
+        fi
+      done
+      
+      # Search for OpenAI keys
+      for pattern in "openai" "OpenAI" "OPENAI" "gpt" "GPT" "chatgpt" "ChatGPT"; do
+        if OPENAI_ITEM=$(echo "$BW_ITEMS" | jq -r ".[] | select(.name | test(\"$pattern\"; \"i\")) | .id" | head -1) && [ -n "$OPENAI_ITEM" ]; then
+          if OPENAI_KEY=$(bw get item "$OPENAI_ITEM" --session "$BW_SESSION" 2>/dev/null | jq -r '.fields[]? | select(.name | test("api|key|token"; "i")) | .value' | head -1) && [ -n "$OPENAI_KEY" ]; then
+            _print "${GREEN}${CHECK} OpenAI API key found from: $(echo "$BW_ITEMS" | jq -r ".[] | select(.id==\"$OPENAI_ITEM\") | .name")${NC}"
+            break
+          fi
+        fi
+      done
+      
+      # Search for GitHub tokens
+      for pattern in "github" "GitHub" "GITHUB" "git" "Git" "GIT"; do
+        if GITHUB_ITEM=$(echo "$BW_ITEMS" | jq -r ".[] | select(.name | test(\"$pattern\"; \"i\")) | .id" | head -1) && [ -n "$GITHUB_ITEM" ]; then
+          if GITHUB_TOKEN=$(bw get item "$GITHUB_ITEM" --session "$BW_SESSION" 2>/dev/null | jq -r '.fields[]? | select(.name | test("token|key|pat"; "i")) | .value' | head -1) && [ -n "$GITHUB_TOKEN" ]; then
+            _print "${GREEN}${CHECK} GitHub token found from: $(echo "$BW_ITEMS" | jq -r ".[] | select(.id==\"$GITHUB_ITEM\") | .name")${NC}"
+            break
+          fi
+        fi
+      done
+      
+      # Create environment file with discovered keys
+      cat > "$API_CONFIG_DIR/keys.env" << EOF
+# API Keys discovered from Bitwarden - $(date)
+ANTHROPIC_API_KEY="$ANTHROPIC_KEY"
+OPENAI_API_KEY="$OPENAI_KEY" 
+GITHUB_TOKEN="$GITHUB_TOKEN"
+EOF
+      chmod 600 "$API_CONFIG_DIR/keys.env"
+      
+      # Summary of what was found/missing
+      _print "${GREEN}${INFO} Secret discovery summary:${NC}"
+      [ -n "$ANTHROPIC_KEY" ] && _print "${GREEN}${CHECK} Anthropic API key configured${NC}" || _print "${YELLOW}${WARNING} No Anthropic API key found (add item with 'anthropic' in name)${NC}"
+      [ -n "$OPENAI_KEY" ] && _print "${GREEN}${CHECK} OpenAI API key configured${NC}" || _print "${YELLOW}${WARNING} No OpenAI API key found (add item with 'openai' in name)${NC}"
+      [ -n "$GITHUB_TOKEN" ] && _print "${GREEN}${CHECK} GitHub token configured${NC}" || _print "${YELLOW}${WARNING} No GitHub token found (add item with 'github' in name)${NC}"
+      
+    else
+      _print "${RED}${ERROR} Could not retrieve Bitwarden items list${NC}"
+    fi
+    
+    _print "${GREEN}${CHECK} Secret discovery and configuration completed${NC}"
+  fi
 fi

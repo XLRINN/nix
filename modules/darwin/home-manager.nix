@@ -82,7 +82,8 @@ services.aerospace = {
         stateVersion = "23.11";
       };
 
-      programs = {} // import ../shared/home-manager.nix { inherit config pkgs lib; };
+      # Import shared home-manager configuration
+      imports = [ ../shared/home-manager.nix ];
 
       # Marked broken Oct 20, 2022 check later to remove this
       # https://github.com/nix-community/home-manager/issues/3344

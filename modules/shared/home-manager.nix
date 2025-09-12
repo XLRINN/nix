@@ -329,9 +329,45 @@ in
         gc = "nix-collect-garbage -d";
         pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
         pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
+        
+        # Bitwarden shortcuts
+        bw-unlock = "unset BW_SESSION; BW_PASSWORD=\"$(read -s -p 'Master password: ' pw; echo; printf %s \"$pw\")\" bw unlock --raw | tee \"$HOME/.cache/bw-session\" >/dev/null";
+        bw-discover = "echo 'Discovering Bitwarden items that could contain secrets:'; bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name) (\\(.login.username // \"no username\"))\"' | grep -E -i 'tailscale|openrouter|anthropic|claude|openai|gpt|github|git|api|key|token' || echo 'No potential secret items found or Bitwarden not unlocked'";
+        bw-items = "bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name)\"' | sort";
+        load-api-keys = "test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set -a && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set +a && echo '✓ API keys loaded' || echo '❌ No API keys file found'";
+        refresh-secrets = "nix run .#apply --refresh";
+        check-keys = "echo 'Checking API keys...'; test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && { test -n \"$OPENROUTER_API_KEY\" && echo '✓ OpenRouter' || echo '❌ OpenRouter'; test -n \"$GITHUB_TOKEN\" && echo '✓ GitHub' || echo '❌ GitHub'; } || echo '❌ No keys file'";
+        
+        # Sopswarden (SOPS + Bitwarden) shortcuts
+        sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden...'; rbw sync && sopswarden-sync && echo '✓ Secrets synchronized'";
+        sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
+        sops-check = "echo 'Checking sopswarden secrets...'; ls -la /run/secrets/ 2>/dev/null | grep -E 'tailscale|openrouter|github' || echo 'No sopswarden secrets found'";
+        rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
+        rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
       };
     
       initContent = ''
+        # Load API keys from Bitwarden-sourced file if available
+        if [[ -f "$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env" ]]; then
+          set -a
+          source "$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env"
+          set +a
+        fi
+
+        # Bitwarden session helper function
+        bw_session() {
+          local f="$HOME/.cache/bw-session"
+          if command -v bw >/dev/null 2>&1 && [[ -f "$f" ]]; then
+            export BW_SESSION="$(cat "$f")"
+            # Validate session silently; if invalid, unset
+            if ! bw sync >/dev/null 2>&1; then
+              unset BW_SESSION
+            fi
+          fi
+        }
+        bw_session
+
+        # Start Zellij if not already running
         if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then
           export ZELLIJ_RUNNING=1
           export ZELLIJ_DISABLE_TIPS=1

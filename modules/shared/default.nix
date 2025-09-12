@@ -2,7 +2,7 @@
 
 {
   imports = [
-    #./config/tailscale/tailscale.nix
+    ./config/tailscale/tailscale.nix
   ];
 
   nixpkgs = {

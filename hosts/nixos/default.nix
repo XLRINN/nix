@@ -1,4 +1,4 @@
-{ config, inputs, pkgs, lib, ... }:
+{ config, inputs, pkgs, lib, secrets, ... }:
 
 let
   user = "david";
@@ -232,6 +232,51 @@ in
 
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
+
+  # Sopswarden secrets configuration
+  sopswarden = {
+    enable = true;
+    secrets = {
+      # Tailscale authentication key
+      "tailscale-auth-key" = {
+        sopsFile = "/dev/null"; # Not using SOPS files, using Bitwarden directly
+        owner = "root";
+        group = "root";
+        mode = "0600";
+        path = "/run/secrets/tailscale-auth-key";
+        bwPath = "tailscale/authkey"; # Adjust based on your Bitwarden structure
+      };
+      
+      # API Keys for development  
+      "openrouter-api-key" = {
+        sopsFile = "/dev/null";
+        owner = "${user}";
+        group = "users";
+        mode = "0600";
+        path = "/run/secrets/openrouter-api-key";
+        # Try to read from notes first, adjust item name as needed
+        bwPath = "OpenRouter API/notes";  # Update with your actual item name
+      };
+      
+      "github-token" = {
+        sopsFile = "/dev/null";
+        owner = "${user}";
+        group = "users";
+        mode = "0600";
+        path = "/run/secrets/github-token";
+        bwPath = "GitHub Token/notes";  # Update with your actual item name
+      };
+      
+      "github-token" = {
+        sopsFile = "/dev/null";
+        owner = "${user}";
+        group = "users";
+        mode = "0600";
+        path = "/run/secrets/github-token";
+        bwPath = "github/token";
+      };
+    };
+  };
 
   system.stateVersion = "21.05"; # Don't change this
 }
