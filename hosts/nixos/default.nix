@@ -234,40 +234,16 @@ in
   home-manager.backupFileExtension = "backup";
 
   # Sopswarden secrets configuration (recommended secrets management)
-  services.sopswarden = {
-    enable = true;
-    secrets = {
-      # Tailscale authentication key
-      "tailscale-auth-key" = {
-        sopsFile = "/dev/null"; # Not using SOPS files, using Bitwarden directly
-        owner = "root";
-        group = "root";
-        mode = "0600";
-        path = "/run/secrets/tailscale-auth-key";
-        bwPath = "tailscale/authkey"; # Adjust based on your Bitwarden structure
-      };
-      
-      # API Keys for development  
-      "openrouter-api-key" = {
-        sopsFile = "/dev/null";
-        owner = "${user}";
-        group = "users";
-        mode = "0600";
-        path = "/run/secrets/openrouter-api-key";
-        # Try to read from notes first, adjust item name as needed
-        bwPath = "OpenRouter API/notes";  # Update with your actual item name
-      };
-      
-      "github-token" = {
-        sopsFile = "/dev/null";
-        owner = "${user}";
-        group = "users";
-        mode = "0600";
-        path = "/run/secrets/github-token";
-        bwPath = "github/token";
-      };
-    };
-  };
+  # Temporarily disabled sopswarden to allow system to build without Bitwarden secrets
+  # Uncomment and configure when ready for secrets integration again.
+  # services.sopswarden = {
+  #   enable = true;
+  #   secrets = {
+  #     tailscale-auth-key = { name = "Tailscale"; field = "auth-key"; };
+  #     openrouter-api-key = { name = "OpenRouter API"; field = "api-key"; };
+  #     github-token = { name = "GitHub Token"; field = "token"; };
+  #   };
+  # };
 
   system.stateVersion = "21.05"; # Don't change this
 }

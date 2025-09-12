@@ -2,7 +2,7 @@
 
 This configuration integrates Bitwarden secrets using a single recommended approach:
 
-1. **Sopswarden**: SOPS + Bitwarden for declarative, secure secret management (only supported flow now)
+1. **sopsWarden (impure branch)**: Bitwarden → SOPS sync with direct secret values available in Nix (current configured flow)
 
 ## Sopswarden (SOPS + Bitwarden)
 
@@ -15,15 +15,17 @@ This configuration integrates Bitwarden secrets using a single recommended appro
 3. **Declarative Deployment**: Secrets are automatically available at `/run/secrets/`
 4. **System Integration**: NixOS natively supports SOPS-encrypted secrets
 
-### Required Bitwarden Structure for Sopswarden
+### Required Bitwarden Items & Custom Fields
 
-Sopswarden expects secrets to be organized in Bitwarden with specific paths:
+Create (or update) the following Bitwarden items (names must match; custom fields are case‑insensitive):
 
-- **tailscale/authkey** → Tailscale authentication key
-- **openrouter/api-key** → OpenRouter API key (for Avante AI features)
-- **github/token** → GitHub personal access token
+| Purpose | Item Name | Custom Field | Notes |
+|---------|-----------|--------------|-------|
+| Tailscale Auth | `Tailscale` | `auth-key` | Use a reusable AUTH key with --ssh if desired |
+| OpenRouter API | `OpenRouter API` | `api-key` | Single key covers multiple model providers via OpenRouter |
+| GitHub Token | `GitHub Token` | `token` | PAT with minimal required scopes |
 
-**Note**: Since you're using OpenRouter, you only need one API key instead of separate Anthropic and OpenAI keys.
+Anthropic / OpenAI direct keys are optional when using OpenRouter.
 
 ### Usage
 
@@ -56,29 +58,14 @@ The old inline Bitwarden scraping logic has been removed. All new deployments sh
 
 ## Required Bitwarden Items
 
-### Tailscale
-- **Name**: `Tailscale`
-- **Field**: `auth-key` (custom field)
-- **Value**: Your Tailscale auth key (e.g., `tskey-auth-...`)
+### Summary of Needed Items
 
-### Anthropic (for Avante)
-- **Name**: `Anthropic API`
-- **Field**: `api-key` (custom field)
-- **Value**: Your Anthropic API key (e.g., `sk-ant-...`)
-
-### OpenAI (for Avante)
-- **Name**: `OpenAI API`
-- **Field**: `api-key` (custom field)
-- **Value**: Your OpenAI API key (e.g., `sk-...`)
-
-### GitHub Token
-- **Name**: `GitHub Token`
-- **Field**: `token` (custom field)
-- **Value**: Your GitHub personal access token
+See table above (no path mapping needed; items + custom fields only).
 
 ## Managing Secrets
 
 Use aliases defined in your shell (see Home Manager config):
+
 ```bash
 rbw-login      # First time login
 rbw-unlock     # Unlock vault for this session
@@ -88,6 +75,7 @@ sops-check     # List expected secrets in /run/secrets
 ```
 
 ### Tailscale
+
 After running the apply script, Tailscale will automatically use the auth key from Bitwarden:
 
 ```bash
@@ -99,15 +87,12 @@ sudo tailscale up --ssh
 ```
 
 ### Avante.nvim
-The configuration sets up environment variables for Avante to use Claude and OpenAI APIs:
 
-1. Ensure API keys are in Bitwarden
-2. Run `refresh-secrets`
-3. API keys will be automatically available to Neovim
+With OpenRouter you typically only need `openrouter-api-key`. After sync and rebuild, reference secret value directly via `${secrets.openrouter-api-key}` where needed in impure modules, or `cat /run/secrets/openrouter-api-key` in scripts.
 
 ## File Structure (Active Parts)
 
-```
+```text
 modules/shared/config/
 ├── api-keys/
 │   ├── default.nix       # Nix configuration for API keys
@@ -131,6 +116,7 @@ scripts/                  # (Legacy helper scripts retained but not required)
 ## Troubleshooting
 
 ### Bitwarden Session Expired
+
 ```bash
 # Re-authenticate
 bw-unlock
@@ -140,6 +126,7 @@ nix run .#apply
 ```
 
 ### Missing Secrets
+
 ```bash
 # Check what's available in Bitwarden
 bw list items --session $(cat ~/.cache/bw-session)
@@ -149,6 +136,7 @@ refresh-secrets
 ```
 
 ### Tailscale Not Connecting
+
 ```bash
 # Check if key file exists and has content
 cat ~/.local/share/src/nixos-config/modules/shared/config/tailscale/key
@@ -167,7 +155,7 @@ sudo tailscale up --authkey $(cat ~/.local/share/src/nixos-config/modules/shared
 
 ## Adding New Secrets
 
-1. Create/update item in Bitwarden (ensure `bwPath` mapping matches)
+1. Create/update Bitwarden item (match `name` + optional custom `field`)
 2. Add/modify entry under `services.sopswarden.secrets` in `hosts/nixos/default.nix`
-3. `rbw unlock && sops-sync`
+3. `rbw unlock && sopswarden-sync`
 4. `sudo nixos-rebuild switch --impure`
