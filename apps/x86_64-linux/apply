@@ -106,13 +106,20 @@ select_drive() {
     drive_model=$(echo "$drive_info" | awk '{for(i=3;i<=NF;i++) printf "%s ", $i; print ""}' | sed 's/ *$//')
     _print "  ${YELLOW}[$((i+1))]${NC} /dev/${drives[$i]} - ${GREEN}Size: $drive_size${NC} - ${CYAN}Model: $drive_model${NC}"
   done
-  
+
+  if [ ${#drives[@]} -eq 1 ]; then
+    selected_drive="/dev/${drives[0]}"
+    _print "\n${GREEN}Only one drive detected; auto-selecting: $selected_drive${NC}"
+    sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
+    export BOOT_DISK=$(basename "$selected_drive")
+    return
+  fi
+
   while true; do
     _prompt "${YELLOW}${QUESTION} Select drive number (1-${#drives[@]}): ${NC}" choice
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#drives[@]}" ]; then
       selected_drive="/dev/${drives[$((choice-1))]}"
       _print "\n${GREEN}Selected drive: $selected_drive${NC}"
-      # Update the disk-config.nix file with the selected drive
       sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
       _print "${GREEN}${CHECK} Drive configuration updated!${NC}"
       _print "${GREEN}${CHECK} NixOS will be installed on: $selected_drive${NC}"
@@ -123,6 +130,37 @@ select_drive() {
       _print "${RED}Invalid selection. Please enter a number between 1 and ${#drives[@]}.${NC}"
     fi
   done
+}
+
+# Prompt for static IP (optional). Leave blank for DHCP.
+prompt_ip() {
+  if [[ "$OS" == "Darwin" ]]; then return; fi
+  if [[ "${NONINTERACTIVE:-}" == "1" ]]; then
+    IP_ADDR=${IP_ADDR:-}
+    return
+  fi
+  while true; do
+    _prompt "${YELLOW}${QUESTION} Static IPv4 (CIDR) or blank for DHCP: ${NC}" IP_ADDR
+    if [[ -z "$IP_ADDR" ]]; then
+      _print "${GREEN}${INFO} Using DHCP.${NC}"
+      break
+    fi
+    if [[ "$IP_ADDR" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$ ]]; then
+      # Basic octet range check
+      ok=1
+      IFS='./' read -r o1 o2 o3 o4 cidr <<<"$IP_ADDR"
+      for o in $o1 $o2 $o3 $o4; do
+        if (( o < 0 || o > 255 )); then ok=0; break; fi
+      done
+      if (( cidr < 0 || cidr > 32 )); then ok=0; fi
+      if (( ok )); then
+        _print "${GREEN}${CHECK} Static IP set: $IP_ADDR${NC}"
+        break
+      fi
+    fi
+    _print "${RED}Invalid format. Use e.g. 192.168.1.50/24 or leave blank.${NC}"
+  done
+  export IP_ADDR
 }
 
 # Set hostname and find primary disk if this is NixOS
@@ -148,6 +186,7 @@ if [[ "$OS" != "Darwin" ]]; then
     done
   fi
 
+  prompt_ip
   select_drive
 fi
 
@@ -211,6 +250,11 @@ replace_tokens() {
       sed -i -e "s/%INTERFACE%/$PRIMARY_IFACE/g" "$file"
       sed -i -e "s/%DISK%/$BOOT_DISK/g" "$file"
       sed -i -e "s/%HOST%/$HOST_NAME/g" "$file"
+      if [[ -n "$IP_ADDR" ]]; then
+        sed -i -e "s/%IP%/$IP_ADDR/g" "$file"
+      else
+        sed -i -e "s/%IP%/dhcp/g" "$file"
+      fi
     fi
   fi
 }
