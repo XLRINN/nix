@@ -55,10 +55,9 @@
         url = "github:dc-tec/nixvim";
         flake = false;
       };
-    nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, nixos-cosmic, sopswarden, ... } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, sopswarden, ... } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -136,18 +135,19 @@
         }
       );
 
-      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: let
+  nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: let
         user = "david";
       in 
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = { 
-            inherit inputs; 
-            secrets = sopswarden.secrets.${system};
+    inherit inputs; 
+    # secrets integration disabled for now; re-enable later
+    # secrets = sopswarden.secrets.${system};
           };
           modules = [
             disko.nixosModules.disko
-            sopswarden.nixosModules.default
+    # sopswarden.nixosModules.default  # disabled for initial build
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;

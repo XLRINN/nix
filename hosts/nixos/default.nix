@@ -14,24 +14,14 @@ let
   ];
   availableFw = builtins.filter (name: builtins.hasAttr name fwMods) fwCandidates;
   fwModule = if availableFw == [] then null else (builtins.getAttr (builtins.head availableFw) fwMods);
-  cosmicModules =
-    if builtins.hasAttr "nixos-cosmic" inputs && builtins.hasAttr "nixosModules" inputs.nixos-cosmic then
-      let nm = inputs.nixos-cosmic.nixosModules; in
-      lib.flatten [
-        (if builtins.hasAttr "cosmic" nm then [ nm.cosmic ] else [])
-        (if builtins.hasAttr "cosmic-desktop" nm then [ nm."cosmic-desktop" ] else [])
-        (if builtins.hasAttr "default" nm then [ nm.default ] else [])
-      ]
-    else [];
-  cosmicAvailable = (builtins.length cosmicModules) > 0;
+  # Cosmic temporarily removed.
 in
 {
   imports = [
-    ../../modules/nixos/disk-config.nix
+  ../../modules/nixos/disk-config-btrfs.nix
     ../../modules/nixos/hardware.nix
     ../../modules/shared
   ]
-  ++ cosmicModules
   ++ lib.optionals (fwModule != null) [ fwModule ];
 
   # Use the systemd-boot EFI boot loader.
@@ -146,8 +136,7 @@ in
     };
     displayManager.gdm.enable = true;
   desktopManager.gnome.enable = true;
-  # Enable Cosmic only if its module exists in the flake inputs.
-  desktopManager.cosmic.enable = lib.mkIf cosmicAvailable true;
+  # cosmic desktop disabled
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh = {
       enable = true;
