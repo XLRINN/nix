@@ -145,10 +145,9 @@ in
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
     displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
+  desktopManager.gnome.enable = true;
+  # Enable Cosmic only if its module exists in the flake inputs.
   desktopManager.cosmic.enable = lib.mkIf cosmicAvailable true;
-  # Enable Cosmic desktop (experimental) alongside GNOME; choose session at login.
-  desktopManager.cosmic.enable = true;
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh = {
       enable = true;
