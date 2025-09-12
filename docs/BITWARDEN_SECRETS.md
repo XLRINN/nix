@@ -1,11 +1,10 @@
 # Bitwarden Secrets Integration
 
-This configuration provides two approaches for integrating Bitwarden secrets with your Nix system:
+This configuration integrates Bitwarden secrets using a single recommended approach:
 
-1. **Sopswarden (Recommended)**: Uses SOPS + Bitwarden for declarative secret management
-2. **Legacy Apply Script**: Fetches secrets during deployment
+1. **Sopswarden**: SOPS + Bitwarden for declarative, secure secret management (only supported flow now)
 
-## Approach 1: Sopswarden (SOPS + Bitwarden)
+## Sopswarden (SOPS + Bitwarden)
 
 **Sopswarden** is a mature tool that combines SOPS (Secrets OPerationS) with Bitwarden for secure, declarative secret management. This is the recommended approach for production use.
 
@@ -26,7 +25,7 @@ Sopswarden expects secrets to be organized in Bitwarden with specific paths:
 
 **Note**: Since you're using OpenRouter, you only need one API key instead of separate Anthropic and OpenAI keys.
 
-### Sopswarden Usage
+### Usage
 
 ```bash
 # Initial setup (one time)
@@ -42,7 +41,7 @@ sops-check         # Verify secrets are available
 sops-deploy
 ```
 
-### Sopswarden Features
+### Features
 
 - ✅ **Production Ready**: Mature, tested solution
 - ✅ **Truly Declarative**: Secrets defined in Nix configuration
@@ -51,16 +50,9 @@ sops-deploy
 - ✅ **NixOS Native**: Built on NixOS secrets infrastructure
 - ✅ **Automatic Permissions**: Proper file ownership and modes
 
-## Approach 2: Legacy Apply Script (Bitwarden CLI)
+## (Removed) Legacy Apply Script
 
-This is the original implementation that fetches secrets during the apply script execution.
-
-## How It Works
-
-1. **Bootstrap**: The `apply` script prompts for your Bitwarden master password
-2. **Authentication**: Creates a cached session at `~/.cache/bw-session`
-3. **Secret Fetching**: Runs `fetch-secrets.sh` to pull secrets from Bitwarden
-4. **Declarative Access**: Secrets are written to configuration files that Nix can read
+The old inline Bitwarden scraping logic has been removed. All new deployments should rely exclusively on sopswarden + `rbw`.
 
 ## Required Bitwarden Items
 
@@ -84,33 +76,15 @@ This is the original implementation that fetches secrets during the apply script
 - **Field**: `token` (custom field)
 - **Value**: Your GitHub personal access token
 
-## Usage
+## Managing Secrets
 
-### Initial Setup
+Use aliases defined in your shell (see Home Manager config):
 ```bash
-# Run the apply script (will prompt for Bitwarden password)
-nix run .#apply
-
-# This will:
-# 1. Authenticate with Bitwarden
-# 2. Fetch secrets and create configuration files
-# 3. Set up Tailscale and API keys declaratively
-```
-
-### Managing Secrets
-
-```bash
-# Check which API keys are available
-check-api-keys
-
-# Refresh secrets from Bitwarden
-refresh-secrets
-
-# Load API keys into current shell
-load-api-keys
-
-# Setup Avante configuration
-setup-avante
+rbw-login      # First time login
+rbw-unlock     # Unlock vault for this session
+sops-sync      # Sync & encrypt secrets
+sops-deploy    # Sync + rebuild system (impure)
+sops-check     # List expected secrets in /run/secrets
 ```
 
 ### Tailscale
@@ -131,7 +105,7 @@ The configuration sets up environment variables for Avante to use Claude and Ope
 2. Run `refresh-secrets`
 3. API keys will be automatically available to Neovim
 
-## File Structure
+## File Structure (Active Parts)
 
 ```
 modules/shared/config/
@@ -144,8 +118,7 @@ modules/shared/config/
 └── avante/
     └── default.nix       # Avante/Neovim configuration
 
-scripts/
-└── fetch-secrets.sh      # Script to pull secrets from Bitwarden
+scripts/                  # (Legacy helper scripts retained but not required)
 ```
 
 ## Security Notes
@@ -186,15 +159,15 @@ sudo tailscale up --authkey $(cat ~/.local/share/src/nixos-config/modules/shared
 
 ## Advantages
 
-1. **Single Source of Truth**: All secrets managed in Bitwarden
-2. **Declarative**: Secrets available to Nix configuration
-3. **Secure**: No secrets in git or Nix store
-4. **Convenient**: Automatic fetching during deployment
-5. **Flexible**: Easy to add new secret types
+1. **Single Source of Truth**: Bitwarden vault
+2. **Declarative**: Secrets defined in Nix via sopswarden
+3. **Secure**: Encrypted with SOPS / age, never in git / store
+4. **Low Friction**: Simple sync + rebuild workflow
+5. **Extensible**: Add new secrets by editing `services.sopswarden.secrets`
 
 ## Adding New Secrets
 
-1. Add item to Bitwarden with appropriate fields
-2. Update `fetch-secrets.sh` to fetch the new secret
-3. Update relevant Nix configuration to use the secret
-4. Add to documentation
+1. Create/update item in Bitwarden (ensure `bwPath` mapping matches)
+2. Add/modify entry under `services.sopswarden.secrets` in `hosts/nixos/default.nix`
+3. `rbw unlock && sops-sync`
+4. `sudo nixos-rebuild switch --impure`

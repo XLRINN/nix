@@ -233,8 +233,8 @@ in
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
-  # Sopswarden secrets configuration
-  sopswarden = {
+  # Sopswarden secrets configuration (recommended secrets management)
+  services.sopswarden = {
     enable = true;
     secrets = {
       # Tailscale authentication key
@@ -256,15 +256,6 @@ in
         path = "/run/secrets/openrouter-api-key";
         # Try to read from notes first, adjust item name as needed
         bwPath = "OpenRouter API/notes";  # Update with your actual item name
-      };
-      
-      "github-token" = {
-        sopsFile = "/dev/null";
-        owner = "${user}";
-        group = "users";
-        mode = "0600";
-        path = "/run/secrets/github-token";
-        bwPath = "GitHub Token/notes";  # Update with your actual item name
       };
       
       "github-token" = {
