@@ -18,7 +18,7 @@ let
 in
 {
   imports = [
-  ../../modules/nixos/disk-config-btrfs.nix
+  ../../modules/nixos/disk-config.nix
     ../../modules/nixos/hardware.nix
     ../../modules/shared
   ]

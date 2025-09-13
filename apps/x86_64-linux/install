@@ -58,7 +58,7 @@ run_apply() {
 run_disko() {
   progress "💾 Partitioning disk..."
   nix run --extra-experimental-features "nix-command flakes" \
-  github:nix-community/disko -- --mode zap_create_mount "${SRC_DIR}/modules/nixos/disk-config-btrfs.nix"
+  github:nix-community/disko -- --mode zap_create_mount "${SRC_DIR}/modules/nixos/disk-config.nix"
 }
 
 setup_files() {

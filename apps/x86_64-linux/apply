@@ -68,7 +68,7 @@ select_drive() {
   if [[ "${NONINTERACTIVE:-}" == "1" ]]; then
     local selected_drive="/dev/${BOOT_DISK:-nvme0n1}"
     _print "${GREEN}NONINTERACTIVE: selecting ${selected_drive}${NC}"
-  sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config-btrfs.nix
+  sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
     export BOOT_DISK=$(basename "$selected_drive")
     return
   fi
@@ -110,8 +110,8 @@ select_drive() {
   if [ ${#drives[@]} -eq 1 ]; then
     selected_drive="/dev/${drives[0]}"
     _print "\n${GREEN}Only one drive detected; auto-selecting: $selected_drive${NC}"
-    sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config-btrfs.nix
-  grep 'device = ' ./modules/nixos/disk-config-btrfs.nix || true
+    sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
+  grep 'device = ' ./modules/nixos/disk-config.nix || true
     export BOOT_DISK=$(basename "$selected_drive")
     return
   fi
@@ -121,8 +121,8 @@ select_drive() {
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#drives[@]}" ]; then
       selected_drive="/dev/${drives[$((choice-1))]}"
       _print "\n${GREEN}Selected drive: $selected_drive${NC}"
-      sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config-btrfs.nix
-  grep 'device = ' ./modules/nixos/disk-config-btrfs.nix || true
+    sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config.nix
+  grep 'device = ' ./modules/nixos/disk-config.nix || true
       _print "${GREEN}${CHECK} Drive configuration updated!${NC}"
       _print "${GREEN}${CHECK} NixOS will be installed on: $selected_drive${NC}"
       _print "${YELLOW}Proceeding with installation...${NC}"
@@ -137,7 +137,7 @@ select_drive() {
 # Detect total system RAM (GiB, ceiling) and prompt for desired swap size.
 configure_swap() {
   if [[ "$OS" == "Darwin" ]]; then return; fi
-  if ! grep -q 'swap = {' ./modules/nixos/disk-config-btrfs.nix 2>/dev/null; then
+  if ! grep -q 'swap = {' ./modules/nixos/disk-config.nix 2>/dev/null; then
     return
   fi
   if [[ -r /proc/meminfo ]]; then
@@ -168,7 +168,7 @@ configure_swap() {
   if [[ ! "$SWAP_SIZE" =~ ^[0-9]+G$ ]]; then
     echo -e "${RED}Invalid swap size format: $SWAP_SIZE (expected e.g. 16 or 16G). Aborting.${NC}"; exit 1
   fi
-  sed -i "/swap/,/root/ s/size = \"[^\"]*\";/size = \"$SWAP_SIZE\";/" ./modules/nixos/disk-config-btrfs.nix
+  sed -i "/swap/,/root/ s/size = \"[^\"]*\";/size = \"$SWAP_SIZE\";/" ./modules/nixos/disk-config.nix
   local swap_gib=${SWAP_SIZE%G}
   if (( swap_gib < TOTAL_RAM_GIB )); then
     echo -e "${YELLOW}${WARNING} Swap (${swap_gib}G) is smaller than RAM (${TOTAL_RAM_GIB}G); hibernation may FAIL.${NC}"

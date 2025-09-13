@@ -21,7 +21,6 @@ _: {
             content = {
               type = "filesystem";
               format = "vfat";
-              label = "EFI";
               mountpoint = "/boot";
               mountOptions = [
                 "uid=0" "gid=0"
