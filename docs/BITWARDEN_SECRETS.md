@@ -25,7 +25,7 @@ Create (or update) the following Bitwarden items (names must match; custom field
 | OpenRouter API | `OpenRouter API` | `api-key` | Single key covers multiple model providers via OpenRouter |
 | GitHub Token | `GitHub Token` | `token` | PAT with minimal required scopes |
 
-Anthropic / OpenAI direct keys are optional when using OpenRouter.
+OpenAI direct keys are optional when using OpenRouter.
 
 ### Usage
 

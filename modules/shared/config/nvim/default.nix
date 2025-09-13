@@ -73,12 +73,6 @@ pkgs.writeTextFile rec {
           -- Configure providers for OpenRouter
           provider = "openai", -- Use OpenAI provider for OpenRouter compatibility
           auto_suggestions = true,
-          claude = {
-            endpoint = "https://openrouter.ai/api/v1",
-            model = "anthropic/claude-3.5-sonnet",
-            temperature = 0,
-            max_tokens = 4096,
-          },
           openai = {
             endpoint = "https://openrouter.ai/api/v1", 
             model = "openai/gpt-4o",
@@ -230,7 +224,6 @@ pkgs.writeTextFile rec {
       { env = "OPENROUTER_API_KEY", file = "/run/secrets/openrouter-api-key" },
       { env = "GITHUB_TOKEN", file = "/run/secrets/github-token" },
       -- Legacy support for direct API keys if needed
-      { env = "ANTHROPIC_API_KEY", file = "/run/secrets/anthropic-api-key" },
       { env = "OPENAI_API_KEY", file = "/run/secrets/openai-api-key" },
     }
     

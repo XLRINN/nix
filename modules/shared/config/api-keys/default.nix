@@ -20,8 +20,8 @@ in
         set -a
         source "${apiKeysFile}"
         set +a
-        echo "✓ API keys loaded successfully"
-        echo "Available keys: ANTHROPIC_API_KEY, OPENAI_API_KEY, GITHUB_TOKEN"
+  echo "✓ API keys loaded successfully"
+  echo "Available keys: OPENAI_API_KEY, GITHUB_TOKEN"
       else
         echo "❌ No API keys file found at ${apiKeysFile}"
         echo "Run: fetch-secrets.sh to populate keys from Bitwarden"
@@ -36,7 +36,6 @@ in
       if [[ -f "${apiKeysFile}" ]]; then
         source "${apiKeysFile}"
         
-        [[ -n "$ANTHROPIC_API_KEY" ]] && echo "✓ Anthropic API key available" || echo "❌ Anthropic API key missing"
         [[ -n "$OPENAI_API_KEY" ]] && echo "✓ OpenAI API key available" || echo "❌ OpenAI API key missing"  
         [[ -n "$GITHUB_TOKEN" ]] && echo "✓ GitHub token available" || echo "❌ GitHub token missing"
       else

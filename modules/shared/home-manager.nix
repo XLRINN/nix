@@ -332,7 +332,7 @@ in
         
         # Bitwarden shortcuts
         bw-unlock = "unset BW_SESSION; BW_PASSWORD=\"$(read -s -p 'Master password: ' pw; echo; printf %s \"$pw\")\" bw unlock --raw | tee \"$HOME/.cache/bw-session\" >/dev/null";
-        bw-discover = "echo 'Discovering Bitwarden items that could contain secrets:'; bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name) (\\(.login.username // \"no username\"))\"' | grep -E -i 'tailscale|openrouter|anthropic|claude|openai|gpt|github|git|api|key|token' || echo 'No potential secret items found or Bitwarden not unlocked'";
+  bw-discover = "echo 'Discovering Bitwarden items that could contain secrets:'; bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name) (\\(.login.username // \"no username\"))\"' | grep -E -i 'tailscale|openrouter|openai|gpt|github|git|api|key|token' || echo 'No potential secret items found or Bitwarden not unlocked'";
         bw-items = "bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name)\"' | sort";
         load-api-keys = "test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set -a && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set +a && echo '✓ API keys loaded' || echo '❌ No API keys file found'";
         refresh-secrets = "nix run .#apply --refresh";

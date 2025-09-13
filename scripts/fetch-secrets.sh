@@ -78,10 +78,9 @@ setup_api_keys() {
   mkdir -p "$api_config_dir"
   
   # Fetch various API keys
-  local anthropic_key openai_key github_token
+  local openai_key github_token
   
   # Try to fetch each key, but don't fail if some are missing
-  anthropic_key=$(fetch_api_key "Anthropic API" "api-key" 2>/dev/null || echo "")
   openai_key=$(fetch_api_key "OpenAI API" "api-key" 2>/dev/null || echo "")
   github_token=$(fetch_api_key "GitHub Token" "token" 2>/dev/null || echo "")
   
@@ -89,7 +88,6 @@ setup_api_keys() {
   cat > "$api_config_dir/keys.env" << EOF
 # API Keys fetched from Bitwarden
 # This file is gitignored and regenerated on each deployment
-ANTHROPIC_API_KEY="$anthropic_key"
 OPENAI_API_KEY="$openai_key"
 GITHUB_TOKEN="$github_token"
 EOF
