@@ -43,7 +43,6 @@ _: {
             content = {
               type = "filesystem";
               format = "ext4";
-              label = "NIXROOT";
               mountpoint = "/";
               mountOptions = [ "noatime" "discard" ];
             };
