@@ -164,9 +164,10 @@ in
     logind = {
       lidSwitch = "hibernate";
       lidSwitchDocked = "ignore"; # don't hibernate when docked/externals attached
-      extraConfig = ''
-        HandleLidSwitchExternalPower=hibernate
-      '';
+      # Updated from deprecated extraConfig to settings.Login
+      settings.Login = {
+        HandleLidSwitchExternalPower = "hibernate";
+      };
     };
   };
 
