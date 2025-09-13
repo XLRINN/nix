@@ -132,8 +132,8 @@ in
     }];
   };
 
-  # Hyprland disabled (using GNOME)
-  programs.hyprland.enable = false;
+  # Enable Hyprland (alongside GNOME; choose session at GDM login)
+  programs.hyprland.enable = true;
 
   services = { 
     xserver = {
@@ -143,8 +143,7 @@ in
     };
     displayManager.gdm = {
       enable = true;
-      # Temporarily force X11 to avoid Wayland black screen until stable
-      wayland = false;
+      wayland = true; # Enable Wayland so Hyprland session appears
     };
     desktopManager.gnome.enable = true;
     xserver.videoDrivers = [ "modesetting" ];
