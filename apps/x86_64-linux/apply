@@ -111,13 +111,7 @@ select_drive() {
     selected_drive="/dev/${drives[0]}"
     _print "\n${GREEN}Only one drive detected; auto-selecting: $selected_drive${NC}"
     sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config-btrfs.nix
-    grep 'device = ' ./modules/nixos/disk-config-btrfs.nix || true
-    if [[ "${SKIP_DISK_CONFIRM:-}" != "1" ]]; then
-      echo -ne "${RED}THIS WILL ERASE ALL DATA ON ${selected_drive}. Type YES to continue: ${NC}"; read -r ans
-      if [[ "$ans" != "YES" ]]; then
-        echo -e "${YELLOW}Aborted by user.${NC}"; exit 1
-      fi
-    fi
+  grep 'device = ' ./modules/nixos/disk-config-btrfs.nix || true
     export BOOT_DISK=$(basename "$selected_drive")
     return
   fi
@@ -128,13 +122,7 @@ select_drive() {
       selected_drive="/dev/${drives[$((choice-1))]}"
       _print "\n${GREEN}Selected drive: $selected_drive${NC}"
       sed -i "s|device = \"/dev/sda\";|device = \"$selected_drive\";|g" ./modules/nixos/disk-config-btrfs.nix
-      grep 'device = ' ./modules/nixos/disk-config-btrfs.nix || true
-      if [[ "${SKIP_DISK_CONFIRM:-}" != "1" ]]; then
-        echo -ne "${RED}FINAL CONFIRMATION: ERASE ALL DATA on ${selected_drive}? Type YES: ${NC}"; read -r ans
-        if [[ "$ans" != "YES" ]]; then
-          echo -e "${YELLOW}Aborted by user.${NC}"; exit 1
-        fi
-      fi
+  grep 'device = ' ./modules/nixos/disk-config-btrfs.nix || true
       _print "${GREEN}${CHECK} Drive configuration updated!${NC}"
       _print "${GREEN}${CHECK} NixOS will be installed on: $selected_drive${NC}"
       _print "${YELLOW}Proceeding with installation...${NC}"
