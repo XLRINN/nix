@@ -39,8 +39,10 @@ in
     kernelModules = [ "uinput" ];
   # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
   kernelParams = [ "loglevel=4" "i915.enable_psr=0" ];
-  # Enable hibernation by pointing resume to labeled swap partition
-  resumeDevice = "/dev/disk/by-label/SWAP";
+  # Enable hibernation: set after install with the actual PARTUUID of the swap partition, e.g.
+  # lsblk -no PARTUUID /dev/yourdisk2
+  # boot.resumeDevice = "/dev/disk/by-partuuid/<uuid>";
+  # (Temporarily unset due to swap label removal.)
   };
 
   # Set your time zone.

@@ -161,8 +161,12 @@ configure_swap() {
       SWAP_SIZE=$input_swap
     fi
   fi
+  # Accept plain number (assume GiB) or number with G suffix
+  if [[ "$SWAP_SIZE" =~ ^[0-9]+$ ]]; then
+    SWAP_SIZE="${SWAP_SIZE}G"
+  fi
   if [[ ! "$SWAP_SIZE" =~ ^[0-9]+G$ ]]; then
-    echo -e "${RED}Invalid swap size format: $SWAP_SIZE (expected e.g. 16G). Aborting.${NC}"; exit 1
+    echo -e "${RED}Invalid swap size format: $SWAP_SIZE (expected e.g. 16 or 16G). Aborting.${NC}"; exit 1
   fi
   sed -i "/swap/,/root/ s/size = \"[^\"]*\";/size = \"$SWAP_SIZE\";/" ./modules/nixos/disk-config-btrfs.nix
   local swap_gib=${SWAP_SIZE%G}

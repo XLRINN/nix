@@ -35,7 +35,6 @@ _: {
             size = "16G"; # Patched dynamically by apply script; should be >= RAM for hibernation
             content = {
               type = "swap";
-              label = "SWAP"; # Used for resume: /dev/disk/by-label/SWAP
             };
           };
           root = {
