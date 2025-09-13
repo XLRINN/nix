@@ -160,6 +160,14 @@ in
 
     gvfs.enable = true;
     tumbler.enable = true;
+    # Hibernate instead of suspend on lid close (overrides default from hardware module)
+    logind = {
+      lidSwitch = "hibernate";
+      lidSwitchDocked = "ignore"; # don't hibernate when docked/externals attached
+      extraConfig = ''
+        HandleLidSwitchExternalPower=hibernate
+      '';
+    };
   };
 
   fonts.packages = with pkgs; [
