@@ -37,8 +37,8 @@ in
     };
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
     kernelModules = [ "uinput" ];
-    # Speed optimizations
-    kernelParams = [ "quiet" "loglevel=3" "console=ttyS0" ];
+  # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
+  kernelParams = [ "loglevel=4" "i915.enable_psr=0" ];
   };
 
   # Set your time zone.
@@ -59,7 +59,10 @@ in
 
   hardware = {
     enableAllFirmware = true; # Enable all firmware
-    graphics.enable = true; # Update from opengl.enable to graphics.enable
+    graphics.enable = true;   # Wayland/X11 GL stack
+    # Ensure classic option for wider compatibility (kept alongside graphics.enable)
+    opengl.enable = true;
+    opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
     ledger.enable = true;
   };
 
@@ -125,8 +128,8 @@ in
     }];
   };
 
-  # Enable Hyprland
-  programs.hyprland.enable = true;
+  # Hyprland disabled (using GNOME)
+  programs.hyprland.enable = false;
 
   services = { 
     xserver = {
@@ -134,8 +137,13 @@ in
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-    displayManager.gdm.enable = true;
-  desktopManager.gnome.enable = true;
+    displayManager.gdm = {
+      enable = true;
+      # Temporarily force X11 to avoid Wayland black screen until stable
+      wayland = false;
+    };
+    desktopManager.gnome.enable = true;
+    xserver.videoDrivers = [ "modesetting" ];
   # cosmic desktop disabled
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh = {
