@@ -44,6 +44,19 @@ in
   # (Temporarily unset due to swap label removal.)
   };
 
+  # Force filesystem declarations to match our labeled partitions
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos-root";
+    fsType = "ext4";
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/EFI";
+    fsType = "vfat";
+  };
+
+  swapDevices = [ ];
+
   # Set your time zone.
   time.timeZone = "America/New_York";
 
