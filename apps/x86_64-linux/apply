@@ -134,54 +134,6 @@ select_drive() {
   done
 }
 
-# Detect total system RAM (GiB, ceiling) and prompt for desired swap size.
-configure_swap() {
-  if [[ "$OS" == "Darwin" ]]; then return; fi
-  if ! grep -q 'swap = {' ./modules/nixos/disk-config.nix 2>/dev/null; then
-    return
-  fi
-  if [[ -r /proc/meminfo ]]; then
-    local mem_kb total_gib
-    mem_kb=$(grep -i '^MemTotal:' /proc/meminfo | awk '{print $2}')
-    if [[ -n "$mem_kb" ]]; then
-      total_gib=$(( (mem_kb + 1024*1024 - 1) / (1024*1024) ))
-      TOTAL_RAM_GIB=$total_gib
-    fi
-  fi
-  TOTAL_RAM_GIB=${TOTAL_RAM_GIB:-8}
-  local default_swap=${TOTAL_RAM_GIB}G
-  if [[ "${NONINTERACTIVE:-}" == "1" ]]; then
-    SWAP_SIZE=${SWAP_SIZE:-$default_swap}
-  else
-    echo -e "${YELLOW}${QUESTION} Detected RAM: ${TOTAL_RAM_GIB}G. Enter swap size (e.g. 0G, 8G, 32G) [default: ${default_swap}]: ${NC}"
-    read -r input_swap
-    if [[ -z "$input_swap" ]]; then
-      SWAP_SIZE=$default_swap
-    else
-      SWAP_SIZE=$input_swap
-    fi
-  fi
-  # Accept plain number (assume GiB) or number with G suffix
-  if [[ "$SWAP_SIZE" =~ ^[0-9]+$ ]]; then
-    SWAP_SIZE="${SWAP_SIZE}G"
-  fi
-  if [[ ! "$SWAP_SIZE" =~ ^[0-9]+G$ ]]; then
-    echo -e "${RED}Invalid swap size format: $SWAP_SIZE (expected e.g. 16 or 16G). Aborting.${NC}"; exit 1
-  fi
-  sed -i "/swap/,/root/ s/size = \"[^\"]*\";/size = \"$SWAP_SIZE\";/" ./modules/nixos/disk-config.nix
-  local swap_gib=${SWAP_SIZE%G}
-  if (( swap_gib < TOTAL_RAM_GIB )); then
-    echo -e "${YELLOW}${WARNING} Swap (${swap_gib}G) is smaller than RAM (${TOTAL_RAM_GIB}G); hibernation may FAIL.${NC}"
-    if [[ "${NONINTERACTIVE:-}" != "1" ]]; then
-      echo -ne "${QUESTION} Continue anyway? Type YES to proceed: ${NC}"; read -r c
-      if [[ "$c" != "YES" ]]; then
-        echo -e "${RED}Aborting so you can choose a larger swap.${NC}"; exit 1
-      fi
-    fi
-  else
-    echo -e "${GREEN}${CHECK} Swap size set to $SWAP_SIZE (>= RAM ${TOTAL_RAM_GIB}G) — hibernation supported.${NC}"
-  fi
-}
 
 # Prompt for static IP (optional). Leave blank for DHCP.
 prompt_ip() {
@@ -239,7 +191,6 @@ if [[ "$OS" != "Darwin" ]]; then
 
   prompt_ip
   select_drive
-    configure_swap
 fi
 
 # Auto-detect Framework laptop and set nixos-hardware profile
