@@ -18,8 +18,7 @@ let
 in
 {
   imports = [
-  ../../modules/nixos/disk-config.nix
-    ../../modules/nixos/hardware.nix
+    ../../modules/nixos/disk-config.nix
     ../../modules/shared
   ]
   ++ lib.optionals (fwModule != null) [ fwModule ];
@@ -68,15 +67,6 @@ in
     opengl.enable = true;
     opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
     ledger.enable = true;
-  };
-
-  # Optional: nixos-hardware profile for specific machines.
-  # For Framework laptops examples:
-  #  - my.hardware.profilePath = "framework/13-inch/intel";
-  #  - my.hardware.profilePath = "framework/13-inch/amd/7040";
-  my.hardware = {
-    isLaptop = true;
-    profilePath = lib.mkDefault null;
   };
 
   virtualisation.docker.enable = true;
