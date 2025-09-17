@@ -132,40 +132,12 @@ in
     }];
   };
 
-  # Enable Hyprland (alongside GNOME; choose session at GDM login)
-  programs.hyprland.enable = true;
-
-  services = { 
-    xserver = {
-      enable = true;
-      xkb.layout = "us"; # Update from layout to xkb.layout
-      xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
-    };
-    displayManager.gdm = {
-      enable = true;
-      wayland = true; # Enable Wayland so Hyprland session appears
-    };
-    desktopManager.gnome.enable = true;
-    xserver.videoDrivers = [ "modesetting" ];
-  # cosmic desktop disabled
-    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
+  services = {
     openssh = {
       enable = true;
       settings = {
         PasswordAuthentication = true;
         KbdInteractiveAuthentication = false;
-      };
-    };
-
-    gvfs.enable = true;
-    tumbler.enable = true;
-    # Hibernate instead of suspend on lid close (overrides default from hardware module)
-    logind = {
-      lidSwitch = "hibernate";
-      lidSwitchDocked = "ignore"; # don't hibernate when docked/externals attached
-      # Updated from deprecated extraConfig to settings.Login
-      settings.Login = {
-        HandleLidSwitchExternalPower = "hibernate";
       };
     };
   };
@@ -213,12 +185,7 @@ in
   };
 
   # Manages keys and such
-  programs = {
-    gnupg.agent.enable = true;
-
-    # Needed for anything GTK related
-    dconf.enable = true;
-  };
+  programs.gnupg.agent.enable = true;
 
   environment.systemPackages = with pkgs; [
     gitAndTools.gitFull

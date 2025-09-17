@@ -148,13 +148,14 @@
           modules = [
             disko.nixosModules.disko
     # sopswarden.nixosModules.default  # disabled for initial build
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/nixos/home-manager.nix;
-              };
-            }
+            # home-manager temporarily disabled while we target a minimal TTY environment
+            # home-manager.nixosModules.home-manager {
+            #   home-manager = {
+            #     useGlobalPkgs = true;
+            #     useUserPackages = true;
+            #     users.${user} = import ./modules/nixos/home-manager.nix;
+            #   };
+            # }
             ./hosts/nixos
           ];
         }
