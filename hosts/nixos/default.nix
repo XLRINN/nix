@@ -207,7 +207,6 @@ in
   };
 
   # Home Manager configuration
-  home-manager.backupFileExtension = "backup";
 
   # Sopswarden secrets configuration (recommended secrets management)
   # Temporarily disabled sopswarden to allow system to build without Bitwarden secrets
