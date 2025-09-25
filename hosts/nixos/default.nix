@@ -78,7 +78,14 @@ in
     graphics.enable = true;   # Wayland/X11 GL stack
     # Ensure classic option for wider compatibility (kept alongside graphics.enable)
     opengl.enable = true;
-    opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
+    opengl.extraPackages = with pkgs; [ 
+      intel-media-driver 
+      intel-vaapi-driver 
+      vaapiVdpau 
+      libvdpau-va-gl 
+      # Add mesa drivers for better VM graphics support
+      mesa.drivers
+    ];
     ledger.enable = true;
   };
 
@@ -143,6 +150,33 @@ in
         KbdInteractiveAuthentication = false;
       };
     };
+
+    # X11 and desktop environment configuration
+    # This fixes the blank screen issue by enabling a graphical desktop
+    xserver = {
+      enable = true;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+      xkb.layout = "us";
+      xkb.options = "ctrl:nocaps";
+      
+      # VM-specific video driver configuration
+      # VirtIO and QXL drivers work well with Proxmox
+      videoDrivers = lib.mkDefault [ "qxl" "virtio" "cirrus" "vesa" ];
+    };
+
+    # Better support for input devices (important for VMs)
+    libinput.enable = true;
+
+    # Additional services for desktop functionality
+    gvfs.enable = true;
+    tumbler.enable = true;
+
+    # SPICE agent for better VM integration (if using SPICE display)
+    spice-vdagentd.enable = true;
+
+    # QEMU Guest Agent - essential for Proxmox VM management
+    qemuGuest.enable = true;
   };
 
   fonts.packages = with pkgs; [
@@ -196,6 +230,11 @@ in
     neovim
     noto-fonts-emoji
     pciutils  # Provides lspci for hardware diagnostics
+    
+    # VM-specific utilities
+    spice-vdagent   # SPICE guest agent for better integration
+    qemu-guest-agent # QEMU guest agent for Proxmox integration
+    xorg.xf86videoqxl # QXL video driver for VMs
   ];
 
 
