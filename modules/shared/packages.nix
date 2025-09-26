@@ -9,7 +9,7 @@ with pkgs; [
   bash-completion
   bat
   btop
-  bitwarden-cli
+  # bitwarden-cli removed (fails to build on Darwin due to argon2/node-gyp); use rbw instead
   rbw  # Rust Bitwarden client for sopswarden
   # Note: bws (Bitwarden Secrets Manager CLI) might not be in nixpkgs yet
   # You can install it manually: curl -L https://github.com/bitwarden/sdk/releases/latest/download/bws-x86_64-unknown-linux-gnu.zip
@@ -54,7 +54,8 @@ with pkgs; [
   lua
   ranger
   lynx
-  ueberzug
+  # ueberzug (Linux-only) removed: fails to build on Darwin (X11 dependency, upstream #error OS unsupported)
+  # If needed on Linux only, re-add via: (pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.ueberzug ]) in a separate attr
   tmux
   powershell
 
@@ -67,7 +68,7 @@ with pkgs; [
   dejavu_fonts
 
   feather-font
-  jetbrains-mono
+  # jetbrains-mono already included above; avoid duplicate
   font-awesome
   nerd-fonts.fira-code
   meslo-lgs-nf

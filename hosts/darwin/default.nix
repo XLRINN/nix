@@ -10,11 +10,9 @@ let user = "david"; in
     ../../modules/shared/cachix
   ];
 
-  # Auto upgrade nix package and the daemon service.
-  services.nix-daemon.enable = true;
-
-  # Enable sudo Touch ID authentication
-  security.pam.enableSudoTouchIdAuth = true;
+  # nix-daemon is now managed automatically; removed deprecated services.nix-daemon.enable
+  # Touch ID auth option renamed in recent nix-darwin: migrate to new location
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   # Setup user, packages, programs
   nix = {
@@ -22,7 +20,7 @@ let user = "david"; in
     settings.trusted-users = [ "@admin" "${user}" ];
 
     gc = {
-      user = "root";
+      # Removed deprecated gc.user (GC always runs as root now)
       automatic = true;
       interval = { Weekday = 0; Hour = 2; Minute = 0; };
       options = "--delete-older-than 30d";
@@ -40,6 +38,8 @@ let user = "david"; in
 
   system = {
     stateVersion = 4;
+    # Required for per-user defaults & homebrew options after migration
+    primaryUser = user;
 
     defaults = {
       NSGlobalDomain = {
@@ -67,5 +67,8 @@ let user = "david"; in
       };
     };
   };
-}
+
+  # Fix activation error: nixbld group GID expected 30000 but actual is 350 on this system.
+  # Correct placement (top-level, not under system.*) per nix-darwin module options.
+  ids.gids.nixbld = 350;
 }

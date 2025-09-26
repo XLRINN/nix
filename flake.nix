@@ -6,6 +6,9 @@
     home-manager.url = "github:nix-community/home-manager";
     # Add sopswarden for Bitwarden secrets management
     sopswarden.url = "github:pfassina/sopswarden/main";
+  # Legacy nixpkgs for an older bitwarden-cli that builds (argon2/node-gyp regression in newer revs)
+  # Using the 24.05 stable channel (adjust to a specific commit later if needed):
+  legacy-nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
   # Hardware-specific modules for NixOS machines (e.g., Framework laptops)
   nixos-hardware.url = "github:NixOS/nixos-hardware";
     darwin = {
@@ -101,6 +104,14 @@
     {
       devShells = forAllSystems devShell;
       apps = nixpkgs.lib.genAttrs linuxSystems mkLinuxApps // nixpkgs.lib.genAttrs darwinSystems mkDarwinApps;
+
+      # Expose legacy bitwarden-cli for systems where it still builds
+      packages = let
+        legacyFor = system: (import inputs.legacy-nixpkgs { system = system; }).bitwarden-cli or null;
+      in nixpkgs.lib.genAttrs (linuxSystems ++ darwinSystems) (system: {
+        inherit (nixpkgs.legacyPackages.${system}) git;
+        bitwarden-cli-legacy = legacyFor system;
+      });
 
       darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system: let
         user = "david";

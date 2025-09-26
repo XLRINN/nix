@@ -35,9 +35,14 @@ alias bw-unlock='unset BW_SESSION; BW_PASSWORD="$(read -s -p "Master password: "
 
 # Aliases
 alias pf="pfetch"
-alias bs="nix run .#build-switch"
-alias bss="nix run .#build-switch && source ~/.zshrc"
-alias fmu="clear && nix run .#build-switch && source ~/.zshrc"
+alias bs="nix run .#build-switch"                                # build + switch (requires sudo now, see sbs)
+alias bss="nix run .#build-switch && source ~/.zshrc"             # build + switch + reload
+alias fmu="clear && nix run .#build-switch && source ~/.zshrc"    # full update
+
+# Sudo variants (preferred on nix-darwin since activation must run as root)
+alias sbs="sudo -H nix run .#build-switch"
+alias sbss="sudo -H nix run .#build-switch && source ~/.zshrc"
+alias sfmu="clear && sudo -H nix run .#build-switch && source ~/.zshrc"
 alias sauce="source ~/.zshrc"
 alias addcask="nvim ~/nix/modules/darwin/casks.nix"
 alias cbs="clear && bs"

@@ -347,6 +347,56 @@ in
       };
     
       initContent = ''
+        # Provide a lightweight 'bw' shim if bitwarden-cli is not installed but rbw is.
+        if ! command -v bw >/dev/null 2>&1 && command -v rbw >/dev/null 2>&1; then
+          bw() {
+            # Simple translation layer for common commands
+            case "$1" in
+              login)
+                shift
+                echo "(shim) rbw handles auth separately; run 'rbw login' if needed" >&2
+                ;;
+              unlock)
+                shift
+                rbw unlock "$@" 2>/dev/null || return 1
+                ;;
+              sync)
+                rbw sync "$@" 2>/dev/null || return 1
+                ;;
+              get)
+                shift
+                subcmd="$1"; shift
+                case "$subcmd" in
+                  item)
+                    # rbw get item by name prints secure json; emulate minimal subset
+                    rbw get "$@" 2>/dev/null || return 1
+                    ;;
+                  password)
+                    rbw get "$@" 2>/dev/null || return 1
+                    ;;
+                  *) echo "Unsupported bw get subcommand in shim: $subcmd" >&2; return 2 ;;
+                esac
+                ;;
+              list)
+                shift
+                what="$1"; shift
+                case "$what" in
+                  items)
+                    # Basic list of items (names only); enrich as needed
+                    rbw list | jq -R 'select(length>0) | { name: . }' | jq -s '.'
+                    ;;
+                  *) echo "Unsupported bw list target in shim: $what" >&2; return 2 ;;
+                esac
+                ;;
+              *)
+                echo "bw shim: unsupported command '$1'. Install bitwarden-cli for full functionality." >&2
+                return 2
+                ;;
+            esac
+          }
+          export -f bw || true
+        fi
+
         # Load API keys from Bitwarden-sourced file if available
         if [[ -f "$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env" ]]; then
           set -a

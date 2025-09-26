@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./config/tailscale/tailscale.nix
+    # ./config/tailscale/tailscale.nix  # Disabled - causes networking.firewall errors on Darwin
   ];
 
   nixpkgs = {

@@ -49,25 +49,19 @@ in {
       normalize = path: if hasSuffix ".app" path then path + "/" else path;
     in
     {
-      system.activationScripts.postUserActivation.text = ''
-        echo >&2 "Setting up the Dock..."
-        #haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
-        
-        # Apply autohide setting
-        defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"};
+      system.activationScripts.dock.text = ''
+        echo >&2 "Setting up the Dock (root activation)..."
+        user="${config.system.primaryUser or "david"}"
 
-        # Apply Dock position setting
-        defaults write com.apple.dock orientation -string "${cfg.position}";
+        # Apply settings as the primary user (preferences are per-user)
+        sudo -u "$user" defaults write com.apple.dock autohide -bool ${if cfg.autohide then "true" else "false"}
+        sudo -u "$user" defaults write com.apple.dock orientation -string "${cfg.position}"
+        sudo -u "$user" defaults write com.apple.dock tilesize -int ${toString cfg.size}
+        sudo -u "$user" defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"}
+        sudo -u "$user" defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize}
 
-        # Apply Dock size setting
-        defaults write com.apple.dock tilesize -int ${toString cfg.size};
-
-        # Apply Dock magnification settings
-        defaults write com.apple.dock magnification -bool ${if cfg.magnification then "true" else "false"};
-        defaults write com.apple.dock largesize -int ${toString cfg.magnificationSize};
-
-        # Restart Dock to apply changes
-        killall Dock
+        # Restart Dock for the user
+        sudo -u "$user" killall Dock 2>/dev/null || true
       '';
     }
   );
