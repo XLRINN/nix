@@ -101,7 +101,24 @@ install_nixos() {
   # Set root and user passwords non-interactively
   echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
   echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
-  
+
+  # Explicitly install systemd-boot into the ESP to avoid firmware/NVRAM quirks
+  if [ -d /sys/firmware/efi ]; then
+    echo -e "${CYAN}UEFI environment detected; installing systemd-boot with NVRAM entries...${NC}"
+    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bootctl install || true
+  else
+    echo -e "${YELLOW}No UEFI firmware detected (legacy/CSM boot). Installing systemd-boot without NVRAM and adding fallback BOOTX64.EFI...${NC}"
+    chroot /mnt /nix/var/nix/profiles/system/sw/bin/bootctl --esp-path=/boot install --no-variables || true
+    mkdir -p /mnt/boot/EFI/BOOT || true
+    if [ -f /mnt/boot/EFI/systemd/systemd-bootx64.efi ]; then
+      cp -f /mnt/boot/EFI/systemd/systemd-bootx64.efi /mnt/boot/EFI/BOOT/BOOTX64.EFI || true
+    fi
+  fi
+
+  # Show resulting ESP contents for verification
+  echo -e "${CYAN}ESP layout:${NC}"
+  ls -R /mnt/boot/EFI || true
+
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
 

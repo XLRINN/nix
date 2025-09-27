@@ -15,8 +15,6 @@ _: {
               content = {
                 type = "filesystem";
                 format = "vfat";
-                # Ensure the ESP has a stable label for mounting
-                label = "EFI";
                 mountpoint = "/boot";
                 mountOptions = [
                   "uid=0" "gid=0"
@@ -37,8 +35,6 @@ _: {
               content = {
                 type = "filesystem";
                 format = "ext4";
-                # Stable label used by boot/initrd
-                label = "nixos-root";
                 mountpoint = "/";
                 mountOptions = [ "defaults" ];
               };
