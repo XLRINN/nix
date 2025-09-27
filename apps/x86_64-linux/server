@@ -91,7 +91,22 @@ setup_files() {
   if [ -d "/mnt/home/david/nix" ]; then
     rm -rf /mnt/home/david/nix
   fi
-  git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  # Use the same ref used for the installer payload; default to 'server'
+  REF="${NIX_REF:-server}"
+  echo -e "${CYAN}Cloning xlrinn/nix at ref: ${REF}${NC}"
+  git clone --origin nyx --depth 1 --branch "$REF" https://github.com/xlrinn/nix.git /mnt/home/david/nix \
+    || {
+      echo -e "${YELLOW}Branch '${REF}' not found or not a branch; attempting tag/commit checkout...${NC}"
+      git clone --origin nyx https://github.com/xlrinn/nix.git /mnt/home/david/nix
+      # Try to fetch the exact ref (tag or commit)
+      git -C /mnt/home/david/nix fetch nyx "$REF" --depth 1 || true
+      # Checkout the fetched ref if available, else try direct checkout
+      git -C /mnt/home/david/nix checkout -B "install-ref" FETCH_HEAD 2>/dev/null \
+        || git -C /mnt/home/david/nix checkout "$REF" 2>/dev/null \
+        || echo -e "${YELLOW}Warning: Unable to checkout '${REF}'. Staying on default branch.${NC}"
+    }
+  # Record the ref used for install
+  echo "$REF" > /mnt/home/david/nix/.install-ref
   # Minimal identity passthrough (optional)
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
