@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -exu
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
+LOCAL_SRC_DIR=""
+
 cd /tmp || { echo -e "${RED}Cannot cd to /tmp${NC}"; exit 1; }
 
 # Color codes
@@ -26,20 +30,30 @@ check_installer() {
 cleanup() {
   progress "🧹 Cleaning up temporary files..."
   rm -rf nixos-config-main.zip nix-* nyx-*
+  if [[ -n "$LOCAL_SRC_DIR" && -d "$LOCAL_SRC_DIR" ]]; then
+    rm -rf "$LOCAL_SRC_DIR"
+  fi
 }
 
 download_config() {
-  progress "📦 Downloading configuration..."
-  # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'testing'
-    NIX_REF=${NIX_REF:-testing}
+  NIX_REF=${NIX_REF:-testing}
+  if [[ "$NIX_REF" == "local" ]]; then
+    progress "📦 Using local repository at $REPO_ROOT"
+    LOCAL_SRC_DIR=$(mktemp -d /tmp/nix-local-XXXXXX)
+    cp -a "$REPO_ROOT"/. "$LOCAL_SRC_DIR"/
+    rm -rf "$LOCAL_SRC_DIR/.git"
+    SRC_DIR="$LOCAL_SRC_DIR"
+  else
+    progress "📦 Downloading configuration from $NIX_REF..."
     curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
-  unzip -q nixos-config-main.zip
+    unzip -q nixos-config-main.zip
 
-  # Find the extracted directory (GitHub uses nix-<refOrSha>)
+    # Find the extracted directory (GitHub uses nix-<refOrSha>)
     SRC_DIR=$(find . -maxdepth 1 -type d -name "nix-*" | head -n1)
-  if [ -z "$SRC_DIR" ] || [ ! -d "$SRC_DIR" ]; then
-    echo -e "${RED}Error: Extracted directory not found after download.${NC}"
-    exit 1
+    if [ -z "$SRC_DIR" ] || [ ! -d "$SRC_DIR" ]; then
+      echo -e "${RED}Error: Extracted directory not found after download.${NC}"
+      exit 1
+    fi
   fi
 }
 
@@ -59,6 +73,41 @@ run_disko() {
   progress "💾 Partitioning disk..."
   nix run --extra-experimental-features "nix-command flakes" \
   github:nix-community/disko -- --mode zap_create_mount "${SRC_DIR}/modules/nixos/disk-config.nix"
+}
+
+verify_disko() {
+  progress "🔍 Verifying disk layout..."
+
+  local expected=(
+    "/dev/disk/by-label/NIXOS_BOOT"
+    "/dev/disk/by-label/NIXOS_ROOT"
+  )
+
+  local missing=0
+  for path in "${expected[@]}"; do
+    if [[ ! -e "$path" ]]; then
+      echo -e "${RED}Expected block device $path not found after disko run.${NC}"
+      missing=1
+    fi
+  done
+
+  if (( missing )); then
+    echo -e "${YELLOW}lsblk output for debugging:${NC}"
+    lsblk -f
+    exit 1
+  fi
+
+  if ! findmnt -rn /mnt >/dev/null 2>&1; then
+    echo -e "${RED}/mnt is not mounted after partitioning.${NC}"
+    findmnt -arn
+    exit 1
+  fi
+
+  if ! findmnt -rn /mnt/boot >/dev/null 2>&1; then
+    echo -e "${RED}/mnt/boot is not mounted after partitioning.${NC}"
+    findmnt -arn
+    exit 1
+  fi
 }
 
 setup_files() {
@@ -154,6 +203,7 @@ check_installer
 download_config
 run_apply
 run_disko
+verify_disko
 setup_files
 install_nixos
 cleanup
