@@ -27,6 +27,7 @@ cleanup() {
 download_config() {
   # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'server'
   NIX_REF=${NIX_REF:-server}
+  echo -e "${CYAN}Fetching configuration ref: ${NIX_REF}${NC}"
   curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
   unzip -q nixos-config-main.zip
   # Find extracted directory (nix-<refOrSha>) and enter
@@ -36,7 +37,7 @@ download_config() {
     exit 1
   fi
   cd "$SRC_DIR"
-  echo -e "${GREEN}✓ Configuration downloaded and extracted${NC}"
+  echo -e "${GREEN}✓ Configuration downloaded and extracted at: ${SRC_DIR}${NC}"
 }
 
 run_apply() {
@@ -46,6 +47,32 @@ run_apply() {
   ./apps/x86_64-linux/apply
   export USERNAME="david"
   echo -e "${GREEN}✓ Configuration complete${NC}"
+}
+
+verify_disko_config() {
+  # Fail fast if the fetched disko config contains unsupported keys that would break evaluation
+  local dc=./modules/nixos/disk-config.nix
+  if [ ! -f "$dc" ]; then
+    echo -e "${RED}Error: Missing $dc in the fetched repository.${NC}"
+    exit 1
+  fi
+  if grep -qE "(^|[[:space:]])label[[:space:]]*=" "$dc"; then
+    echo -e "${RED}The fetched disko config ($dc) still contains an unsupported 'label =' attribute.${NC}"
+    echo -e "${YELLOW}This will cause: 'The option ... ESP.content.label does not exist' during evaluation.${NC}"
+    if [ "${SANITIZE_DISKO:-0}" = "1" ]; then
+      echo -e "${CYAN}SANITIZE_DISKO=1 set — removing 'label =' lines automatically...${NC}"
+      # Remove lines with 'label =' in the content blocks. This is safe because labels aren't supported in this schema.
+      sed -i -E '/^[[:space:]]*label[[:space:]]*=/d' "$dc"
+      echo -e "${GREEN}✓ Sanitized $dc${NC}"
+    else
+      echo -e "${CYAN}Fix options:${NC}"
+      echo -e "  1) Push the latest repo changes (where 'label =' was removed) to the '${NIX_REF:-server}' ref."
+      echo -e "  2) Re-run with a specific fixed ref: NIX_REF=<commit-or-tag> nix run .#server"
+      echo -e "  3) Manually edit $dc on your branch to remove 'label =' entries."
+      echo -e "  4) Quick workaround: set SANITIZE_DISKO=1 when running this script to auto-remove 'label' lines."
+      exit 1
+    fi
+  fi
 }
 
 run_disko() {
@@ -131,6 +158,7 @@ prompt_reboot() {
 cleanup
 check_installer
 download_config
+verify_disko_config
 run_apply
 run_disko
 setup_files
