@@ -1,4 +1,5 @@
 _: {
+  disko.enableConfig = true;
   # Btrfs layout with subvolumes for root, home, nix store, logs, and snapshots
   # Uses GPT with a separate EFI System Partition.
   # Adjust device path (/dev/sda) as needed for your target system (e.g., /dev/nvme0n1).
