@@ -30,9 +30,20 @@ in
         enable = true;
         configurationLimit = 10;  # Keep fewer boot entries
       };
-      efi.canTouchEfiVariables = true;
+      efi = {
+        canTouchEfiVariables = true;
+        # Our ESP is mounted at /boot via disko
+        efiSysMountPoint = "/boot";
+      };
       # Faster boot
       timeout = 1;
+    };
+    # Optional: provide GRUB fallback in case the target doesn't support UEFI at boot time
+    # This is harmless on UEFI systems (grub won't be used) but can save you on legacy BIOS VMs
+    grub = {
+      devices = lib.mkDefault [ "/dev/sda" ];
+      efiSupport = true;
+      enable = lib.mkDefault false; # leave disabled by default; enable manually if needed
     };
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
     kernelModules = [ "uinput" ];
@@ -44,16 +55,7 @@ in
   # (Temporarily unset due to swap label removal.)
   };
 
-  # Force filesystem declarations to match our labeled partitions
-  fileSystems."/" = {
-    device = lib.mkForce "/dev/disk/by-label/nixos-root";
-    fsType = "ext4";
-  };
-
-  fileSystems."/boot" = {
-    device = lib.mkForce "/dev/disk/by-label/EFI";
-    fsType = "vfat";
-  };
+  # Let disko manage filesystems; no overrides needed here
 
   swapDevices = [ ];
 
