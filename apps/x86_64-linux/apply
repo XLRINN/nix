@@ -169,8 +169,100 @@ if host.exists():
     host.write_text(re.sub(r"\n\s*swapDevices = lib\\.mkForce \[\{\n(?:.*?\n)*?\s*\}\];\n", "\n", host.read_text(), flags=re.S))
 PY
   else
-    echo -e "${RED}Unable to disable swap automatically: perl or python3 is required.${NC}"
-    exit 1
+    if ! command -v awk >/dev/null 2>&1; then
+      echo -e "${RED}Unable to disable swap automatically: awk is required.${NC}"
+      exit 1
+    fi
+    local file tmp
+    for file in "${files[@]}"; do
+      if [[ -f "$file" ]]; then
+        tmp=$(mktemp)
+        if awk '
+function flush() {
+  for (i = 1; i <= buf_len; ++i) print buf[i]
+  buf_len = 0
+}
+{
+  line = $0
+  if (skip) {
+    if (close_pattern != "" && line ~ close_pattern) {
+      skip = 0
+      close_pattern = ""
+    }
+    next
+  }
+  if (line ~ /^[[:space:]]*swap = [{]$/) {
+    if (buf_len > 0) {
+      buf_len -= 1
+    }
+    if (match(line, /^([[:space:]]*).*/, m)) {
+      close_pattern = "^" m[1] "[}];[[:space:]]*$"
+    } else {
+      close_pattern = "^[[:space:]]*[}];[[:space:]]*$"
+    }
+    skip = 1
+    next
+  }
+  if (line ~ /^[[:space:]]*$/) {
+    buf[++buf_len] = line
+    next
+  }
+  flush()
+  print line
+}
+END {
+  flush()
+}
+        ' "$file" > "$tmp"; then
+          mv "$tmp" "$file"
+        else
+          rm -f "$tmp"
+          echo -e "${RED}Failed to strip swap definition from $file.${NC}"
+          exit 1
+        fi
+      fi
+    done
+
+    if [[ -f ./hosts/nixos/default.nix ]]; then
+      tmp=$(mktemp)
+      if awk '
+function flush() {
+  for (i = 1; i <= buf_len; ++i) print buf[i]
+  buf_len = 0
+}
+{
+  line = $0
+  if (skip) {
+    if (line ~ /^[[:space:]]*[}][]];[[:space:]]*$/) {
+      skip = 0
+    }
+    next
+  }
+  if (line ~ /^[[:space:]]*swapDevices = lib[.]mkForce [[][{]$/) {
+    if (buf_len > 0) {
+      buf_len -= 1
+    }
+    skip = 1
+    next
+  }
+  if (line ~ /^[[:space:]]*$/) {
+    buf[++buf_len] = line
+    next
+  }
+  flush()
+  print line
+}
+END {
+  flush()
+}
+      ' ./hosts/nixos/default.nix > "$tmp"; then
+        mv "$tmp" ./hosts/nixos/default.nix
+      else
+        rm -f "$tmp"
+        echo -e "${RED}Failed to strip swapDevices override from ./hosts/nixos/default.nix.${NC}"
+        exit 1
+      fi
+    fi
   fi
   echo -e "${CYAN}${INFO} Swap configuration removed; system will be installed without swap.${NC}"
 }
