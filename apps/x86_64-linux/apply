@@ -134,6 +134,47 @@ select_drive() {
   done
 }
 
+# Remove swap definitions when the user opts out.
+disable_swap_partition() {
+  local files=(
+    "./modules/nixos/disk-config.nix"
+    "./modules/nixos/disk-config-btrfs.nix"
+  )
+  if command -v perl >/dev/null 2>&1; then
+    for file in "${files[@]}"; do
+      if [[ -f "$file" ]]; then
+        perl -0pi -e 's/\n(\s*)swap = \{\n(?:.*?\n)\1\};\n/\n/s' "$file"
+      fi
+    done
+    if [[ -f ./hosts/nixos/default.nix ]]; then
+      perl -0pi -e 's/\n\s*swapDevices = lib\.mkForce \[\{\n(?:.*?\n)*?\s*\}\];\n//s' ./hosts/nixos/default.nix
+    fi
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 <<'PY'
+from pathlib import Path
+import re
+
+files = [
+    Path("modules/nixos/disk-config.nix"),
+    Path("modules/nixos/disk-config-btrfs.nix"),
+]
+pattern = re.compile(r"\n(\s*)swap = \{\n(?:.*?\n)\1\};\n", re.S)
+for path in files:
+    if path.exists():
+        text = path.read_text()
+        path.write_text(pattern.sub("\n", text))
+
+host = Path("hosts/nixos/default.nix")
+if host.exists():
+    host.write_text(re.sub(r"\n\s*swapDevices = lib\\.mkForce \[\{\n(?:.*?\n)*?\s*\}\];\n", "\n", host.read_text(), flags=re.S))
+PY
+  else
+    echo -e "${RED}Unable to disable swap automatically: perl or python3 is required.${NC}"
+    exit 1
+  fi
+  echo -e "${CYAN}${INFO} Swap configuration removed; system will be installed without swap.${NC}"
+}
+
 # Detect total system RAM (GiB, ceiling) and prompt for desired swap size.
 configure_swap() {
   if [[ "$OS" == "Darwin" ]]; then return; fi
@@ -149,37 +190,34 @@ configure_swap() {
     fi
   fi
   TOTAL_RAM_GIB=${TOTAL_RAM_GIB:-8}
-  local default_swap=${TOTAL_RAM_GIB}G
+
+  local input_swap=""
   if [[ "${NONINTERACTIVE:-}" == "1" ]]; then
-    SWAP_SIZE=${SWAP_SIZE:-$default_swap}
+    input_swap="${SWAP_SIZE:-}"
   else
-    echo -e "${YELLOW}${QUESTION} Detected RAM: ${TOTAL_RAM_GIB}G. Enter swap size (e.g. 0G, 8G, 32G) [default: ${default_swap}]: ${NC}"
+    echo -e "${YELLOW}${QUESTION} Detected RAM: ${TOTAL_RAM_GIB}G. Enter swap size (e.g. 8G, 32G). Leave blank for no swap:${NC}"
     read -r input_swap
-    if [[ -z "$input_swap" ]]; then
-      SWAP_SIZE=$default_swap
-    else
-      SWAP_SIZE=$input_swap
-    fi
   fi
-  # Accept plain number (assume GiB) or number with G suffix
+
+  if [[ -z "$input_swap" || "$input_swap" =~ ^0[Gg]?$ ]]; then
+    disable_swap_partition
+    return
+  fi
+
+  SWAP_SIZE="$input_swap"
   if [[ "$SWAP_SIZE" =~ ^[0-9]+$ ]]; then
     SWAP_SIZE="${SWAP_SIZE}G"
   fi
   if [[ ! "$SWAP_SIZE" =~ ^[0-9]+G$ ]]; then
     echo -e "${RED}Invalid swap size format: $SWAP_SIZE (expected e.g. 16 or 16G). Aborting.${NC}"; exit 1
   fi
+
   sed -i "/swap/,/root/ s/size = \"[^\"]*\";/size = \"$SWAP_SIZE\";/" ./modules/nixos/disk-config.nix
   local swap_gib=${SWAP_SIZE%G}
   if (( swap_gib < TOTAL_RAM_GIB )); then
-    echo -e "${YELLOW}${WARNING} Swap (${swap_gib}G) is smaller than RAM (${TOTAL_RAM_GIB}G); hibernation may FAIL.${NC}"
-    if [[ "${NONINTERACTIVE:-}" != "1" ]]; then
-      echo -ne "${QUESTION} Continue anyway? Type YES to proceed: ${NC}"; read -r c
-      if [[ "$c" != "YES" ]]; then
-        echo -e "${RED}Aborting so you can choose a larger swap.${NC}"; exit 1
-      fi
-    fi
+    echo -e "${YELLOW}${WARNING} Swap (${swap_gib}G) is smaller than RAM (${TOTAL_RAM_GIB}G); hibernation may fail.${NC}"
   else
-    echo -e "${GREEN}${CHECK} Swap size set to $SWAP_SIZE (>= RAM ${TOTAL_RAM_GIB}G) — hibernation supported.${NC}"
+    echo -e "${GREEN}${CHECK} Swap size set to $SWAP_SIZE (>= RAM ${TOTAL_RAM_GIB}G).${NC}"
   fi
 }
 

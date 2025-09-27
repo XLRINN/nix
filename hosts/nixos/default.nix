@@ -70,6 +70,13 @@ in
     ledger.enable = true;
   };
 
+  fileSystems."/".device = lib.mkForce "/dev/disk/by-label/NIXOS_ROOT";
+  fileSystems."/boot".device = lib.mkForce "/dev/disk/by-label/NIXOS_BOOT";
+  swapDevices = lib.mkForce [{
+    device = "/dev/disk/by-label/NIXOS_SWAP";
+    label = "NIXOS_SWAP";
+  }];
+
   # Optional: nixos-hardware profile for specific machines.
   # For Framework laptops examples:
   #  - my.hardware.profilePath = "framework/13-inch/intel";

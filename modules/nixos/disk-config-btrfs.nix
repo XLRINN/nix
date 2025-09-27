@@ -21,6 +21,7 @@ _: {
             content = {
               type = "filesystem";
               format = "vfat";
+              extraArgs = [ "-n" "NIXOS_BOOT" ];
               mountpoint = "/boot";
               mountOptions = [
                 "uid=0" "gid=0"
@@ -34,6 +35,7 @@ _: {
             size = "16G"; # Patched dynamically by apply script; should be >= RAM for hibernation
             content = {
               type = "swap";
+              extraArgs = [ "--label" "NIXOS_SWAP" ];
             };
           };
           root = {
@@ -41,6 +43,7 @@ _: {
             content = {
               type = "filesystem";
               format = "ext4";
+              extraArgs = [ "-L" "NIXOS_ROOT" ];
               mountpoint = "/";
               mountOptions = [ "noatime" "discard" ];
             };
