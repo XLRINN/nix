@@ -45,15 +45,30 @@ in
       settings = {
         default_Layout = "compact";
         pane_frames = false;
-        theme = "ansi";
+        theme = "dark-modern";
         simplified_ui = true;
         hide_session_name = true;
         rounded_corners = true;
         show_startup_tips = false;
+        themes = {
+          "dark-modern" = {
+            fg = [204 204 204];
+            bg = [31 31 31];
+            black = [39 39 39];
+            red = [247 73 73];
+            green = [46 160 67];
+            yellow = [158 106 3];
+            blue = [0 120 212];
+            magenta = [208 18 115];
+            cyan = [29 180 214];
+            white = [204 204 204];
+            orange = [158 106 3];
+          };
+        };
       };
     };
 
-    yazi = {
+     yazi = {
       enable = true;
       settings = {
         editor = "neovim";
@@ -85,31 +100,31 @@ in
           bizarre_retry = 5;
         };
         theme = {
-          background = "0x282c34";
-          foreground = "0xc5c8c6";
-          black = "0x282c34";
-          red = "0xcc6666";
-          green = "0xb5bd68";
-          yellow = "0xf0c674";
-          blue = "0x81a2be";
-          magenta = "0xb294bb";
-          cyan = "0x8abeb7";
-          white = "0xc5c8c6";
-          bright_black = "0x969896";
-          bright_red = "0xcc6666";
-          bright_green = "0xb5bd68";
-          bright_yellow = "0xf0c674";
-          bright_blue = "0x81a2be";
-          bright_magenta = "0xb294bb";
-          bright_cyan = "0x8abeb7";
-          bright_white = "0xffffff";
+          background = "0x1f1f1f";
+          foreground = "0xcccccc";
+          black = "0x272727";
+          red = "0xf74949";
+          green = "0x2ea043";
+          yellow = "0x9e6a03";
+          blue = "0x0078d4";
+          magenta = "0xd01273";
+          cyan = "0x1db4d6";
+          white = "0xcccccc";
+          bright_black = "0x5d5d5d";
+          bright_red = "0xdc5452";
+          bright_green = "0x23d18b";
+          bright_yellow = "0xf5f543";
+          bright_blue = "0x3b8eea";
+          bright_magenta = "0xd670d6";
+          bright_cyan = "0x29b8db";
+          bright_white = "0xe5e5e5";
         };
-        open = {
-          rules = [
-            { mime = "*/*"; use = "edit"; }
-            { name = "*"; use = "edit"; }
-          ];
-        };
+      open = {
+        rules = [
+          { mime = "*/*"; use = "edit"; }
+          { name = "*"; use = "edit"; }
+        ];
+      };
       };
     };
 
@@ -141,28 +156,28 @@ in
         };
         colors = {
           primary = {
-            background = "0x2E3440";
-            foreground = "0xD8DEE9";
+            background = "0x1f1f1f";
+            foreground = "0xcccccc";
           };
           normal = {
-            black = "0x3B4252";
-            red = "0xBF616A";
-            green = "0xA3BE8C";
-            yellow = "0xEBCB8B";
-            blue = "0x81A1C1";
-            magenta = "0xB48EAD";
-            cyan = "0x88C0D0";
-            white = "0xE5E9F0";
+            black = "0x272727";
+            red = "0xf74949";
+            green = "0x2ea043";
+            yellow = "0x9e6a03";
+            blue = "0x0078d4";
+            magenta = "0xd01273";
+            cyan = "0x1db4d6";
+            white = "0xcccccc";
           };
           bright = {
-            black = "0x4C566A";
-            red = "0xBF616A";
-            green = "0xA3BE8C";
-            yellow = "0xEBCB8B";
-            blue = "0x81A1C1";
-            magenta = "0xB48EAD";
-            cyan = "0x8FBCBB";
-            white = "0xECEFF4";
+            black = "0x5d5d5d";
+            red = "0xdc5452";
+            green = "0x23d18b";
+            yellow = "0xf5f543";
+            blue = "0x3b8eea";
+            magenta = "0xd670d6";
+            cyan = "0x29b8db";
+            white = "0xe5e5e5";
           };
         };
         selection = {
@@ -188,10 +203,10 @@ in
         set shiftwidth=2
         set smartindent
         set mouse=a
-        set termguicolors
+        set notermguicolors
         set background=dark
         set clipboard=unnamedplus
-        set termguicolors
+        colorscheme default
         " Keybindings to toggle NERDTree
         nnoremap <leader>n :NERDTreeToggle<CR>
 
@@ -295,6 +310,41 @@ in
           { "neovim/nvim-lspconfig", enabled = false },
           { "andersevenrud/nordic.nvim" },
           {"github/copilot.vim"},
+          { "johnseth97/codex.nvim",
+            dependencies = { "nvim-lua/plenary.nvim" },
+            cmd = { "Codex", "CodexToggle" },
+            keys = {
+              { "<leader>cc", "<cmd>CodexToggle<CR>", desc = "Codex: toggle window" },
+            },
+            event = "VeryLazy",
+            config = function()
+              require("codex").setup({
+                keymaps = { toggle = nil, quit = "<C-q>" },
+                border = "rounded",
+                width = 0.85,
+                height = 0.85,
+                autoinstall = true,
+              })
+            end,
+          },
+          { "yetone/avante.nvim",
+            event = "VeryLazy",
+            opts = {
+              provider = "openai",
+              openai = {
+                endpoint = "https://openrouter.ai/api/v1",
+                model = "openai/gpt-4o",
+                temperature = 0,
+              },
+              behaviour = { auto_suggestions = true },
+            },
+            dependencies = {
+              "nvim-lua/plenary.nvim",
+              "MunifTanjim/nui.nvim",
+              "stevearc/dressing.nvim",
+              "nvim-tree/nvim-web-devicons",
+            },
+          },
         },
       })
       EOF
@@ -320,15 +370,20 @@ in
         }];
       shellAliases = {
         pf = "pfetch";
-        bs = "nix run .#build-switch";
-        bss = "nix run .#build-switch && source ~/.zshrc";
-        fmu = "clear && nix run .#build-switch && source ~/.zshrc";
+        swap= "sudo nix run .#build-switch";
+        bss = "sudo nix run .#build-switch && source ~/.zshrc";
+        upgrade = "clear && sudo nix run .#build-switch && source ~/.zshrc";
         sauce = "source ~/.zshrc";
         addcask = "nvim ~/nix/modules/darwin/casks.nix";
         cbs = "clear && bs";
         gc = "nix-collect-garbage -d";
         pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
         pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
+        unlock = "bash ~/nix/scripts/secrets-wizard.sh";
+        install-bws = "bash ~/nix/scripts/install-bws.sh";
+        bws-setup = "bash ~/nix/scripts/bws-quick-setup.sh";
+        set-bws-token = "security add-generic-password -a $USER -s BWS_ACCESS_TOKEN -w";
+        set-bws-project = "security add-generic-password -a $USER -s BWS_PROJECT_ID -w";
         
         # Bitwarden shortcuts
         bw-unlock = "unset BW_SESSION; BW_PASSWORD=\"$(read -s -p 'Master password: ' pw; echo; printf %s \"$pw\")\" bw unlock --raw | tee \"$HOME/.cache/bw-session\" >/dev/null";
@@ -347,6 +402,25 @@ in
       };
     
       initContent = ''
+        # Set rbw (Bitwarden) email to the same value used for git
+        export RBW_EMAIL="${email}"
+
+        # Ensure user's local bin is in PATH (for bws install)
+        export PATH="$HOME/.local/bin:$PATH"
+
+        # Default BWS project name if not set (used by secrets wizard)
+        if [[ -z "''${BWS_PROJECT_NAME:-}" ]]; then
+          export BWS_PROJECT_NAME="nyx"
+        fi
+
+        # Auto-load Bitwarden Secrets Manager token/project from macOS Keychain if present
+        if [[ -z "''${BWS_ACCESS_TOKEN:-}" ]] && command -v security >/dev/null 2>&1; then
+          export BWS_ACCESS_TOKEN="$(security find-generic-password -a "$USER" -s BWS_ACCESS_TOKEN -w 2>/dev/null || true)"
+        fi
+        if [[ -z "''${BWS_PROJECT_ID:-}" ]] && command -v security >/dev/null 2>&1; then
+          export BWS_PROJECT_ID="$(security find-generic-password -a "$USER" -s BWS_PROJECT_ID -w 2>/dev/null || true)"
+        fi
+
         # Provide a lightweight 'bw' shim if bitwarden-cli is not installed but rbw is.
         if ! command -v bw >/dev/null 2>&1 && command -v rbw >/dev/null 2>&1; then
           bw() {
@@ -404,6 +478,13 @@ in
           set +a
         fi
 
+        # Load BWS access token from a private env file if present (Linux/NixOS)
+        if [[ -f "$HOME/.secrets/bws.env" ]]; then
+          set -a
+          source "$HOME/.secrets/bws.env"
+          set +a
+        fi
+
         # Bitwarden session helper function
         bw_session() {
           local f="$HOME/.cache/bw-session"
@@ -416,6 +497,11 @@ in
           fi
         }
         bw_session
+
+        # If only OPENROUTER_API_KEY is present, mirror it to OPENAI_API_KEY for tooling that expects that variable
+        if [[ -z "''${OPENAI_API_KEY:-}" && -n "''${OPENROUTER_API_KEY:-}" ]]; then
+          export OPENAI_API_KEY="$OPENROUTER_API_KEY"
+        fi
 
         # Start Zellij if not already running
         if [ -z "$ZELLIJ" ] && [ -z "$ZELLIJ_RUNNING" ]; then

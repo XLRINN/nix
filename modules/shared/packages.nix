@@ -14,7 +14,7 @@ with pkgs; [
   # Note: bws (Bitwarden Secrets Manager CLI) might not be in nixpkgs yet
   # You can install it manually: curl -L https://github.com/bitwarden/sdk/releases/latest/download/bws-x86_64-unknown-linux-gnu.zip
   coreutils
-  #codex
+  codex
   killall
   pfetch
   neofetch
@@ -24,6 +24,7 @@ with pkgs; [
   openssh
   sqlite
   wget
+  curl
   zip
   kitty
   oh-my-zsh 
@@ -55,6 +56,7 @@ with pkgs; [
   lua
   ranger
   lynx
+  age
   # ueberzug (Linux-only) removed: fails to build on Darwin (X11 dependency, upstream #error OS unsupported)
   # If needed on Linux only, re-add via: (pkgs.lib.optionals pkgs.stdenv.isLinux [ pkgs.ueberzug ]) in a separate attr
   tmux
@@ -73,4 +75,4 @@ with pkgs; [
   font-awesome
   nerd-fonts.fira-code
   meslo-lgs-nf
-]
+] ++ (if stdenv.isDarwin then [ pinentry_mac ] else [ pinentry-curses ])

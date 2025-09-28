@@ -83,6 +83,7 @@
           exec ${self}/apps/${system}/${scriptName}
         '')}/bin/${scriptName}";
       };
+      # Standard app builder referencing files in repo
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
@@ -90,6 +91,15 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "desktop" = mkApp "desktop" system;
+        # Secrets: run the wizard directly from the user's checkout to avoid
+        # depending on repo files being in the flake source when the tree is dirty.
+        "secrets" = {
+          type = "app";
+          program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin "secrets" ''
+            #!/usr/bin/env bash
+            exec bash ~/nix/scripts/secrets-wizard.sh "$@"
+          '')}/bin/secrets";
+        };
       };
       mkDarwinApps = system: {
         "apply" = mkApp "apply" system;
@@ -99,6 +109,13 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "rollback" = mkApp "rollback" system;
+        "secrets" = {
+          type = "app";
+          program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin "secrets" ''
+            #!/usr/bin/env bash
+            exec bash ~/nix/scripts/secrets-wizard.sh "$@"
+          '')}/bin/secrets";
+        };
       };
     in
     {
