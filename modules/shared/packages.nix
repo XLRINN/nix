@@ -14,6 +14,7 @@ with pkgs; [
   # Note: bws (Bitwarden Secrets Manager CLI) might not be in nixpkgs yet
   # You can install it manually: curl -L https://github.com/bitwarden/sdk/releases/latest/download/bws-x86_64-unknown-linux-gnu.zip
   coreutils
+  #codex
   killall
   pfetch
   neofetch

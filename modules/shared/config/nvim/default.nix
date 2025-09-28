@@ -173,6 +173,36 @@ pkgs.writeTextFile rec {
         },
       },
 
+      -- Codex.nvim for inline AI-assisted coding
+      {
+        "johnseth97/codex.nvim",
+        dependencies = {
+          "nvim-lua/plenary.nvim",
+        },
+        cmd = { "Codex", "CodexToggle" },
+        keys = {
+          {
+            "<leader>cc",
+            function()
+              require("codex").toggle()
+            end,
+            desc = "Codex: toggle window",
+          },
+        },
+        config = function()
+          require("codex").setup({
+            keymaps = {
+              toggle = nil,
+              quit = "<C-q>",
+            },
+            border = "rounded",
+            width = 0.85,
+            height = 0.85,
+            autoinstall = true,
+          })
+        end,
+      },
+
       -- CoC for LSP and autocompletion
       {
         "neoclide/coc.nvim",
