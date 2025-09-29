@@ -175,9 +175,6 @@ in
     };
 
     qemuGuest.enable = true;
-    "spice-vdagent" = {
-      enable = lib.mkDefault true;
-    };
 
     gvfs.enable = true;
     tumbler.enable = true;
@@ -191,6 +188,8 @@ in
       };
     };
   };
+
+  services."spice-vdagent".enable = lib.mkDefault true;
 
   fonts.packages = with pkgs; [
       noto-fonts
