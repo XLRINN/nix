@@ -199,35 +199,47 @@ in
       "tailscale-auth-key" = {
         name = "Tailscale";
         field = "auth-key";
-        path = "/run/secrets/tailscale-auth-key";
-        owner = "root";
-        group = "root";
-        mode = "0600";
       };
       "openrouter-api-key" = {
         name = "OpenRouter API";
         field = "api-key";
-        path = "/run/secrets/openrouter-api-key";
-        owner = "${user}";
-        group = "users";
-        mode = "0400";
       };
       "github-token" = {
         name = "github";
         field = "token";
-        path = "/run/secrets/github-token";
-        owner = "${user}";
-        group = "users";
-        mode = "0400";
       };
       "github-ssh-key" = {
         name = "github";
         field = "private-key";
-        path = "/home/${user}/.ssh/id_ed25519";
-        owner = "${user}";
-        group = "users";
-        mode = "0600";
+        type = "note";
       };
+    };
+  };
+
+  sops.secrets = {
+    "tailscale-auth-key" = {
+      owner = "root";
+      group = "root";
+      mode = "0600";
+      path = "/run/secrets/tailscale-auth-key";
+    };
+    "openrouter-api-key" = {
+      owner = "${user}";
+      group = "users";
+      mode = "0400";
+      path = "/run/secrets/openrouter-api-key";
+    };
+    "github-token" = {
+      owner = "${user}";
+      group = "users";
+      mode = "0400";
+      path = "/run/secrets/github-token";
+    };
+    "github-ssh-key" = {
+      owner = "${user}";
+      group = "users";
+      mode = "0600";
+      path = "/home/${user}/.ssh/id_ed25519";
     };
   };
 
