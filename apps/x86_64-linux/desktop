@@ -65,15 +65,15 @@ setup_files() {
     rm -rf /mnt/home/david/nix
   fi
   git clone --origin nyx --depth 1 --branch "${NIX_BRANCH:-master}" https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  mkdir -p /mnt/home/david/.ssh
+  ssh-keyscan -t ed25519 github.com >> /mnt/home/david/.ssh/known_hosts 2>/dev/null || true
+  chown -R 1000:1000 /mnt/home/david/.ssh
+  chmod 700 /mnt/home/david/.ssh
+  chmod 600 /mnt/home/david/.ssh/known_hosts 2>/dev/null || true
   # Minimal identity passthrough (optional)
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
   # Prefer SSH remote so pushes work once SSH keys are in place
-  git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
-  git -C /mnt/home/david/nix remote set-branches nyx '*' || true
-  git -C /mnt/home/david/nix fetch nyx --prune --tags || true
-  git -C /mnt/home/david/nix fetch nyx --unshallow >/dev/null 2>&1 || true
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
 

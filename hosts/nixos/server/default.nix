@@ -6,9 +6,9 @@ let
 in
 {
 	imports = [
-		../../modules/nixos/disk-config.nix
-		../../modules/nixos/hardware.nix
-		../../modules/shared
+		../../../modules/nixos/disk-config.nix
+		../../../modules/nixos/hardware.nix
+		../../../modules/shared
 	];
 
 	networking = {
