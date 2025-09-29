@@ -1,11 +1,21 @@
-_: {
+{ lib, config, ... }:
+
+let
+  inherit (lib) mkDefault;
+  # Default to virtio disk when the QEMU guest agent is enabled (e.g., Proxmox)
+  defaultDevice =
+    if (config.services.qemuGuest.enable or false) || (config.virtualisation.qemuGuest.enable or false)
+    then "/dev/vda"
+    else "/dev/sda";
+in
+{
   disko.enableConfig = true;
   # This formats the disk with the ext4 filesystem
   # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
     disk = {
       main = {
-        device = "/dev/sda";
+        device = mkDefault defaultDevice;
         type = "disk";
         content = {
           type = "gpt";

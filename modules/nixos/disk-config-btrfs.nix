@@ -1,4 +1,13 @@
-_: {
+{ lib, config, ... }:
+
+let
+  inherit (lib) mkDefault;
+  defaultDevice =
+    if (config.services.qemuGuest.enable or false) || (config.virtualisation.qemuGuest.enable or false)
+    then "/dev/vda"
+    else "/dev/sda";
+in
+{
   disko.enableConfig = true;
   # Btrfs layout with subvolumes for root, home, nix store, logs, and snapshots
   # Uses GPT with a separate EFI System Partition.
@@ -11,7 +20,7 @@ _: {
   # Adjust swap size as needed (e.g., match RAM for hibernation).
   disko.devices = {
     disk.main = {
-      device = "/dev/sda"; # Replaced by installer apply script; prefer /dev/disk/by-id for stability.
+      device = mkDefault defaultDevice; # Replaced by installer apply script; prefer /dev/disk/by-id for stability.
       type = "disk";
       content = {
         type = "gpt";
