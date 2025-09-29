@@ -54,6 +54,10 @@ run_disko() {
 }
 
 prompt_bws() {
+  # Skip the Bitwarden Secrets Manager prompt unless explicitly enabled.
+  if [[ "${BWS_PROMPT:-0}" != "1" ]]; then
+    return
+  fi
   # Ask once during install so the target can bootstrap secrets on first boot
   if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
     echo -e "${CYAN}Optional: Provide Bitwarden Secrets Manager access token to pre-provision secrets (press Enter to skip).${NC}"
@@ -88,15 +92,28 @@ setup_files() {
   # Minimal identity passthrough (optional)
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
-  # Enforce HTTPS-only origin
-  # Ensure 'nyx' remote uses HTTPS and fetches all branches
-  git -C /mnt/home/david/nix remote set-url nyx https://github.com/xlrinn/nix.git >/dev/null 2>&1 || true
+  # Prefer SSH remote so pushes work once SSH keys are in place
+  git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
   git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
   git -C /mnt/home/david/nix remote set-branches nyx '*' || true
   git -C /mnt/home/david/nix fetch nyx --prune --tags || true
   git -C /mnt/home/david/nix fetch nyx --unshallow >/dev/null 2>&1 || true
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
+
+  # Seed per-user git config so pushes are ready after first boot
+  if [ -f /tmp/git_name.txt ] && [ -f /tmp/git_email.txt ]; then
+    mkdir -p /mnt/home/david
+    cat > /mnt/home/david/.gitconfig <<EOF
+[user]
+    name = $(cat /tmp/git_name.txt)
+    email = $(cat /tmp/git_email.txt)
+[pull]
+    rebase = false
+EOF
+    chown 1000:1000 /mnt/home/david/.gitconfig
+    chmod 600 /mnt/home/david/.gitconfig
+  fi
 
   # Optionally pre-provision Bitwarden Secrets Manager token for first boot
   if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
@@ -143,6 +160,18 @@ install_nixos() {
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
 
+run_unlock() {
+  if [[ "${RUN_UNLOCK:-1}" != "1" ]]; then
+    echo -e "${YELLOW}Skipping Bitwarden unlock (RUN_UNLOCK=${RUN_UNLOCK:-0}).${NC}"
+    return
+  fi
+
+  echo -e "${CYAN}Launching 'unlock' helper inside the target system...${NC}"
+  if ! chroot /mnt /nix/var/nix/profiles/system/sw/bin/su - david -c "cd ~/nix && bash scripts/secrets-wizard.sh"; then
+    echo -e "${YELLOW}Bitwarden unlock helper exited with an error or was cancelled. Run 'unlock' after reboot if needed.${NC}"
+  fi
+}
+
 prompt_reboot() {
   echo -e "\e[1;32mRebooting in 5 seconds...\e[0m"
   sleep 5
@@ -157,5 +186,6 @@ run_disko
 prompt_bws
 setup_files
 install_nixos
+run_unlock
 cleanup
 prompt_reboot 
