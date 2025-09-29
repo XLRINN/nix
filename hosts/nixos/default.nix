@@ -3,6 +3,7 @@
 let
   user = "david";
   keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ];
+  sopswardenSecretsFile = "/var/lib/sopswarden/secrets.yaml";
 
   # Probe for available Framework modules to avoid version-specific errors and deprecations.
   fwMods = inputs.nixos-hardware.nixosModules or {};
@@ -241,6 +242,11 @@ in
       mode = "0600";
       path = "/home/${user}/.ssh/id_ed25519";
     };
+  };
+
+  sops = {
+    defaultSopsFile = lib.mkDefault sopswardenSecretsFile;
+    validateSopsFiles = lib.mkDefault false;
   };
 
   systemd.tmpfiles.rules = [

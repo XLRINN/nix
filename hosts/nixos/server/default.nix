@@ -3,6 +3,8 @@
 let
 	user = "david";
 	keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ];
+	lib = pkgs.lib;
+	sopsFile = "/var/lib/sopswarden/secrets.yaml";
 in
 {
 	imports = [
@@ -61,9 +63,9 @@ in
     wheelNeedsPassword = false;
   };
 
-  services.sopswarden = {
-    enable = true;
-    secrets = {
+	services.sopswarden = {
+		enable = true;
+		secrets = {
       "tailscale-auth-key" = {
         name = "Tailscale";
         field = "auth-key";
@@ -84,8 +86,8 @@ in
     };
   };
 
-  sops.secrets = {
-    "tailscale-auth-key" = {
+	sops.secrets = {
+		"tailscale-auth-key" = {
       owner = "root";
       group = "root";
       mode = "0600";
@@ -103,13 +105,18 @@ in
       mode = "0400";
       path = "/run/secrets/github-token";
     };
-    "github-ssh-key" = {
-      owner = "${user}";
-      group = "users";
-      mode = "0600";
-      path = "/home/${user}/.ssh/id_ed25519";
-    };
-  };
+		"github-ssh-key" = {
+			owner = "${user}";
+			group = "users";
+			mode = "0600";
+			path = "/home/${user}/.ssh/id_ed25519";
+		};
+	};
+
+	sops = {
+		defaultSopsFile = lib.mkDefault sopsFile;
+		validateSopsFiles = lib.mkDefault false;
+	};
 
 	systemd.tmpfiles.rules = [
 		"d /home/${user}/.ssh 0700 ${user} users -"
