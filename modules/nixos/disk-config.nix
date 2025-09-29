@@ -4,8 +4,11 @@ let
   lib' = if lib != null then lib else import <nixpkgs/lib> {};
   inherit (lib') mkDefault attrByPath;
   # Allow installer scripts to replace the %DISK% token. If untouched, fall back to autodetection.
-  rawDevice = "%DISK%";
-  scriptedDevice = if rawDevice != "%DISK%" then rawDevice else null;
+  rawDeviceBase = "%DISK%";
+  scriptedDevice =
+    if rawDeviceBase != "%DISK%"
+    then "/dev/" + rawDeviceBase
+    else null;
   # Detect virtio disks when qemu guest support is enabled (e.g., Proxmox)
   qemuGuestEnabled = attrByPath [ "services" "qemuGuest" "enable" ] false config
     || attrByPath [ "virtualisation" "qemuGuest" "enable" ] false config;

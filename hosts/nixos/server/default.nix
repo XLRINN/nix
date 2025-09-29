@@ -22,8 +22,24 @@ in
 			efi.canTouchEfiVariables = true;
 			timeout = 1;
 		};
-		initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-		kernelModules = [ "uinput" ];
+		initrd.availableKernelModules = [
+			"xhci_pci"
+			"ahci"
+			"nvme"
+			"usbhid"
+			"usb_storage"
+			"sd_mod"
+			"virtio_blk"
+			"virtio_pci"
+			"virtio_scsi"
+		];
+		initrd.kernelModules = [
+			"virtio_blk"
+			"virtio_console"
+			"virtio_pci"
+			"virtio_scsi"
+		];
+		kernelModules = [ "uinput" "virtio_balloon" "virtio_net" "virtio_rng" ];
 	};
 
 	networking = {
