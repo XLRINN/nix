@@ -171,6 +171,7 @@ in
       settings = {
         PasswordAuthentication = true;
         KbdInteractiveAuthentication = false;
+        PermitRootLogin = "prohibit-password";
       };
     };
 
@@ -186,7 +187,8 @@ in
       settings.Login = {
         HandleLidSwitchExternalPower = "hibernate";
       };
-    };
+      };
+    passwordAuthentication = true;
   };
 
   services."spice-vdagentd".enable = lib.mkDefault true;
