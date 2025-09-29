@@ -168,14 +168,10 @@
       in 
         nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = { 
-    inherit inputs; 
-    # secrets integration disabled for now; re-enable later
-    # secrets = sopswarden.secrets.${system};
-          };
+          specialArgs = { inherit inputs; };
           modules = [
             disko.nixosModules.disko
-    # sopswarden.nixosModules.default  # disabled for initial build
+            sopswarden.nixosModules.default
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;

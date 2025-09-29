@@ -1,16 +1,7 @@
-This directory can hold an age-encrypted Bitwarden Secrets Manager access token for bootstrapping new machines.
+This directory is available if you want to keep additional encrypted material
+(e.g., age-encrypted backups). The current configuration no longer uses a
+Bitwarden Secrets Manager access token; all secrets are retrieved directly from
+Bitwarden via `rbw` + `sopswarden` when you run the `unlock` helper.
 
-Files
-- bws.token.age: Encrypted with a passphrase via `age -p`. Safe to commit. Do NOT commit the passphrase.
-
-Bootstrap
-1) Prepare once (on a trusted machine):
-   - Run: `BWS_ACCESS_TOKEN='<token>' BWS_TOKEN_PASSPHRASE='<pass>' bash scripts/prepare-bws-token.sh`
-   - Commit `secrets/bws.token.age` to the repo.
-2) On fresh machines:
-   - Provide the passphrase once: `export BWS_TOKEN_PASSPHRASE='<pass>'`
-   - Run `unlock` (the wizard decrypts the token and fetches secrets automatically).
-
-Notes
-- You can also store the passphrase in a keychain or private env file per machine; never commit it.
-- To rotate: run `prepare-bws-token.sh` again with a new token; commit the new encrypted file.
+If you do not need repository-local encrypted blobs, you can leave this
+directory empty.

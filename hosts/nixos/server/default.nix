@@ -1,11 +1,11 @@
-{ config, pkgs, lib, inputs, ... }:
+{ pkgs, ... }:
 
 let
 	user = "david";
 	keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ];
 in
 {
-	imports = [ ../../shared ../../modules/nixos/disk-config-btrfs.nix ];
+	imports = [ ../../modules/nixos/disk-config-btrfs.nix ];
 
 	networking = {
 		hostName = "server"; # token replaced by apply script
@@ -25,10 +25,10 @@ in
 		};
 	};
 
-	users.users = {
-		${user} = {
-			isNormalUser = true;
-			extraGroups = [ "wheel" "networkmanager" ];
+  users.users = {
+    ${user} = {
+      isNormalUser = true;
+      extraGroups = [ "wheel" "networkmanager" ];
 			openssh.authorizedKeys.keys = keys;
 			initialPassword = "6!y2c87T"; # rotate post-install
 		};
@@ -41,9 +41,47 @@ in
 	security.sudo.enable = true;
 	security.sudo.extraRules = [{ groups = [ "wheel" ]; commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }]; }];
 
-	environment.systemPackages = with pkgs; [ gitAndTools.gitFull neovim htop btop ];
+	services.sopswarden = {
+		enable = true;
+		secrets = {
+			"tailscale-auth-key" = {
+				name = "Tailscale";
+				field = "auth-key";
+				path = "/run/secrets/tailscale-auth-key";
+				owner = "root";
+				group = "root";
+				mode = "0600";
+			};
+			"openrouter-api-key" = {
+				name = "OpenRouter API";
+				field = "api-key";
+				path = "/run/secrets/openrouter-api-key";
+				owner = "${user}";
+				group = "users";
+				mode = "0400";
+			};
+			"github-token" = {
+				name = "GitHub Token";
+				field = "token";
+				path = "/run/secrets/github-token";
+				owner = "${user}";
+				group = "users";
+				mode = "0400";
+			};
+			"github-ssh-key" = {
+				name = "GitHub SSH Key";
+				field = "private-key";
+				path = "/home/${user}/.ssh/id_ed25519";
+				owner = "${user}";
+				group = "users";
+				mode = "0600";
+			};
+		};
+	};
 
-	programs.zsh.enable = true;
+	systemd.tmpfiles.rules = [
+		"d /home/${user}/.ssh 0700 ${user} users -"
+	];
 
 	services.getty.autologinUser = null;
 	system.stateVersion = "23.11";

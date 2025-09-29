@@ -191,6 +191,48 @@ in
 
   services."spice-vdagentd".enable = lib.mkDefault true;
 
+  services.sopswarden = {
+    enable = true;
+    secrets = {
+      "tailscale-auth-key" = {
+        name = "Tailscale";
+        field = "auth-key";
+        path = "/run/secrets/tailscale-auth-key";
+        owner = "root";
+        group = "root";
+        mode = "0600";
+      };
+      "openrouter-api-key" = {
+        name = "OpenRouter API";
+        field = "api-key";
+        path = "/run/secrets/openrouter-api-key";
+        owner = "${user}";
+        group = "users";
+        mode = "0400";
+      };
+      "github-token" = {
+        name = "github";
+        field = "token";
+        path = "/run/secrets/github-token";
+        owner = "${user}";
+        group = "users";
+        mode = "0400";
+      };
+      "github-ssh-key" = {
+        name = "github";
+        field = "private-key";
+        path = "/home/${user}/.ssh/id_ed25519";
+        owner = "${user}";
+        group = "users";
+        mode = "0600";
+      };
+    };
+  };
+
+  systemd.tmpfiles.rules = [
+    "d /home/${user}/.ssh 0700 ${user} users -"
+  ];
+
   fonts.packages = with pkgs; [
       noto-fonts
       noto-fonts-cjk-sans

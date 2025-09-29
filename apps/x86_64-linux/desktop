@@ -53,30 +53,6 @@ run_disko() {
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
-prompt_bws() {
-  # Skip the Bitwarden Secrets Manager prompt unless explicitly enabled.
-  if [[ "${BWS_PROMPT:-0}" != "1" ]]; then
-    return
-  fi
-  # Ask once during install so the target can bootstrap secrets on first boot
-  if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
-    echo -e "${CYAN}Optional: Provide Bitwarden Secrets Manager access token to pre-provision secrets (press Enter to skip).${NC}"
-    read -r -p "BWS access token: " BWS_ACCESS_TOKEN || true
-  fi
-  if [ -n "${BWS_ACCESS_TOKEN:-}" ] && [ -z "${BWS_TOKEN_PASSPHRASE:-}" ]; then
-    echo -e "${CYAN}Optional: Set a passphrase to store the token encrypted in the repo (secrets/bws.token.age).${NC}"
-    echo -e "${CYAN}Leave blank to store token in /home/david/.secrets/bws.env instead.${NC}"
-    read -r -s -p "Passphrase (optional): " BWS_TOKEN_PASSPHRASE || true; echo
-    if [ -n "${BWS_TOKEN_PASSPHRASE:-}" ]; then
-      read -r -s -p "Confirm passphrase: " _CONFIRM || true; echo
-      if [ "${BWS_TOKEN_PASSPHRASE}" != "${_CONFIRM}" ]; then
-        echo -e "${YELLOW}Passphrases did not match; skipping encryption (will use ~/.secrets/bws.env).${NC}"
-        unset BWS_TOKEN_PASSPHRASE
-      fi
-    fi
-  fi
-}
-
 setup_files() {
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
@@ -115,23 +91,6 @@ EOF
     chmod 600 /mnt/home/david/.gitconfig
   fi
 
-  # Optionally pre-provision Bitwarden Secrets Manager token for first boot
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    echo -e "${CYAN}Provisioning BWS token for first boot...${NC}"
-    # Prefer encrypted token in repo using age via nix shell; fallback to private env file
-    if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
-      chroot /mnt /bin/sh -lc "cd /home/david/nix && nix shell nixpkgs#age -c BWS_ACCESS_TOKEN='${BWS_ACCESS_TOKEN}' BWS_TOKEN_PASSPHRASE='${BWS_TOKEN_PASSPHRASE}' bash scripts/prepare-bws-token.sh" || {
-        echo -e "${YELLOW}Failed to create encrypted token; falling back to ~/.secrets/bws.env${NC}"
-        mkdir -p /mnt/home/david/.secrets
-        printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
-        chmod 600 /mnt/home/david/.secrets/bws.env
-      }
-    else
-      mkdir -p /mnt/home/david/.secrets
-      printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
-      chmod 600 /mnt/home/david/.secrets/bws.env
-    fi
-  fi
 }
 
 install_nixos() {
@@ -183,7 +142,6 @@ check_installer
 download_config
 run_apply
 run_disko
-prompt_bws
 setup_files
 install_nixos
 run_unlock

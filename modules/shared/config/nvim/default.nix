@@ -234,21 +234,6 @@ pkgs.writeTextFile rec {
     vim.opt.number = true
     vim.opt.relativenumber = true
 
-    -- Load API keys from environment file if available
-    local api_keys_file = vim.fn.expand("~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env")
-    if vim.fn.filereadable(api_keys_file) == 1 then
-      for line in io.lines(api_keys_file) do
-        if line:match("^[A-Z_]*=") then
-          local key, value = line:match("^([^=]*)=(.*)$")
-          if key and value then
-            -- Remove quotes if present
-            value = value:gsub('^"(.*)"$', '%1')
-            vim.env[key] = value
-          end
-        end
-      end
-    end
-
     -- Load API keys from sopswarden secrets if available
     local secret_files = {
       { env = "OPENROUTER_API_KEY", file = "/run/secrets/openrouter-api-key" },

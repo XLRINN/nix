@@ -23,7 +23,8 @@ Create (or update) the following Bitwarden items (names must match; custom field
 |---------|-----------|--------------|-------|
 | Tailscale Auth | `Tailscale` | `auth-key` | Use a reusable AUTH key with --ssh if desired |
 | OpenRouter API | `OpenRouter API` | `api-key` | Single key covers multiple model providers via OpenRouter |
-| GitHub Token | `GitHub Token` | `token` | PAT with minimal required scopes |
+| GitHub Token | `github` | `token` | PAT with minimal required scopes |
+| GitHub SSH Key | `github` | `private-key` | Private key used for repo pushes |
 
 OpenAI direct keys are optional when using OpenRouter.
 
@@ -92,47 +93,32 @@ With OpenRouter you typically only need `openrouter-api-key`. After sync and reb
 
 ## File Structure (Active Parts)
 
-```text
-modules/shared/config/
-├── api-keys/
-│   ├── default.nix       # Nix configuration for API keys
-│   └── keys.env          # Generated environment file (gitignored)
-├── tailscale/
-│   ├── tailscale.nix     # Tailscale configuration
-│   └── key               # Auth key from Bitwarden (gitignored)
-└── avante/
-    └── default.nix       # Avante/Neovim configuration
-
-scripts/                  # (Legacy helper scripts retained but not required)
-```
+Secrets declared under `services.sopswarden.secrets` land in `/run/secrets/…`. 
+Refer to `hosts/*/default.nix` for the exact paths each host expects.
 
 ## Security Notes
 
-- Secret files (`keys.env`, `tailscale/key`) are gitignored
-- Files have restrictive permissions (600)
-- Bitwarden session expires and needs re-authentication
-- Secrets are only stored locally, not in the Nix store
+- Secrets live in `/run/secrets` with restrictive permissions managed by sopswarden
+- Nothing sensitive is committed to git or stored in the Nix store
+- Bitwarden sessions expire regularly; re-run `unlock` when prompted
 
 ## Troubleshooting
 
-### Bitwarden Session Expired
+-### Bitwarden Session Expired
 
 ```bash
-# Re-authenticate
-bw-unlock
-
-# Or run the apply script again
-nix run .#apply
+# Re-authenticate and resync
+rbw-login
+rbw-unlock
+sops-sync
 ```
 
-### Missing Secrets
+-### Missing Secrets
 
 ```bash
-# Check what's available in Bitwarden
-bw list items --session $(cat ~/.cache/bw-session)
-
-# Refresh from Bitwarden
-refresh-secrets
+# Ensure the item exists and roughly matches the expected name/field in services.sopswarden.secrets
+rbw list | grep -i "tailscale"
+sops-sync
 ```
 
 ### Tailscale Not Connecting
