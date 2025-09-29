@@ -39,7 +39,10 @@ in
 	};
 
 	security.sudo.enable = true;
-	security.sudo.extraRules = [{ groups = [ "wheel" ]; commands = [{ command = "ALL"; options = [ "NOPASSWD" ]; }]; }];
+  security.sudo = {
+    enable = true;
+    wheelNeedsPassword = false;
+  };
 
 	services.sopswarden = {
 		enable = true;
