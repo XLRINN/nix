@@ -136,6 +136,10 @@ in
 		validateSopsFiles = lib.mkDefault false;
 	};
 
+	home-manager.users.${user} = {
+		programs.alacritty.enable = lib.mkForce false;
+	};
+
 	systemd.tmpfiles.rules = [
 		"d /home/${user}/.ssh 0700 ${user} users -"
 	];
