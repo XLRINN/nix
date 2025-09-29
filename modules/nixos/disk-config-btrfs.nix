@@ -1,11 +1,11 @@
-{ lib, config, ... }:
+{ lib ? null, config ? {}, ... }:
 
 let
-  inherit (lib) mkDefault;
-  defaultDevice =
-    if (config.services.qemuGuest.enable or false) || (config.virtualisation.qemuGuest.enable or false)
-    then "/dev/vda"
-    else "/dev/sda";
+  lib' = if lib != null then lib else import <nixpkgs/lib> {};
+  inherit (lib') mkDefault attrByPath;
+  qemuGuestEnabled = attrByPath [ "services" "qemuGuest" "enable" ] false config
+    || attrByPath [ "virtualisation" "qemuGuest" "enable" ] false config;
+  defaultDevice = if qemuGuestEnabled then "/dev/vda" else "/dev/sda";
 in
 {
   disko.enableConfig = true;

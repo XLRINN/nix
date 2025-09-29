@@ -1,12 +1,12 @@
-{ lib, config, ... }:
+{ lib ? null, config ? {}, ... }:
 
 let
-  inherit (lib) mkDefault;
-  # Default to virtio disk when the QEMU guest agent is enabled (e.g., Proxmox)
-  defaultDevice =
-    if (config.services.qemuGuest.enable or false) || (config.virtualisation.qemuGuest.enable or false)
-    then "/dev/vda"
-    else "/dev/sda";
+  lib' = if lib != null then lib else import <nixpkgs/lib> {};
+  inherit (lib') mkDefault attrByPath;
+  # Detect virtio disks when qemu guest support is enabled (e.g., Proxmox)
+  qemuGuestEnabled = attrByPath [ "services" "qemuGuest" "enable" ] false config
+    || attrByPath [ "virtualisation" "qemuGuest" "enable" ] false config;
+  defaultDevice = if qemuGuestEnabled then "/dev/vda" else "/dev/sda";
 in
 {
   disko.enableConfig = true;
