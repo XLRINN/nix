@@ -59,7 +59,8 @@ setup_files() {
   if [ -d "/mnt/home/david/nix" ]; then
     rm -rf /mnt/home/david/nix
   fi
-  git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  CLONE_BRANCH=${NIX_BRANCH:-server}
+  git clone --origin nyx --depth 1 --branch "$CLONE_BRANCH" https://github.com/xlrinn/nix.git /mnt/home/david/nix
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
   git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
