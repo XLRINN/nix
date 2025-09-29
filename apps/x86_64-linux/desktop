@@ -25,7 +25,7 @@ cleanup() {
 }
 
 download_config() {
-  # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'testing'
+  # Allow pinning a branch, tag, or commit SHA via NIX_REF (default: testing)
   NIX_REF=${NIX_REF:-testing}
   curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
   unzip -q nixos-config-main.zip
@@ -64,7 +64,7 @@ setup_files() {
   if [ -d "/mnt/home/david/nix" ]; then
     rm -rf /mnt/home/david/nix
   fi
-  git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  git clone --origin nyx --depth 1 --branch "${NIX_BRANCH:-master}" https://github.com/xlrinn/nix.git /mnt/home/david/nix
   # Minimal identity passthrough (optional)
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
@@ -79,7 +79,6 @@ setup_files() {
 
   # Seed per-user git config so pushes are ready after first boot
   if [ -f /tmp/git_name.txt ] && [ -f /tmp/git_email.txt ]; then
-    mkdir -p /mnt/home/david
     cat > /mnt/home/david/.gitconfig <<EOF
 [user]
     name = $(cat /tmp/git_name.txt)
@@ -108,6 +107,10 @@ install_nixos() {
       exit 1
       ;;
   esac
+
+  if [ -n "${NIX_PROFILE:-}" ]; then
+    FLAKE_TARGET="${NIX_PROFILE}-${FLAKE_TARGET}"
+  fi
 
   nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1 --no-write-lock-file --no-root-passwd
   chmod -R 775 /mnt/etc/nixos
