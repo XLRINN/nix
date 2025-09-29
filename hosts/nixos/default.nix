@@ -189,7 +189,7 @@ in
     };
   };
 
-  services."spice-vdagent".enable = lib.mkDefault true;
+  services."spice-vdagentd".enable = lib.mkDefault true;
 
   fonts.packages = with pkgs; [
       noto-fonts
