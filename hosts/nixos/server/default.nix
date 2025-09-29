@@ -42,7 +42,6 @@ in
 		};
 	};
 
-	security.sudo.enable = true;
   security.sudo = {
     enable = true;
     wheelNeedsPassword = false;
