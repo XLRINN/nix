@@ -11,6 +11,19 @@ in
 		../../../modules/shared
 	];
 
+	boot = {
+		loader = {
+			systemd-boot = {
+				enable = true;
+				configurationLimit = 10;
+			};
+			efi.canTouchEfiVariables = true;
+			timeout = 1;
+		};
+		initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+		kernelModules = [ "uinput" ];
+	};
+
 	networking = {
 		hostName = "server"; # token replaced by apply script
 		useDHCP = true;
