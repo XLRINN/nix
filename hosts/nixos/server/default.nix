@@ -45,6 +45,8 @@ in
 		};
 	};
 
+	services.qemuGuest.enable = lib.mkDefault true;
+
   users.users = {
     ${user} = {
       isNormalUser = true;
