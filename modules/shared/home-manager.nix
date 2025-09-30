@@ -6,6 +6,7 @@ let
   email = "xlrin.morgan@gmail.com"; 
 in
 {
+  home.stateVersion = "23.11";
   home.file.".config/rbw/config.json" = {
     text = builtins.toJSON {
       email = email;
