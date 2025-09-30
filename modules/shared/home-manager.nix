@@ -13,7 +13,9 @@ in
       lock_timeout = 43200;
       sync_interval = 3600;
     } + "\n";
-    mode = "0600";
+    permissions = {
+      mode = "0600";
+    };
   };
 
   programs = {
