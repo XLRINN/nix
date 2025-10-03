@@ -19,10 +19,9 @@ in
 
 	services.openssh = {
 		enable = true;
-		settings = {
-			PasswordAuthentication = true;
-			KbdInteractiveAuthentication = false;
-		};
+		# Use canonical option names to avoid evaluation errors
+		passwordAuthentication = true;
+		keyboardInteractiveAuthentication = false;
 	};
 
 	users.users = {

@@ -24,7 +24,7 @@ in
   echo "Available keys: OPENAI_API_KEY, GITHUB_TOKEN"
       else
         echo "❌ No API keys file found at ${apiKeysFile}"
-        echo "Run: fetch-secrets.sh to populate keys from Bitwarden"
+    echo "Run: secrets-wizard.sh to populate keys from Bitwarden (preferred)"
       fi
     '')
     
@@ -45,9 +45,9 @@ in
     
     (writeScriptBin "refresh-secrets" ''
       #!/bin/bash
-      # Refresh all secrets from Bitwarden
+      # Refresh all secrets from Bitwarden (uses secrets-wizard.sh)
       echo "Refreshing secrets from Bitwarden..."
-      "${pkgs.bash}/bin/bash" "/home/${user}/.local/share/src/nixos-config/scripts/fetch-secrets.sh"
+      "${pkgs.bash}/bin/bash" "/home/${user}/.local/share/src/nixos-config/scripts/secrets-wizard.sh"
     '')
   ];
   

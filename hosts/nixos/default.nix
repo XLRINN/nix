@@ -168,10 +168,9 @@ in
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
     openssh = {
       enable = true;
-      settings = {
-        PasswordAuthentication = true;
-        KbdInteractiveAuthentication = false;
-      };
+      # Use canonical option names (lowercase) instead of the raw settings map
+      passwordAuthentication = true;
+      keyboardInteractiveAuthentication = false;
     };
 
     qemuGuest.enable = true;
