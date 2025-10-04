@@ -20,6 +20,19 @@ check_installer() {
   fi
 }
 
+# Require UEFI for systemd-boot based installs. In Proxmox,
+# set Firmware to OVMF (UEFI) and add an EFI Disk. See:
+# https://nixos.wiki/wiki/Proxmox_Virtual_Environment
+check_uefi_or_exit() {
+  if [ ! -d /sys/firmware/efi ]; then
+    echo -e "${YELLOW}UEFI firmware not detected.${NC}"
+    echo -e "${YELLOW}This installer targets UEFI (systemd-boot).${NC}"
+    echo -e "${CYAN}In Proxmox, set VM Firmware: 'OVMF (UEFI)' and add an EFI Disk, then reboot the installer.${NC}"
+    echo -e "${CYAN}Docs: https://nixos.wiki/wiki/Proxmox_Virtual_Environment${NC}"
+    exit 1
+  fi
+}
+
 cleanup() {
   rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-* nyx-*
 }
@@ -180,6 +193,7 @@ prompt_reboot() {
 
 cleanup
 check_installer
+check_uefi_or_exit
 download_config
 run_apply
 run_disko

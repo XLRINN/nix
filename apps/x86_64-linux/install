@@ -27,6 +27,19 @@ check_installer() {
   fi
 }
 
+# Ensure VM firmware uses UEFI when installing with systemd-boot.
+# For Proxmox, set: Options -> BIOS: OVMF (UEFI), add an EFI Disk (Storage: local-lvm or local),
+# and use VirtIO SCSI (single) or SATA for the disk. See: https://nixos.wiki/wiki/Proxmox_Virtual_Environment
+check_uefi_or_exit() {
+  if [ ! -d /sys/firmware/efi ]; then
+    echo -e "${YELLOW}UEFI firmware not detected.${NC}"
+    echo -e "${YELLOW}This installer is configured for UEFI (systemd-boot).${NC}"
+    echo -e "${CYAN}In Proxmox, set Firmware to 'OVMF (UEFI)' and add an EFI Disk, then boot the NixOS ISO again.${NC}"
+    echo -e "${CYAN}Docs: https://nixos.wiki/wiki/Proxmox_Virtual_Environment${NC}"
+    exit 1
+  fi
+}
+
 cleanup() {
   progress "🧹 Cleaning up temporary files..."
   rm -rf nixos-config-main.zip nix-* nyx-*
@@ -200,6 +213,7 @@ auto_reboot() {
 # --- Main execution flow ---
 cleanup
 check_installer
+check_uefi_or_exit
 download_config
 run_apply
 run_disko

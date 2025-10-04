@@ -10,6 +10,11 @@ _: {
         content = {
           type = "gpt";
           partitions = {
+            # Small BIOS boot partition so images work on BIOS and UEFI
+            bios = {
+              type = "EF02"; # BIOS boot partition for GRUB on GPT
+              size = "1M";
+            };
             ESP = {
               type = "EF00";
               size = "500M";
