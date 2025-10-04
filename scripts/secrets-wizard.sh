@@ -94,6 +94,86 @@ verify_rbw() {
   fi
 }
 
+verify_bw() {
+  if ! have bw; then
+    say "${YELLOW}bitwarden-cli (bw) not found; skipping bw unlock path.${NC}"
+    return 1
+  fi
+}
+
+step_bw_login_unlock() {
+  say "${BLUE}Step 1:${NC} bw login/unlock (interactive; prompts for master password and 2FA)"
+  # Login (no-op if already logged in)
+  if ! bw login; then
+    say "${YELLOW}bw login returned non-zero (may already be logged in). Continuing.${NC}"
+  fi
+  # Unlock and capture session token
+  local session
+  if ! session=$(bw unlock --raw); then
+    say "${RED}bw unlock failed. Check your master password/2FA and try again.${NC}"
+    exit 1
+  fi
+  export BW_SESSION="$session"
+  mkdir -p "$HOME/.cache"
+  printf '%s' "$session" > "$HOME/.cache/bw-session"
+  bw sync >/dev/null 2>&1 || true
+}
+
+step_bw_envfile() {
+  say "${BLUE}Step 2:${NC} Generate per-user env file (keys.env) via bw"
+  if ! have jq; then
+    say "${YELLOW}jq not found; proceeding without JSON parsing (password-only fetch).${NC}"
+  fi
+  local api_config_dir="$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys"
+  mkdir -p "$api_config_dir"
+
+  get_from_bw_password() {
+    local name="$1"
+    bw get password "$name" 2>/dev/null || true
+  }
+  get_from_bw_item_field() {
+    local name="$1" field="$2"
+    if have jq; then
+      bw get item "$name" 2>/dev/null | jq -r --arg F "$field" '
+        (.fields[]? | select((.name|ascii_downcase)==($F|ascii_downcase)) | .value) //
+        (.login.password // empty) //
+        (.notes // empty)
+      ' | awk 'NF{print; exit}'
+    else
+      printf ''
+    fi
+  }
+
+  # Try password first, then fall back to common field names or notes
+  local openai_key openrouter_key github_token
+  openai_key=$(get_from_bw_password "OpenAI")
+  if [ -z "${openai_key//[\n\r\t\ ]/}" ]; then
+    openai_key=$(get_from_bw_item_field "OpenAI" "OPENAI_API_KEY")
+  fi
+
+  openrouter_key=$(get_from_bw_password "openrouter")
+  if [ -z "${openrouter_key//[\n\r\t\ ]/}" ]; then
+    openrouter_key=$(get_from_bw_item_field "openrouter" "OPENROUTER_API_KEY")
+  fi
+
+  github_token=$(get_from_bw_password "GitHub Token")
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then
+    github_token=$(get_from_bw_password "github-token")
+  fi
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then
+    github_token=$(get_from_bw_item_field "GitHub Token" "GITHUB_TOKEN")
+  fi
+
+  cat > "$api_config_dir/keys.env" << EOF
+# API Keys fetched from Bitwarden (bw)
+# This file is gitignored and regenerated
+OPENAI_API_KEY="${openai_key}"
+OPENROUTER_API_KEY="${openrouter_key}"
+GITHUB_TOKEN="${github_token}"
+EOF
+  chmod 600 "$api_config_dir/keys.env"
+}
+
 configure_rbw() {
   # Ensure rbw has at least 'email' configured. Support optional base/identity URLs via env.
   local os="$(uname -s)"
@@ -185,33 +265,63 @@ step_macos_envfile() {
   mkdir -p "$api_config_dir"
 
   # Helper: get value for an item, prefer custom field, fallback to password
-  # Items are stored as notes under the 'nyx' folder. We fetch from that folder.
+  # Items are expected under a folder (default: 'nyx'). You can override with RBW_FOLDER.
   get_secret() {
     local item="$1"
-    local val
-    # First try the password field within the nyx folder
-    val=$(rbw get --folder "nyx" "$item" 2>/dev/null || true)
+    local val folder
+    folder="${RBW_FOLDER:-nyx}"
+    # First try the password field within the configured folder
+    val=$(rbw get --folder "$folder" "$item" 2>/dev/null || true)
     # If empty, try including notes; pick first non-empty line
     if [ -z "${val//[\n\r\t\ ]/}" ]; then
-      val=$(rbw get --full --folder "nyx" "$item" 2>/dev/null || true)
+      val=$(rbw get --full --folder "$folder" "$item" 2>/dev/null || true)
+    fi
+    # If still empty, fall back to a global search (no folder restriction)
+    if [ -z "${val//[\n\r\t\ ]/}" ]; then
+      val=$(rbw get "$item" 2>/dev/null || true)
+      if [ -z "${val//[\n\r\t\ ]/}" ]; then
+        val=$(rbw get --full "$item" 2>/dev/null || true)
+      fi
     fi
     # Trim to first non-empty line
     val=$(printf "%s" "$val" | awk 'NF{print; exit}')
     printf "%s" "$val"
   }
 
-  # Fetch secrets
+  # Fetch secrets with multiple common names
   # OpenAI for Codex
-  openai_key=$(get_secret "OpenAI")
+  openai_key=$(get_secret "OPENAI_API_KEY")
+  if [ -z "${openai_key//[\n\r\t\ ]/}" ]; then openai_key=$(get_secret "OpenAI"); fi
+  if [ -z "${openai_key//[\n\r\t\ ]/}" ]; then openai_key=$(get_secret "openai"); fi
+  if [ -z "${openai_key//[\n\r\t\ ]/}" ]; then openai_key=$(get_secret "OpenAI API"); fi
   # OpenRouter for Avante
-  openrouter_key=$(get_secret "openrouter")
+  openrouter_key=$(get_secret "OPENROUTER_API_KEY")
+  if [ -z "${openrouter_key//[\n\r\t\ ]/}" ]; then openrouter_key=$(get_secret "openrouter"); fi
+  if [ -z "${openrouter_key//[\n\r\t\ ]/}" ]; then openrouter_key=$(get_secret "OpenRouter"); fi
+  if [ -z "${openrouter_key//[\n\r\t\ ]/}" ]; then openrouter_key=$(get_secret "OpenRouter API"); fi
+  # GitHub PAT (accept many common names)
+  github_token=$(get_secret "GITHUB_TOKEN")
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then github_token=$(get_secret "GitHub Token"); fi
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then github_token=$(get_secret "github-token"); fi
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then github_token=$(get_secret "GitHub"); fi
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then github_token=$(get_secret "github"); fi
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then github_token=$(get_secret "gh-token"); fi
+  if [ -z "${github_token//[\n\r\t\ ]/}" ]; then github_token=$(get_secret "GH_TOKEN"); fi
 
   # Write keys.env
+  # Compute mirrored values for convenience
+  local out_openai="$openai_key"
+  if [ -z "${out_openai//[\n\r\t\ ]/}" ] && [ -n "${openrouter_key//[\n\r\t\ ]/}" ]; then
+    out_openai="$openrouter_key"
+  fi
+
   cat > "$api_config_dir/keys.env" << EOF
 # API Keys fetched from Bitwarden via rbw
 # This file is gitignored and regenerated
-OPENAI_API_KEY="$openai_key"
+OPENAI_API_KEY="$out_openai"
 OPENROUTER_API_KEY="$openrouter_key"
+GITHUB_TOKEN="${github_token}"
+GH_TOKEN="${github_token}"
 EOF
   chmod 600 "$api_config_dir/keys.env"
 
@@ -257,15 +367,31 @@ step_bws_envfile() {
     return 1
   fi
 
-  # Pull keys by common names (support your naming: OpenAI, openrouter)
-  local openai_key openrouter_key
+  # Pull keys by common names (support your naming: OpenAI, OpenAI API; openrouter, OpenRouter API; GitHub Token)
+  local openai_key openrouter_key github_token
   openai_key=$(printf '%s' "$json" | jq -r '[ .[] | select((.key=="OPENAI_API_KEY") or (.key=="OpenAI") or (.key=="openai")) | .value ][0]')
+  if [ -z "${openai_key//[\n\r\t\ ]/}" ]; then
+    openai_key=$(printf '%s' "$json" | jq -r '[ .[] | select((.key=="OpenAI API")) | .value ][0]')
+  fi
   openrouter_key=$(printf '%s' "$json" | jq -r '[ .[] | select((.key=="OPENROUTER_API_KEY") or (.key=="openrouter") or (.key=="OpenRouter")) | .value ][0]')
+  if [ -z "${openrouter_key//[\n\r\t\ ]/}" ]; then
+    openrouter_key=$(printf '%s' "$json" | jq -r '[ .[] | select((.key=="OpenRouter API")) | .value ][0]')
+  fi
+  github_token=$(printf '%s' "$json" | jq -r '[ .[] | select((.key=="GITHUB_TOKEN") or (.key=="github-token") or (.key=="GitHub Token") or (.key=="GitHub") or (.key=="github") or (.key=="gh-token") or (.key=="GH_TOKEN")) | .value ][0]')
+
+  # Compute mirrored values for convenience
+  local out_openai
+  out_openai="$openai_key"
+  if [ -z "${out_openai//[\n\r\t\ ]/}" ] && [ -n "${openrouter_key//[\n\r\t\ ]/}" ]; then
+    out_openai="$openrouter_key"
+  fi
 
   cat > "$api_config_dir/keys.env" << EOF
 # API Keys fetched from Bitwarden Secrets Manager (bws)
-OPENAI_API_KEY="${openai_key:-}"
+OPENAI_API_KEY="${out_openai:-}"
 OPENROUTER_API_KEY="${openrouter_key:-}"
+GITHUB_TOKEN="${github_token:-}"
+GH_TOKEN="${github_token:-}"
 EOF
   chmod 600 "$api_config_dir/keys.env"
 }
@@ -274,8 +400,8 @@ verify_envfile() {
   local f="$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env"
   say "${BLUE}Verify:${NC} checking keys at $f"
   if [ -f "$f" ]; then
-    grep -E 'OPENAI_API_KEY|OPENROUTER_API_KEY' -n "$f" || true
-    if grep -qE 'OPENAI_API_KEY=""|OPENROUTER_API_KEY=""' "$f"; then
+    grep -E 'OPENAI_API_KEY|OPENROUTER_API_KEY|GITHUB_TOKEN' -n "$f" || true
+    if grep -qE 'OPENAI_API_KEY=""|OPENROUTER_API_KEY=""|GITHUB_TOKEN=""' "$f"; then
       say "${YELLOW}keys.env written but one or more values are empty. Check Bitwarden items in the 'nyx' folder (OpenAI, openrouter).${NC}"
     else
       say "${GREEN}✓ keys.env present. Open a new shell or run 'load-api-keys'.${NC}"
@@ -323,9 +449,22 @@ main() {
   # Prefer Bitwarden Secrets Manager (bws) if an access token is present
   ensure_bws || true
   ensure_token_from_age || true
-  if [ -n "${BWS_ACCESS_TOKEN:-}" ] && ( have bws || have_docker ); then
+  if [ "${FORCE_BW:-0}" != "1" ] && [ -n "${BWS_ACCESS_TOKEN:-}" ] && ( have bws || have_docker ); then
     say "${BLUE}Detected BWS access token; using Secrets Manager for fetching keys.${NC}"
-    step_bws_envfile || true
+    if step_bws_envfile; then
+      verify_envfile
+      post_notes_macos
+      say "\n${GREEN}All done.${NC}"
+      exit 0
+    else
+      say "${YELLOW}Falling back to Bitwarden CLI unlock (bw).${NC}"
+    fi
+  fi
+
+  # Prefer the official bw unlocker if available or if forced
+  if verify_bw; then
+    step_bw_login_unlock
+    step_bw_envfile
     verify_envfile
     post_notes_macos
     say "\n${GREEN}All done.${NC}"

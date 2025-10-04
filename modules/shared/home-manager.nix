@@ -329,15 +329,20 @@ in
           },
           { "yetone/avante.nvim",
             event = "VeryLazy",
-            opts = {
-              provider = "openai",
-              openai = {
-                endpoint = "https://openrouter.ai/api/v1",
-                model = "openai/gpt-4o",
-                temperature = 0,
-              },
-              behaviour = { auto_suggestions = true },
-            },
+            config = function()
+              local env = vim.env or {}
+              local key = env.OPENAI_API_KEY or env.OPENROUTER_API_KEY or ""
+              require("avante").setup({
+                provider = "openai",
+                openai = {
+                  api_key = key,
+                  endpoint = "https://openrouter.ai/api/v1",
+                  model = "openai/gpt-4o",
+                  temperature = 0,
+                },
+                behaviour = { auto_suggestions = true },
+              })
+            end,
             dependencies = {
               "nvim-lua/plenary.nvim",
               "MunifTanjim/nui.nvim",
@@ -391,7 +396,7 @@ in
         bw-items = "bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name)\"' | sort";
         load-api-keys = "test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set -a && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set +a && echo '✓ API keys loaded' || echo '❌ No API keys file found'";
         refresh-secrets = "nix run .#apply --refresh";
-        check-keys = "echo 'Checking API keys...'; test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && { test -n \"$OPENROUTER_API_KEY\" && echo '✓ OpenRouter' || echo '❌ OpenRouter'; test -n \"$GITHUB_TOKEN\" && echo '✓ GitHub' || echo '❌ GitHub'; } || echo '❌ No keys file'";
+        check-keys = "echo 'Checking API keys...'; test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && { test -n \"$OPENROUTER_API_KEY\" && echo '✓ OpenRouter' || echo '❌ OpenRouter'; test -n \"$GITHUB_TOKEN$GH_TOKEN\" && echo '✓ GitHub' || echo '❌ GitHub'; } || echo '❌ No keys file'";
         
         # Sopswarden (SOPS + Bitwarden) shortcuts
         sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden...'; rbw sync && sopswarden-sync && echo '✓ Secrets synchronized'";
@@ -422,7 +427,8 @@ in
         fi
 
         # Provide a lightweight 'bw' shim if bitwarden-cli is not installed but rbw is.
-        if ! command -v bw >/dev/null 2>&1 && command -v rbw >/dev/null 2>&1; then
+        # Set DISABLE_BW_SHIM=1 to skip defining this function.
+        if [[ "''${DISABLE_BW_SHIM:-0}" != "1" ]] && ! command -v bw >/dev/null 2>&1 && command -v rbw >/dev/null 2>&1; then
           bw() {
             # Simple translation layer for common commands
             case "$1" in
@@ -468,7 +474,7 @@ in
                 ;;
             esac
           }
-          export -f bw || true
+          # No need to export the function; avoids odd prints under zsh
         fi
 
         # Load API keys from Bitwarden-sourced file if available

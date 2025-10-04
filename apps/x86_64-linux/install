@@ -70,6 +70,25 @@ download_config() {
   fi
 }
 
+preflight_secrets() {
+  progress "🔐 Checking Secrets Manager access (optional)..."
+  (
+    set -e
+    cd "$SRC_DIR"
+    # If an encrypted token exists or a token/env is present, try to run the wizard now
+    if [[ -f secrets/bws.token.age || -n "${BWS_ACCESS_TOKEN:-}" ]]; then
+      progress "Running secrets wizard in live environment (this may prompt)."
+      # Ensure age/jq are available for decryption and JSON parsing
+      if command -v nix >/dev/null 2>&1; then
+        nix shell nixpkgs#age nixpkgs#jq -c -- bash scripts/secrets-wizard.sh || true
+      else
+        bash scripts/secrets-wizard.sh || true
+      fi
+    else
+      progress "No BWS token or encrypted token found; skipping."
+    fi
+  ) || progress "${YELLOW}Secrets preflight skipped/failed (will still work after reboot).${NC}"
+}
 run_apply() {
   progress "⚙️  Applying configuration (interactive)..."
   chmod +x "${SRC_DIR}/apps/x86_64-linux/apply"
@@ -216,6 +235,7 @@ check_installer
 check_uefi_or_exit
 download_config
 run_apply
+preflight_secrets
 run_disko
 verify_disko
 setup_files

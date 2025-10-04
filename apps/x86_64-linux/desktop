@@ -52,6 +52,23 @@ download_config() {
   echo -e "${GREEN}✓ Configuration downloaded and extracted${NC}"
 }
 
+preflight_secrets() {
+  echo -e "${CYAN}Checking Secrets Manager access (optional)...${NC}"
+  (
+    set -e
+    # If an encrypted token exists or a token/env is present, try to run the wizard now
+    if [[ -f secrets/bws.token.age || -n "${BWS_ACCESS_TOKEN:-}" ]]; then
+      echo -e "${CYAN}Running secrets wizard in live environment (this may prompt).${NC}"
+      if command -v nix >/dev/null 2>&1; then
+        nix shell nixpkgs#age nixpkgs#jq -c -- bash scripts/secrets-wizard.sh || true
+      else
+        bash scripts/secrets-wizard.sh || true
+      fi
+    else
+      echo -e "${YELLOW}No BWS token or encrypted token found; skipping.${NC}"
+    fi
+  ) || echo -e "${YELLOW}Secrets preflight skipped/failed (will still work after reboot).${NC}"
+}
 run_apply() {
   # Interactive by default; set NONINTERACTIVE=1 externally only if desired.
   : "${HOST_NAME:=}"  # allow pre-seeding
@@ -180,8 +197,13 @@ run_unlock() {
   fi
 
   echo -e "${CYAN}Launching 'unlock' helper inside the target system...${NC}"
-  if ! chroot /mnt /nix/var/nix/profiles/system/sw/bin/su - david -c "cd ~/nix && bash scripts/secrets-wizard.sh"; then
-    echo -e "${YELLOW}Bitwarden unlock helper exited with an error or was cancelled. Run 'unlock' after reboot if needed.${NC}"
+  # Prefer invoking via bash and sudo -u to avoid PAM and /run zsh issues in chroot
+  if [[ ! -x /mnt/nix/var/nix/profiles/system/sw/bin/bash ]]; then
+    echo -e "${YELLOW}System profile not fully available in chroot. Run 'unlock' after reboot.${NC}"
+    return
+  fi
+  if ! chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "command -v sudo >/dev/null 2>&1 && sudo -u david -H bash -lc 'cd ~/nix && bash scripts/secrets-wizard.sh'"; then
+    echo -e "${YELLOW}Bitwarden unlock helper could not run in chroot. Run 'unlock' after reboot if needed.${NC}"
   fi
 }
 
@@ -196,6 +218,7 @@ check_installer
 check_uefi_or_exit
 download_config
 run_apply
+preflight_secrets
 run_disko
 prompt_bws
 setup_files
