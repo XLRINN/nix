@@ -143,6 +143,21 @@ install_nixos() {
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
 
+run_secrets_preboot() {
+  # If we provisioned a token, attempt to run the secrets wizard inside the target before reboot
+  echo -e "${CYAN}Attempting to run secrets wizard before reboot...${NC}"
+  # If a passphrase was provided, stash it in the target user's secrets dir to avoid quoting issues
+  if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
+    mkdir -p /mnt/home/david/.secrets
+    printf "%s" "${BWS_TOKEN_PASSPHRASE}" > /mnt/home/david/.secrets/bws.pass
+    chmod 600 /mnt/home/david/.secrets/bws.pass
+  fi
+  # Run as the target user in chroot; use passphrase file if present
+  chroot /mnt /bin/sh -lc "su - david -c 'cd /home/david/nix && if [ -f ~/.secrets/bws.pass ]; then export BWS_TOKEN_PASSPHRASE=\"$(cat ~/.secrets/bws.pass)\"; fi; nix --experimental-features \"nix-command flakes\" run .#secrets'" || {
+    echo -e "${YELLOW}Secrets wizard pre-boot run failed; you can run \"nix run .#secrets\" after first login.${NC}"
+  }
+}
+
 prompt_reboot() {
   echo -e "\e[1;32mRebooting in 5 seconds...\e[0m"
   sleep 5
@@ -152,10 +167,11 @@ prompt_reboot() {
 cleanup
 check_installer
 download_config
+prompt_bws
 run_apply
 run_disko
-prompt_bws
 setup_files
 install_nixos
 cleanup
+run_secrets_preboot
 prompt_reboot 
