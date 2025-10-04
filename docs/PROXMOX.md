@@ -11,14 +11,14 @@ https://nixos.wiki/wiki/Proxmox_Virtual_Environment
 - Network Device: VirtIO (paravirtualized)
 - QEMU Guest Agent: Enable in VM Options (the OS enables the agent service automatically)
 
-Boot the NixOS ISO, open a shell, and run the installer:
+Boot the NixOS ISO, open a shell, and run the installer directly from GitHub (no local checkout needed):
 
 ```
-# Use the installer app that auto-downloads config
-nix run .#desktop
+# Use the installer app that auto-downloads this repo's config
+nix run github:xlrinn/nix#desktop
 ```
 
 Notes
-- The installer is UEFI-only (systemd-boot). If the VM uses BIOS/SeaBIOS, the installer exits with a friendly hint to switch to UEFI and add an EFI disk.
+- The installer is UEFI-only (systemd-boot). If the VM uses BIOS/SeaBIOS, the installer exits with a friendly hint to switch to UEFI and add an EFI disk. If you prefer BIOS, tell me and I can add a GRUB-on-BIOS fallback.
 - VirtIO/QEMU guest modules and agents are enabled by default in the NixOS host configuration.
 - The Disko layout includes a small BIOS boot partition for cross-compatibility, alongside the EFI system partition.

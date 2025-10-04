@@ -24,6 +24,10 @@ in
   ]
   ++ lib.optionals (fwModule != null) [ fwModule ];
 
+  # Prefer stable by-label devices to avoid PARTLABEL mismatches in some VMs
+  fileSystems."/".device = lib.mkForce "/dev/disk/by-label/NIXOS_ROOT";
+  fileSystems."/boot".device = lib.mkForce "/dev/disk/by-label/NIXOS_BOOT";
+
   # Use the systemd-boot EFI boot loader.
   boot = {
     loader = {
@@ -54,8 +58,14 @@ in
       "virtio_scsi"
     ];
     kernelModules = [ "uinput" "virtio_balloon" "virtio_net" "virtio_rng" ];
-  # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
-  kernelParams = [ "loglevel=4" "i915.enable_psr=0" ];
+    # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
+    # Explicitly set root by LABEL to avoid PARTLABEL dependency in stage-1
+    kernelParams = [
+      "loglevel=4"
+      "i915.enable_psr=0"
+      "root=LABEL=NIXOS_ROOT"
+      "rootfstype=ext4"
+    ];
   # Enable hibernation: set after install with the actual PARTUUID of the swap partition, e.g.
   # lsblk -no PARTUUID /dev/yourdisk2
   # boot.resumeDevice = "/dev/disk/by-partuuid/<uuid>";
@@ -80,10 +90,10 @@ in
 
   hardware = {
     enableAllFirmware = true; # Enable all firmware
-    graphics.enable = true;   # Wayland/X11 GL stack
-    # Ensure classic option for wider compatibility (kept alongside graphics.enable)
-    opengl.enable = true;
-    opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
+    graphics = {
+      enable = true;   # Wayland/X11 GL stack
+      extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
+    };
     ledger.enable = true;
   };
 
@@ -178,13 +188,10 @@ in
     gvfs.enable = true;
     tumbler.enable = true;
     # Hibernate instead of suspend on lid close (overrides default from hardware module)
-    logind = {
-      lidSwitch = "hibernate";
-      lidSwitchDocked = "ignore"; # don't hibernate when docked/externals attached
-      # Updated from deprecated extraConfig to settings.Login
-      settings.Login = {
-        HandleLidSwitchExternalPower = "hibernate";
-      };
+    logind.settings.Login = {
+      HandleLidSwitch = "hibernate";
+      HandleLidSwitchDocked = "ignore";
+      HandleLidSwitchExternalPower = "hibernate";
     };
   };
 
