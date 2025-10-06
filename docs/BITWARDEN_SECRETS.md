@@ -74,6 +74,8 @@ sops-deploy    # Sync + rebuild system (impure)
 sops-check     # List expected secrets in /run/secrets
 ```
 
+Running `unlock` (or `nix run .#secrets`) now starts with a quick prompt asking whether to use the machine’s Bitwarden Secrets Manager token or your personal credentials. Pick whichever is available; you can force a mode ahead of time via `UNLOCK_MODE=machine|personal`.
+
 ### Tailscale
 
 After running the apply script, Tailscale will automatically use the auth key from Bitwarden:
