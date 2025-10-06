@@ -259,41 +259,73 @@ get_github_token() {
 setup_github_repo() {
   echo -e "${CYAN}Setting up GitHub repository...${NC}"
   
+  # Ensure target directory exists and is empty
+  if ! mkdir -p /mnt/home/david; then
+    echo -e "${RED}Failed to create home directory${NC}"
+    return 1
+  fi
+  
+  if [ -d "/mnt/home/david/nix" ]; then
+    if ! rm -rf /mnt/home/david/nix; then
+      echo -e "${RED}Failed to remove existing repository directory${NC}"
+      return 1
+    fi
+  fi
+  
   # Get GitHub token
   GITHUB_TOKEN=$(get_github_token)
   if [ -z "$GITHUB_TOKEN" ]; then
-    echo -e "${YELLOW}No GitHub token available. Will set up repo without authentication.${NC}"
-    return 0
-  fi
-
-  # Clone with token and set up authentication
-  echo -e "${CYAN}Cloning repository with authentication...${NC}"
-  if [ -d "/mnt/home/david/nix" ]; then
-    rm -rf /mnt/home/david/nix
-  fi
-  
-  git clone --origin nyx --depth 1 --branch master "https://xlrinn:${GITHUB_TOKEN}@github.com/xlrinn/nix.git" /mnt/home/david/nix
-  
-  # Set up permanent authentication
-  mkdir -p /mnt/home/david/.config/git
-  cat > /mnt/home/david/.netrc <<EOF
+    echo -e "${YELLOW}No GitHub token available. Setting up repo without authentication...${NC}"
+    if ! git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix; then
+      echo -e "${RED}Failed to clone repository${NC}"
+      return 1
+    fi
+  else
+    # Clone with token and set up authentication
+    echo -e "${CYAN}Cloning repository with authentication...${NC}"
+    if ! git clone --origin nyx --depth 1 --branch master "https://xlrinn:${GITHUB_TOKEN}@github.com/xlrinn/nix.git" /mnt/home/david/nix; then
+      echo -e "${RED}Failed to clone repository with authentication${NC}"
+      return 1
+    fi
+    
+    # Set up permanent authentication
+    if ! mkdir -p /mnt/home/david/.config/git; then
+      echo -e "${YELLOW}Failed to create git config directory${NC}"
+    fi
+    
+    # Create .netrc file for authentication
+    cat > /mnt/home/david/.netrc <<EOF
 machine github.com
 login xlrinn
 password ${GITHUB_TOKEN}
 EOF
-  chmod 600 /mnt/home/david/.netrc
-  chown 1000:1000 /mnt/home/david/.netrc
+    chmod 600 /mnt/home/david/.netrc || echo -e "${YELLOW}Warning: Failed to set permissions on .netrc${NC}"
+    chown 1000:1000 /mnt/home/david/.netrc || echo -e "${YELLOW}Warning: Failed to set ownership on .netrc${NC}"
+  fi
   
-  # Configure git
-  git -C /mnt/home/david/nix config credential.helper "store --file /home/david/.config/git/credentials"
+  # Verify repository was cloned successfully
+  if [ ! -d "/mnt/home/david/nix" ]; then
+    echo -e "${RED}Repository directory does not exist after clone${NC}"
+    return 1
+  fi
+  
+  # Configure git (continue on errors)
+  git -C /mnt/home/david/nix config credential.helper "store --file /home/david/.config/git/credentials" || true
   git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
   git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
   git -C /mnt/home/david/nix remote set-branches nyx '*' || true
   
-  chown -R 1000:1000 /mnt/home/david/nix
-  chmod -R 755 /mnt/home/david/nix
+  # Set permissions (continue on errors but warn)
+  if ! chown -R 1000:1000 /mnt/home/david/nix; then
+    echo -e "${YELLOW}Warning: Failed to set ownership on repository${NC}"
+  fi
+  
+  if ! chmod -R 755 /mnt/home/david/nix; then
+    echo -e "${YELLOW}Warning: Failed to set permissions on repository${NC}"
+  fi
   
   echo -e "${GREEN}✓ GitHub repository configured${NC}"
+  return 0
 }
 
 setup_files() {
