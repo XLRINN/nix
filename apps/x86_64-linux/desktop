@@ -18,10 +18,10 @@ ensure_bw() {
   if have bw; then
     return 0
   fi
-  # Try to install bw using nix
+  # Install bw using nix
   if have nix; then
-    nix-shell -p bitwarden-cli --run "true"
-    return 0
+    nix-shell -p bitwarden-cli --run "bw --version" >/dev/null 2>&1
+    return $?
   fi
   return 1
 }
@@ -32,6 +32,7 @@ bw_get_token() {
   local twofa_code="$3"
   
   # Login and get session
+  local BW_SESSION
   BW_SESSION=$(bw login "$email" "$password" --raw)
   if [ $? -ne 0 ]; then
     return 1
@@ -49,27 +50,60 @@ bw_get_token() {
   BW_SESSION="$BW_SESSION" bw get item "GitHub Token" --raw | jq -r '.fields[] | select(.name=="token") | .value'
 }
 
-# Bitwarden Secrets Manager (bws) helpers for access token method
-bws_cmd() {
-  if have bws; then
-    BWS_ACCESS_TOKEN="$BWS_ACCESS_TOKEN" bws "$@"
-  elif have_docker; then
-    docker run --rm -e BWS_ACCESS_TOKEN="$BWS_ACCESS_TOKEN" bitwarden/bws "$@"
-  else
-    echo "bws command not found" >&2
-    return 127
+install_bws() {
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+  
+  # Download and install bws based on architecture
+  case "$(uname -m)" in
+    x86_64)
+      curl -L "https://github.com/bitwarden/sdk/releases/download/bws-v0.3.0/bws-x86_64-unknown-linux-gnu-0.3.0.zip" -o "$tmp_dir/bws.zip"
+      ;;
+    aarch64)
+      curl -L "https://github.com/bitwarden/sdk/releases/download/bws-v0.3.0/bws-aarch64-unknown-linux-gnu-0.3.0.zip" -o "$tmp_dir/bws.zip"
+      ;;
+    *)
+      echo "Unsupported architecture: $(uname -m)"
+      return 1
+      ;;
+  esac
+  
+  unzip -q "$tmp_dir/bws.zip" -d "$tmp_dir"
+  sudo mv "$tmp_dir/bws" /usr/local/bin/
+  rm -rf "$tmp_dir"
+  
+  # Verify installation
+  if ! have bws; then
+    return 1
   fi
+  
+  return 0
+}
+
+bws_cmd() {
+  if ! have bws; then
+    echo -e "${CYAN}Installing Bitwarden Secrets Manager CLI...${NC}"
+    if ! install_bws; then
+      echo -e "${RED}Failed to install bws${NC}" >&2
+      return 127
+    fi
+  fi
+  
+  BWS_ACCESS_TOKEN="$BWS_ACCESS_TOKEN" bws "$@"
 }
 
 ensure_bws() {
-  if have bws || have_docker; then
+  if have bws; then
     return 0
   fi
-  # Try to install bws using nix
-  if have nix; then
-    nix-shell -p bitwarden-cli --run "true"
+  
+  echo -e "${CYAN}Installing Bitwarden Secrets Manager CLI...${NC}"
+  if install_bws; then
+    echo -e "${GREEN}✓ BWS CLI installed successfully${NC}"
     return 0
   fi
+  
+  echo -e "${RED}Failed to install BWS CLI${NC}"
   return 1
 }
 
@@ -354,11 +388,14 @@ check_installer
 check_uefi_or_exit
 download_config
 run_apply
-preflight_secrets
 run_disko
-prompt_bws
 setup_files
 install_nixos
+
+# Handle GitHub authentication last, after system is fully set up
+echo -e "\n${CYAN}Setting up GitHub access...${NC}"
+prompt_bws
 run_unlock
+
 cleanup
 prompt_reboot 
