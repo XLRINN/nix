@@ -39,6 +39,8 @@ in
       # Faster boot
       timeout = 1;
     };
+    # Proxmox guest support
+    initrd.kernelModules = [ "virtio_balloon" "virtio_console" "virtio_rng" ];
     initrd.availableKernelModules = [
       "xhci_pci"
       "ahci"
@@ -84,13 +86,18 @@ in
       allowedTCPPorts = [ 22 ];
     };
     wireless.enable = false; # Make sure NetworkManager is managing wifi, not wpa_supplicant
+    
+    # Increase download buffer size to prevent warnings
+    extraOptions = ''
+      download-buffer-size=64000
+    '';
   # If %IP% token replaced with 'dhcp' keep defaults, else set static /24
   interfaces.${config.networking.primaryInterface or ""} = lib.mkIf (config.networking.useDHCP != false) {};
   };
 
   hardware = {
     enableAllFirmware = true; # Enable all firmware
-    graphics = {
+    opengl = {
       enable = true;   # Wayland/X11 GL stack
       extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
     };

@@ -5,7 +5,8 @@ _: {
   disko.devices = {
     disk = {
       main = {
-        device = "/dev/sda";
+        # Support both SCSI and VirtIO devices in Proxmox
+        device = "/dev/disk/by-path/pci-*";
         type = "disk";
         content = {
           type = "gpt";

@@ -118,17 +118,39 @@ check_installer() {
   fi
 }
 
-# Require UEFI for systemd-boot based installs. In Proxmox,
-# set Firmware to OVMF (UEFI) and add an EFI Disk. See:
-# https://nixos.wiki/wiki/Proxmox_Virtual_Environment
+# Check and validate Proxmox/UEFI environment
 check_uefi_or_exit() {
+  echo -e "${CYAN}Checking system environment...${NC}"
+  
+  # Check for UEFI
   if [ ! -d /sys/firmware/efi ]; then
     echo -e "${YELLOW}UEFI firmware not detected.${NC}"
-    echo -e "${YELLOW}This installer targets UEFI (systemd-boot).${NC}"
-    echo -e "${CYAN}In Proxmox, set VM Firmware: 'OVMF (UEFI)' and add an EFI Disk, then reboot the installer.${NC}"
-    echo -e "${CYAN}Docs: https://nixos.wiki/wiki/Proxmox_Virtual_Environment${NC}"
+    echo -e "${YELLOW}This installer requires UEFI with systemd-boot.${NC}"
+    echo -e "\n${CYAN}Proxmox VM Requirements:${NC}"
+    echo -e "1. Set VM Options > BIOS to: ${GREEN}OVMF (UEFI)${NC}"
+    echo -e "2. Add EFI Disk: ${GREEN}Add > EFI Disk${NC}"
+    echo -e "3. For best performance:"
+    echo -e "   - Machine: ${GREEN}q35${NC}"
+    echo -e "   - SCSI Controller: ${GREEN}VirtIO SCSI${NC}"
+    echo -e "   - Disk Bus: ${GREEN}VirtIO Block${NC} or ${GREEN}SCSI${NC}"
+    echo -e "   - Network: ${GREEN}VirtIO${NC}"
+    echo -e "\nSee: ${CYAN}https://nixos.wiki/wiki/Proxmox_Virtual_Environment${NC}"
     exit 1
   fi
+
+  # Check for common Proxmox virtio modules
+  if ! grep -q virtio_pci /proc/modules; then
+    echo -e "${YELLOW}Warning: VirtIO PCI driver not loaded. Performance may be reduced.${NC}"
+    echo -e "${CYAN}Recommend setting Network Device to VirtIO in Proxmox.${NC}"
+  fi
+
+  # Check disk availability
+  if ! ls /dev/disk/by-path/pci-* >/dev/null 2>&1; then
+    echo -e "${RED}No disks found. Ensure disk is attached and using VirtIO Block or SCSI.${NC}"
+    exit 1
+  fi
+
+  echo -e "${GREEN}✓ System environment checks passed${NC}"
 }
 
 cleanup() {
@@ -200,12 +222,13 @@ run_disko() {
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
-setup_github_auth() {
+get_github_token() {
   case "${GITHUB_AUTH_METHOD:-}" in
     1)
       if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
         echo -e "${CYAN}Using previously provided Bitwarden token...${NC}"
-        return 0
+        bws_cmd secret get --field token "GitHub Token"
+        return $?
       fi
       ;;
       
@@ -222,23 +245,56 @@ setup_github_auth() {
       read -r -p "Enter your 2FA code: " BW_2FA
       
       echo -e "${CYAN}Logging into Bitwarden...${NC}"
-      GITHUB_TOKEN=$(bw_get_token "$BW_EMAIL" "$BW_PASSWORD" "$BW_2FA")
-      if [ $? -eq 0 ] && [ -n "$GITHUB_TOKEN" ]; then
-        echo -e "${GREEN}✓ Successfully retrieved GitHub token${NC}"
-        # Store the token for use by other functions
-        echo "$GITHUB_TOKEN" > /tmp/github_token.tmp
-        chmod 600 /tmp/github_token.tmp
-      else
-        echo -e "${RED}Failed to retrieve GitHub token${NC}"
-        return 1
-      fi
+      bw_get_token "$BW_EMAIL" "$BW_PASSWORD" "$BW_2FA"
+      return $?
       ;;
       
     *)
       echo -e "${YELLOW}No GitHub authentication method selected. You can set this up manually after installation.${NC}"
-      return 0
+      return 1
       ;;
   esac
+}
+
+setup_github_repo() {
+  echo -e "${CYAN}Setting up GitHub repository...${NC}"
+  
+  # Get GitHub token
+  GITHUB_TOKEN=$(get_github_token)
+  if [ -z "$GITHUB_TOKEN" ]; then
+    echo -e "${YELLOW}No GitHub token available. Will set up repo without authentication.${NC}"
+    return 0
+  fi
+
+  # Clone with token and set up authentication
+  echo -e "${CYAN}Cloning repository with authentication...${NC}"
+  if [ -d "/mnt/home/david/nix" ]; then
+    rm -rf /mnt/home/david/nix
+  fi
+  
+  git clone --origin nyx --depth 1 --branch master "https://xlrinn:${GITHUB_TOKEN}@github.com/xlrinn/nix.git" /mnt/home/david/nix
+  
+  # Set up permanent authentication
+  mkdir -p /mnt/home/david/.config/git
+  cat > /mnt/home/david/.netrc <<EOF
+machine github.com
+login xlrinn
+password ${GITHUB_TOKEN}
+EOF
+  chmod 600 /mnt/home/david/.netrc
+  chown 1000:1000 /mnt/home/david/.netrc
+  
+  # Configure git
+  git -C /mnt/home/david/nix config credential.helper "store --file /home/david/.config/git/credentials"
+  git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
+  git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
+  git -C /mnt/home/david/nix remote set-branches nyx '*' || true
+  
+  chown -R 1000:1000 /mnt/home/david/nix
+  chmod -R 755 /mnt/home/david/nix
+  
+  echo -e "${GREEN}✓ GitHub repository configured${NC}"
+}
 }
 }
 
@@ -405,9 +461,9 @@ run_disko
 setup_files
 install_nixos
 
-# Handle GitHub authentication last, after system is fully set up
+# Handle GitHub authentication and repository setup last, after everything else is done
 echo -e "\n${CYAN}Setting up GitHub access...${NC}"
-setup_github_auth
+setup_github_repo
 run_unlock
 
 cleanup
