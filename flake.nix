@@ -97,7 +97,34 @@
           type = "app";
           program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin "secrets" ''
             #!/usr/bin/env bash
-            exec bash ~/nix/scripts/secrets-wizard.sh "$@"
+            set -euo pipefail
+
+            PATH=${nixpkgs.legacyPackages.${system}.git}/bin:$PATH
+
+            find_repo() {
+              if [ -f "./scripts/secrets-wizard.sh" ]; then
+                printf '%s' "$(pwd -P)"
+                return 0
+              fi
+              if repo="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+                if [ -f "${repo}/scripts/secrets-wizard.sh" ]; then
+                  printf '%s' "$repo"
+                  return 0
+                fi
+              fi
+              if [ -f "$HOME/nix/scripts/secrets-wizard.sh" ]; then
+                printf '%s' "$HOME/nix"
+                return 0
+              fi
+              return 1
+            }
+
+            if repo_dir="$(find_repo)"; then
+              exec bash "${repo_dir}/scripts/secrets-wizard.sh" "$@"
+            else
+              echo "Unable to locate scripts/secrets-wizard.sh. Run this command from the repo root or move the repo to ~/nix." >&2
+              exit 1
+            fi
           '')}/bin/secrets";
         };
       };
@@ -113,7 +140,34 @@
           type = "app";
           program = "${(nixpkgs.legacyPackages.${system}.writeScriptBin "secrets" ''
             #!/usr/bin/env bash
-            exec bash ~/nix/scripts/secrets-wizard.sh "$@"
+            set -euo pipefail
+
+            PATH=${nixpkgs.legacyPackages.${system}.git}/bin:$PATH
+
+            find_repo() {
+              if [ -f "./scripts/secrets-wizard.sh" ]; then
+                printf '%s' "$(pwd -P)"
+                return 0
+              fi
+              if repo="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+                if [ -f "${repo}/scripts/secrets-wizard.sh" ]; then
+                  printf '%s' "$repo"
+                  return 0
+                fi
+              fi
+              if [ -f "$HOME/nix/scripts/secrets-wizard.sh" ]; then
+                printf '%s' "$HOME/nix"
+                return 0
+              fi
+              return 1
+            }
+
+            if repo_dir="$(find_repo)"; then
+              exec bash "${repo_dir}/scripts/secrets-wizard.sh" "$@"
+            else
+              echo "Unable to locate scripts/secrets-wizard.sh. Run this command from the repo root or move the repo to ~/nix." >&2
+              exit 1
+            fi
           '')}/bin/secrets";
         };
       };
@@ -163,19 +217,18 @@
         }
       );
 
-  nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: let
+      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: let
         user = "david";
-      in 
+      in
         nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = { 
-    inherit inputs; 
-    # secrets integration disabled for now; re-enable later
-    # secrets = sopswarden.secrets.${system};
+          specialArgs = {
+            inherit inputs;
+            secrets = sopswarden.secrets.${system};
           };
           modules = [
             disko.nixosModules.disko
-    # sopswarden.nixosModules.default  # disabled for initial build
+            sopswarden.nixosModules.default
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;

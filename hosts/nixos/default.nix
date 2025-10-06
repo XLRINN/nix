@@ -276,17 +276,23 @@ in
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
-  # Sopswarden secrets configuration (recommended secrets management)
-  # Temporarily disabled sopswarden to allow system to build without Bitwarden secrets
-  # Uncomment and configure when ready for secrets integration again.
-  # services.sopswarden = {
-  #   enable = true;
-  #   secrets = {
-  #     tailscale-auth-key = { name = "Tailscale"; field = "auth-key"; };
-  #     openrouter-api-key = { name = "OpenRouter API"; field = "api-key"; };
-  #     github-token = { name = "GitHub Token"; field = "token"; };
-  #   };
-  # };
+  services.sopswarden = {
+    enable = true;
+    secrets = {
+      tailscale-auth-key = {
+        name = "Tailscale";
+        field = "auth-key";
+      };
+      openrouter-api-key = {
+        name = "OpenRouter API";
+        field = "api-key";
+      };
+      github-token = {
+        name = "GitHub Token";
+        field = "token";
+      };
+    };
+  };
 
   system.stateVersion = "21.05"; # Don't change this
 }

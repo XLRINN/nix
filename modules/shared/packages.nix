@@ -11,8 +11,10 @@ with pkgs; [
   btop
   # bitwarden-cli removed (fails to build on Darwin due to argon2/node-gyp); use rbw instead
   rbw  # Rust Bitwarden client for sopswarden
-  # Note: bws (Bitwarden Secrets Manager CLI) might not be in nixpkgs yet
-  # You can install it manually: curl -L https://github.com/bitwarden/sdk/releases/latest/download/bws-x86_64-unknown-linux-gnu.zip
+  # bws (Bitwarden Secrets Manager CLI) is required for secrets automation
+  # Not yet in nixpkgs; install manually in installer scripts:
+  # curl -L https://github.com/bitwarden/sdk/releases/latest/download/bws-x86_64-unknown-linux-gnu.zip -o bws.zip && unzip bws.zip && sudo mv bws /usr/local/bin/
+  # bws # Uncomment when available in nixpkgs
   coreutils
   codex
   killall
