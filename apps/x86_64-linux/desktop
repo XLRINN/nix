@@ -154,7 +154,7 @@ check_uefi_or_exit() {
 }
 
 cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-* nyx-*
+  rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-* nyx-* /tmp/github_token.tmp /tmp/git_name.txt /tmp/git_email.txt
 }
 
 download_config() {
@@ -295,13 +295,23 @@ EOF
   
   echo -e "${GREEN}✓ GitHub repository configured${NC}"
 }
-}
-}
 
 setup_files() {
-  mkdir -p /mnt/etc/nixos
-  cp -r * /mnt/etc/nixos
-  cd /mnt/etc/nixos
+  if ! mkdir -p /mnt/etc/nixos; then
+    echo -e "${RED}Failed to create /mnt/etc/nixos directory${NC}"
+    return 1
+  fi
+  
+  if ! cp -r * /mnt/etc/nixos; then
+    echo -e "${RED}Failed to copy configuration files${NC}"
+    return 1
+  fi
+  
+  cd /mnt/etc/nixos || {
+    echo -e "${RED}Failed to change directory to /mnt/etc/nixos${NC}"
+    return 1
+  }
+  
   echo -e "${GREEN}✓ Files copied to system${NC}"
 
   # Ensure a clean ~/nix git clone for the first boot
@@ -310,47 +320,11 @@ setup_files() {
     rm -rf /mnt/home/david/nix
   fi
 
-  # Set up GitHub authentication
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    ensure_bws || {
-      echo -e "${YELLOW}Failed to ensure bws command is available${NC}"
-      return 1
-    }
-    
-    # Get GitHub token from BWS
-    echo -e "${CYAN}Fetching GitHub token from Bitwarden Secrets Manager...${NC}"
-    GITHUB_TOKEN=$(bws_cmd secret get --field token "GitHub Token")
-  elif [[ -f /tmp/github_token.tmp ]]; then
-    # Get GitHub token from temporary file (from master password login)
-    GITHUB_TOKEN=$(cat /tmp/github_token.tmp)
-    rm -f /tmp/github_token.tmp  # Clean up
-    
-    if [[ -n "$GITHUB_TOKEN" ]]; then
-      echo -e "${GREEN}✓ GitHub token retrieved successfully${NC}"
-      
-      # Use token for initial clone
-      git clone --origin nyx --depth 1 --branch master "https://xlrinn:${GITHUB_TOKEN}@github.com/xlrinn/nix.git" /mnt/home/david/nix
-      
-      # Set up permanent auth via .netrc
-      mkdir -p /mnt/home/david/.config/git
-      cat > /mnt/home/david/.netrc <<EOF
-machine github.com
-login xlrinn
-password ${GITHUB_TOKEN}
-EOF
-      chmod 600 /mnt/home/david/.netrc
-      chown 1000:1000 /mnt/home/david/.netrc
-      
-      # Configure git to use credentials
-      git -C /mnt/home/david/nix config credential.helper "store --file /home/david/.config/git/credentials"
-      echo -e "${GREEN}✓ GitHub authentication configured${NC}"
-    else
-      echo -e "${YELLOW}Failed to get GitHub token, falling back to HTTPS clone${NC}"
-      git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
-    fi
-  else
-    echo -e "${YELLOW}No BWS token available, using HTTPS clone${NC}"
-    git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  # Let setup_github_repo handle the clone and auth setup - don't duplicate here
+  echo -e "${CYAN}Setting up GitHub repository...${NC}"
+  if ! setup_github_repo; then
+    echo -e "${YELLOW}GitHub repository setup was not successful or skipped${NC}"
+    # Non-fatal - continue with installation
   fi
 
   # Minimal identity passthrough (optional)
@@ -415,12 +389,18 @@ install_nixos() {
       ;;
   esac
 
-  nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1 --no-write-lock-file --no-root-passwd
+  if ! nixos-install --flake .#$FLAKE_TARGET --option max-jobs 1 --no-write-lock-file --no-root-passwd; then
+    echo -e "${RED}Failed to install NixOS${NC}"
+    exit 1
+  fi
   chmod -R 775 /mnt/etc/nixos
   
   # Set root and user passwords non-interactively
-  echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
-  echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
+  if ! echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd || \
+     ! echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd; then
+    echo -e "${RED}Failed to set passwords${NC}"
+    exit 1
+  fi
   
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
