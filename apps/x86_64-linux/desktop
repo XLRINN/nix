@@ -173,6 +173,25 @@ run_apply() {
   : "${BOOT_DISK:=}"
   ./apps/x86_64-linux/apply
   export USERNAME="david"
+  
+  # Ask about GitHub access method right after disk questions
+  echo -e "\n${CYAN}How would you like to set up GitHub access?${NC}"
+  echo -e "1) I have a Bitwarden Secrets Manager token"
+  echo -e "2) I'll use my Bitwarden password and 2FA (will ask at the end)"
+  read -r -p "Enter your choice (1-2): " GITHUB_AUTH_METHOD
+  export GITHUB_AUTH_METHOD
+  
+  if [ "$GITHUB_AUTH_METHOD" = "1" ]; then
+    echo -e "${CYAN}Please paste your Bitwarden Secrets Manager token:${NC}"
+    read -r -p "Token: " BWS_ACCESS_TOKEN
+    if [ -n "${BWS_ACCESS_TOKEN}" ]; then
+      export BWS_ACCESS_TOKEN
+      echo -e "${GREEN}✓ Token saved for later use${NC}"
+    else
+      echo -e "${YELLOW}No token provided. You can set this up manually after installation.${NC}"
+    fi
+  fi
+  
   echo -e "${GREEN}✓ Configuration complete${NC}"
 }
 
@@ -181,29 +200,22 @@ run_disko() {
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
-prompt_bws() {
-  echo -e "\n${CYAN}How would you like to access your GitHub token?${NC}"
-  echo -e "1) I already have access via SSH and have the token"
-  echo -e "2) I need to login with my Bitwarden password and 2FA"
-  read -r -p "Enter your choice (1-2): " choice
-
-  case "$choice" in
+setup_github_auth() {
+  case "${GITHUB_AUTH_METHOD:-}" in
     1)
-      echo -e "${CYAN}Please paste your existing Bitwarden Secrets Manager token:${NC}"
-      read -r -p "Token: " BWS_ACCESS_TOKEN
-      if [ -z "${BWS_ACCESS_TOKEN}" ]; then
-        echo -e "${RED}No token provided${NC}"
-        return 1
+      if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
+        echo -e "${CYAN}Using previously provided Bitwarden token...${NC}"
+        return 0
       fi
-      export BWS_ACCESS_TOKEN
       ;;
-
+      
     2)
       ensure_bw || {
         echo -e "${RED}Failed to ensure Bitwarden CLI is available${NC}"
         return 1
       }
       
+      echo -e "${CYAN}Please log in to Bitwarden to set up GitHub access${NC}"
       read -r -p "Enter your Bitwarden email: " BW_EMAIL
       read -r -s -p "Enter your master password: " BW_PASSWORD
       echo
@@ -223,10 +235,11 @@ prompt_bws() {
       ;;
       
     *)
-      echo -e "${RED}Invalid choice${NC}"
-      return 1
+      echo -e "${YELLOW}No GitHub authentication method selected. You can set this up manually after installation.${NC}"
+      return 0
       ;;
   esac
+}
 }
 
 setup_files() {
@@ -394,7 +407,7 @@ install_nixos
 
 # Handle GitHub authentication last, after system is fully set up
 echo -e "\n${CYAN}Setting up GitHub access...${NC}"
-prompt_bws
+setup_github_auth
 run_unlock
 
 cleanup
