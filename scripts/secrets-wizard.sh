@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # Non-interactive Secrets Setup for Bitwarden + sopswarden (NixOS) and Home-Manager (macOS/Linux)
-# - Runs rbw login/unlock/sync (may prompt for credentials, but no Y/N prompts here)
+# - Offers choice between machine token (bws) or personal credentials on startup
+# - Runs rbw login/unlock/sync (may prompt for credentials)
 # - NixOS: runs sopswarden sync if available
 # - macOS/others: generates keys.env directly using rbw (no dependency on `bw` CLI)
 # - Verifies availability and prints concise next steps
@@ -337,6 +338,56 @@ verify_nixos() {
   fi
 }
 
+prompt_auth_method() {
+  case "${UNLOCK_MODE:-}" in
+    machine|MACHINE)
+      AUTH_METHOD="machine"
+      return
+      ;;
+    personal|PERSONAL)
+      AUTH_METHOD="personal"
+      return
+      ;;
+  esac
+
+  local have_machine=0 default_choice=2
+  if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
+    have_machine=1
+  fi
+  if [ "$have_machine" -eq 1 ] && ( have bws || have_docker ); then
+    default_choice=1
+  fi
+
+  if ! [ -t 0 ]; then
+    if [ "$default_choice" -eq 1 ]; then
+      AUTH_METHOD="machine"
+    else
+      AUTH_METHOD="personal"
+    fi
+    return
+  fi
+
+  say ""
+  say "${BLUE}Choose how to authenticate with Bitwarden:${NC}"
+  say "  ${GREEN}1${NC}) Machine token (Bitwarden Secrets Manager via bws)"
+  say "  ${GREEN}2${NC}) Personal credentials (rbw/bw login)"
+  local choice
+  read -r -p "Enter choice [${default_choice}]: " choice || true
+  choice="${choice:-$default_choice}"
+  case "$choice" in
+    1) AUTH_METHOD="machine" ;;
+    2) AUTH_METHOD="personal" ;;
+    *)
+      say "${YELLOW}Unrecognized option '${choice}'. Defaulting to option ${default_choice}.${NC}"
+      if [ "$default_choice" -eq 1 ]; then
+        AUTH_METHOD="machine"
+      else
+        AUTH_METHOD="personal"
+      fi
+      ;;
+  esac
+}
+
 step_bws_envfile() {
   say "${BLUE}BWS:${NC} Generating keys.env from Secrets Manager"
   if ! have jq; then
@@ -446,23 +497,43 @@ main() {
     fi
   fi
 
-  # Prefer Bitwarden Secrets Manager (bws) if an access token is present
+  # Prepare optional machine token flow
   ensure_bws || true
   ensure_token_from_age || true
-  if [ "${FORCE_BW:-0}" != "1" ] && [ -n "${BWS_ACCESS_TOKEN:-}" ] && ( have bws || have_docker ); then
-    say "${BLUE}Detected BWS access token; using Secrets Manager for fetching keys.${NC}"
-    if step_bws_envfile; then
-      verify_envfile
-      post_notes_macos
-      say "\n${GREEN}All done.${NC}"
-      exit 0
+  prompt_auth_method
+
+  if [ "${AUTH_METHOD}" = "machine" ]; then
+    if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
+      if [ -t 0 ]; then
+        say "${CYAN}Paste your Bitwarden Secrets Manager machine token (input hidden):${NC}"
+        read -r -s BWS_ACCESS_TOKEN || true
+        echo
+      fi
+    fi
+    if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
+      say "${YELLOW}No machine token available; falling back to personal credentials.${NC}"
+      AUTH_METHOD="personal"
+    elif ! ( have bws || have_docker ); then
+      say "${YELLOW}Bitwarden Secrets Manager CLI (bws) not available; falling back to personal credentials.${NC}"
+      AUTH_METHOD="personal"
+    elif [ "${FORCE_BW:-0}" = "1" ]; then
+      AUTH_METHOD="personal"
     else
-      say "${YELLOW}Falling back to Bitwarden CLI unlock (bw).${NC}"
+      export BWS_ACCESS_TOKEN
+      if step_bws_envfile; then
+        verify_envfile
+        post_notes_macos
+        say "\n${GREEN}All done.${NC}"
+        exit 0
+      else
+        say "${YELLOW}Machine token flow failed; falling back to personal credentials.${NC}"
+        AUTH_METHOD="personal"
+      fi
     fi
   fi
 
   # Prefer the official bw unlocker if available or if forced
-  if verify_bw; then
+  if [ "${AUTH_METHOD}" = "personal" ] && verify_bw; then
     step_bw_login_unlock
     step_bw_envfile
     verify_envfile
