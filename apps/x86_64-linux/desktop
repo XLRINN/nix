@@ -9,110 +9,6 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Helper functions for Bitwarden access
-have() { command -v "$1" >/dev/null 2>&1; }
-have_docker() { command -v docker >/dev/null 2>&1; }
-
-# Bitwarden CLI (bw) helpers for master password + 2FA method
-ensure_bw() {
-  if have bw; then
-    return 0
-  fi
-  # Install bw using nix
-  if have nix; then
-    nix-shell -p bitwarden-cli --run "bw --version" >/dev/null 2>&1
-    return $?
-  fi
-  return 1
-}
-
-bw_get_token() {
-  local email="$1"
-  local password="$2"
-  local twofa_code="$3"
-  
-  # Login and get session
-  local BW_SESSION
-  BW_SESSION=$(bw login "$email" "$password" --raw)
-  if [ $? -ne 0 ]; then
-    return 1
-  fi
-  
-  # Handle 2FA if needed
-  if [[ "$BW_SESSION" == *"You must complete two-step login"* ]]; then
-    BW_SESSION=$(bw login --method 0 --code "$twofa_code" --session "$BW_SESSION" --raw)
-    if [ $? -ne 0 ]; then
-      return 1
-    fi
-  fi
-  
-  # Unlock vault and get GitHub token
-  BW_SESSION="$BW_SESSION" bw get item "GitHub Token" --raw | jq -r '.fields[] | select(.name=="token") | .value'
-}
-
-install_bws() {
-  local tmp_dir
-  tmp_dir=$(mktemp -d)
-  
-  # Download and install bws based on architecture
-  case "$(uname -m)" in
-    x86_64)
-      curl -L "https://github.com/bitwarden/sdk/releases/download/bws-v0.3.0/bws-x86_64-unknown-linux-gnu-0.3.0.zip" -o "$tmp_dir/bws.zip"
-      ;;
-    aarch64)
-      curl -L "https://github.com/bitwarden/sdk/releases/download/bws-v0.3.0/bws-aarch64-unknown-linux-gnu-0.3.0.zip" -o "$tmp_dir/bws.zip"
-      ;;
-    *)
-      echo "Unsupported architecture: $(uname -m)"
-      return 1
-      ;;
-  esac
-  
-  unzip -q "$tmp_dir/bws.zip" -d "$tmp_dir"
-  # Ensure /usr/local/bin exists
-  if [ ! -d /usr/local/bin ]; then
-    sudo mkdir -p /usr/local/bin
-  fi
-  sudo mv "$tmp_dir/bws" /usr/local/bin/
-  rm -rf "$tmp_dir"
-  
-  # Verify installation
-  if ! have bws; then
-    return 1
-  fi
-  
-  return 0
-}
-
-bws_cmd() {
-  if ! have bws; then
-    echo -e "${CYAN}Installing Bitwarden Secrets Manager CLI...${NC}"
-    if ! install_bws; then
-      echo -e "${RED}Failed to install bws${NC}" >&2
-      return 127
-    fi
-  fi
-  
-  BWS_ACCESS_TOKEN="$BWS_ACCESS_TOKEN" bws "$@"
-}
-
-ensure_bws() {
-  if have bws; then
-    return 0
-  fi
-  
-  echo -e "${CYAN}Installing Bitwarden Secrets Manager CLI...${NC}"
-  if install_bws; then
-    echo -e "${GREEN}✓ BWS CLI installed successfully${NC}"
-    return 0
-  fi
-  
-  echo -e "${RED}Failed to install BWS CLI${NC}"
-  return 1
-}
-
-#commit
-
 check_installer() {
   if [ -e /etc/NIXOS ]; then
     echo -e "\e[1;32mRunning in the NixOS installer environment.\e[0m"
@@ -176,48 +72,14 @@ download_config() {
   echo -e "${GREEN}✓ Configuration downloaded and extracted${NC}"
 }
 
-preflight_secrets() {
-  echo -e "${CYAN}Checking Secrets Manager access (optional)...${NC}"
-  (
-    set -e
-    # If an encrypted token exists or a token/env is present, try to run the wizard now
-    if [[ -f secrets/bws.token.age || -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-      echo -e "${CYAN}Running secrets wizard in live environment (this may prompt).${NC}"
-      if command -v nix >/dev/null 2>&1; then
-        nix shell nixpkgs#age nixpkgs#jq -c -- bash scripts/secrets-wizard.sh || true
-      else
-        bash scripts/secrets-wizard.sh || true
-      fi
-    else
-      echo -e "${YELLOW}No BWS token or encrypted token found; skipping.${NC}"
-    fi
-  ) || echo -e "${YELLOW}Secrets preflight skipped/failed (will still work after reboot).${NC}"
-}
 run_apply() {
   # Interactive by default; set NONINTERACTIVE=1 externally only if desired.
   : "${HOST_NAME:=}"  # allow pre-seeding
   : "${BOOT_DISK:=}"
   ./apps/x86_64-linux/apply
   export USERNAME="david"
-  
-  # Ask about GitHub access method right after disk questions
-  echo -e "\n${CYAN}How would you like to set up GitHub access?${NC}"
-  echo -e "1) I have a Bitwarden Secrets Manager token"
-  echo -e "2) I'll use my Bitwarden password and 2FA (will ask at the end)"
-  read -r -p "Enter your choice (1-2): " GITHUB_AUTH_METHOD
-  export GITHUB_AUTH_METHOD
-  
-  if [ "$GITHUB_AUTH_METHOD" = "1" ]; then
-    echo -e "${CYAN}Please paste your Bitwarden Secrets Manager token:${NC}"
-    read -r -p "Token: " BWS_ACCESS_TOKEN
-    if [ -n "${BWS_ACCESS_TOKEN}" ]; then
-      export BWS_ACCESS_TOKEN
-      echo -e "${GREEN}✓ Token saved for later use${NC}"
-    else
-      echo -e "${YELLOW}No token provided. You can set this up manually after installation.${NC}"
-    fi
-  fi
-  
+  echo -e ""
+  echo -e "${CYAN}GitHub access and Bitwarden secrets will be configured after the first boot.${NC}"
   echo -e "${GREEN}✓ Configuration complete${NC}"
 }
 
@@ -226,113 +88,6 @@ run_disko() {
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
-get_github_token() {
-  case "${GITHUB_AUTH_METHOD:-}" in
-    1)
-      if [ -n "${BWS_ACCESS_TOKEN:-}" ]; then
-        echo -e "${CYAN}Using previously provided Bitwarden token...${NC}"
-        bws_cmd secret get --field token "GitHub Token"
-        return $?
-      fi
-      ;;
-      
-    2)
-      ensure_bw || {
-        echo -e "${RED}Failed to ensure Bitwarden CLI is available${NC}"
-        return 1
-      }
-      
-      echo -e "${CYAN}Please log in to Bitwarden to set up GitHub access${NC}"
-      read -r -p "Enter your Bitwarden email: " BW_EMAIL
-      read -r -s -p "Enter your master password: " BW_PASSWORD
-      echo
-      read -r -p "Enter your 2FA code: " BW_2FA
-      
-      echo -e "${CYAN}Logging into Bitwarden...${NC}"
-      bw_get_token "$BW_EMAIL" "$BW_PASSWORD" "$BW_2FA"
-      return $?
-      ;;
-      
-    *)
-      echo -e "${YELLOW}No GitHub authentication method selected. You can set this up manually after installation.${NC}"
-      return 1
-      ;;
-  esac
-}
-
-setup_github_repo() {
-  echo -e "${CYAN}Setting up GitHub repository...${NC}"
-  
-  # Ensure target directory exists and is empty
-  if ! mkdir -p /mnt/home/david; then
-    echo -e "${RED}Failed to create home directory${NC}"
-    return 1
-  fi
-  
-  if [ -d "/mnt/home/david/nix" ]; then
-    if ! rm -rf /mnt/home/david/nix; then
-      echo -e "${RED}Failed to remove existing repository directory${NC}"
-      return 1
-    fi
-  fi
-  
-  # Get GitHub token
-  GITHUB_TOKEN=$(get_github_token)
-  # Remove any color codes or newlines from token
-  GITHUB_TOKEN=$(echo "$GITHUB_TOKEN" | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\n' | tr -d '\r')
-  if [ -z "$GITHUB_TOKEN" ]; then
-    echo -e "${YELLOW}No GitHub token available. Setting up repo without authentication...${NC}"
-    if ! git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix; then
-      echo -e "${RED}Failed to clone repository${NC}"
-      return 1
-    fi
-  else
-    # Clone with token and set up authentication
-    echo -e "${CYAN}Cloning repository with authentication...${NC}"
-    if ! git clone --origin nyx --depth 1 --branch master "https://xlrinn:${GITHUB_TOKEN}@github.com/xlrinn/nix.git" /mnt/home/david/nix; then
-      echo -e "${RED}Failed to clone repository with authentication${NC}"
-      return 1
-    fi
-    
-    # Set up permanent authentication
-    if ! mkdir -p /mnt/home/david/.config/git; then
-      echo -e "${YELLOW}Failed to create git config directory${NC}"
-    fi
-    
-    # Create .netrc file for authentication
-    cat > /mnt/home/david/.netrc <<EOF
-machine github.com
-login xlrinn
-password ${GITHUB_TOKEN}
-EOF
-    chmod 600 /mnt/home/david/.netrc || echo -e "${YELLOW}Warning: Failed to set permissions on .netrc${NC}"
-    chown 1000:1000 /mnt/home/david/.netrc || echo -e "${YELLOW}Warning: Failed to set ownership on .netrc${NC}"
-  fi
-  
-  # Verify repository was cloned successfully
-  if [ ! -d "/mnt/home/david/nix" ]; then
-    echo -e "${RED}Repository directory does not exist after clone${NC}"
-    return 1
-  fi
-  
-  # Configure git (continue on errors)
-  git -C /mnt/home/david/nix config credential.helper "store --file /home/david/.config/git/credentials" || true
-  git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
-  git -C /mnt/home/david/nix remote set-branches nyx '*' || true
-  
-  # Set permissions (continue on errors but warn)
-  if ! chown -R 1000:1000 /mnt/home/david/nix; then
-    echo -e "${YELLOW}Warning: Failed to set ownership on repository${NC}"
-  fi
-  
-  if ! chmod -R 755 /mnt/home/david/nix; then
-    echo -e "${YELLOW}Warning: Failed to set permissions on repository${NC}"
-  fi
-  
-  echo -e "${GREEN}✓ GitHub repository configured${NC}"
-  return 0
-}
 
 setup_files() {
   if ! mkdir -p /mnt/etc/nixos; then
@@ -352,33 +107,7 @@ setup_files() {
   
   echo -e "${GREEN}✓ Files copied to system${NC}"
 
-  # Ensure a clean ~/nix git clone for the first boot
-  mkdir -p /mnt/home/david
-  if [ -d "/mnt/home/david/nix" ]; then
-    rm -rf /mnt/home/david/nix
-  fi
-
-  # Let setup_github_repo handle the clone and auth setup - don't duplicate here
-  echo -e "${CYAN}Setting up GitHub repository...${NC}"
-  if ! setup_github_repo; then
-    echo -e "${YELLOW}GitHub repository setup was not successful or skipped${NC}"
-    # Non-fatal - continue with installation
-  fi
-
-  # Minimal identity passthrough (optional)
-  if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
-  if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
-  
-  # Prefer SSH remote so pushes work once SSH keys are in place
-  git -C /mnt/home/david/nix remote set-url nyx git@github.com:xlrinn/nix.git >/dev/null 2>&1 || true
-  git -C /mnt/home/david/nix config --add remote.nyx.fetch "+refs/heads/*:refs/remotes/nyx/*" || true
-  git -C /mnt/home/david/nix remote set-branches nyx '*' || true
-  git -C /mnt/home/david/nix fetch nyx --prune --tags || true
-  git -C /mnt/home/david/nix fetch nyx --unshallow >/dev/null 2>&1 || true
-  chown -R 1000:1000 /mnt/home/david/nix
-  chmod -R 755 /mnt/home/david/nix
-
-  # Seed per-user git config so pushes are ready after first boot
+  # Seed per-user git config so pushes are ready after first boot (optional)
   if [ -f /tmp/git_name.txt ] && [ -f /tmp/git_email.txt ]; then
     mkdir -p /mnt/home/david
     cat > /mnt/home/david/.gitconfig <<EOF
@@ -392,23 +121,8 @@ EOF
     chmod 600 /mnt/home/david/.gitconfig
   fi
 
-  # Optionally pre-provision Bitwarden Secrets Manager token for first boot
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    echo -e "${CYAN}Provisioning BWS token for first boot...${NC}"
-    # Prefer encrypted token in repo using age via nix shell; fallback to private env file
-    if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
-      chroot /mnt /bin/sh -lc "cd /home/david/nix && nix shell nixpkgs#age -c BWS_ACCESS_TOKEN='${BWS_ACCESS_TOKEN}' BWS_TOKEN_PASSPHRASE='${BWS_TOKEN_PASSPHRASE}' bash scripts/prepare-bws-token.sh" || {
-        echo -e "${YELLOW}Failed to create encrypted token; falling back to ~/.secrets/bws.env${NC}"
-        mkdir -p /mnt/home/david/.secrets
-        printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
-        chmod 600 /mnt/home/david/.secrets/bws.env
-      }
-    else
-      mkdir -p /mnt/home/david/.secrets
-      printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
-      chmod 600 /mnt/home/david/.secrets/bws.env
-    fi
-  fi
+  echo -e "${CYAN}Skipping Git clone and Bitwarden provisioning in the installer.${NC}"
+  echo -e "${CYAN}After first boot, clone the repo to ~/nix and run 'unlock' to fetch secrets.${NC}"
 }
 
 install_nixos() {
@@ -443,27 +157,6 @@ install_nixos() {
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
 
-run_unlock() {
-  if [[ "${RUN_UNLOCK:-1}" != "1" ]]; then
-    echo -e "${YELLOW}Skipping Bitwarden setup (RUN_UNLOCK=${RUN_UNLOCK:-0}).${NC}"
-    return
-  fi
-
-  if [[ -z "${BWS_ACCESS_TOKEN:-}" ]]; then
-    echo -e "${CYAN}Please enter your Bitwarden access token to set up secrets:${NC}"
-    read -r -p "BWS access token: " BWS_ACCESS_TOKEN
-    export BWS_ACCESS_TOKEN
-  fi
-
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    mkdir -p /mnt/home/david/.secrets
-    printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
-    chmod 600 /mnt/home/david/.secrets/bws.env
-    chown -R 1000:1000 /mnt/home/david/.secrets
-    echo -e "${GREEN}✓ Bitwarden Secrets Manager token configured${NC}"
-  fi
-}
-
 prompt_reboot() {
   echo -e "\e[1;32mRebooting in 5 seconds...\e[0m"
   sleep 5
@@ -479,12 +172,9 @@ run_disko
 setup_files
 install_nixos
 
-# Set up Bitwarden secrets before GitHub authentication
-run_unlock
-
-# Now handle GitHub authentication and repository setup
-echo -e "\n${CYAN}Setting up GitHub access...${NC}"
-setup_github_repo
+echo -e "\n${CYAN}Post-install reminder:${NC}"
+echo -e "  - ${GREEN}After reboot${NC}, clone the repo to ~/nix and configure Git credentials."
+echo -e "  - Run ${GREEN}unlock${NC} (or 'nix run .#secrets') to sync Bitwarden secrets, then 'sops-deploy'."
 
 cleanup
 prompt_reboot 
