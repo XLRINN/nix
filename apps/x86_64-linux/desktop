@@ -69,6 +69,10 @@ install_bws() {
   esac
   
   unzip -q "$tmp_dir/bws.zip" -d "$tmp_dir"
+  # Ensure /usr/local/bin exists
+  if [ ! -d /usr/local/bin ]; then
+    sudo mkdir -p /usr/local/bin
+  fi
   sudo mv "$tmp_dir/bws" /usr/local/bin/
   rm -rf "$tmp_dir"
   
@@ -274,6 +278,8 @@ setup_github_repo() {
   
   # Get GitHub token
   GITHUB_TOKEN=$(get_github_token)
+  # Remove any color codes or newlines from token
+  GITHUB_TOKEN=$(echo "$GITHUB_TOKEN" | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\n' | tr -d '\r')
   if [ -z "$GITHUB_TOKEN" ]; then
     echo -e "${YELLOW}No GitHub token available. Setting up repo without authentication...${NC}"
     if ! git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix; then
@@ -473,10 +479,12 @@ run_disko
 setup_files
 install_nixos
 
-# Handle GitHub authentication and repository setup last, after everything else is done
+# Set up Bitwarden secrets before GitHub authentication
+run_unlock
+
+# Now handle GitHub authentication and repository setup
 echo -e "\n${CYAN}Setting up GitHub access...${NC}"
 setup_github_repo
-run_unlock
 
 cleanup
 prompt_reboot 
