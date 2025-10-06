@@ -107,8 +107,8 @@
                 return 0
               fi
               if repo="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-                if [ -f "${repo}/scripts/secrets-wizard.sh" ]; then
-                  printf '%s' "$repo"
+                if [ -f "''${repo}/scripts/secrets-wizard.sh" ]; then
+                  printf '%s' "''${repo}"
                   return 0
                 fi
               fi
@@ -120,7 +120,7 @@
             }
 
             if repo_dir="$(find_repo)"; then
-              exec bash "${repo_dir}/scripts/secrets-wizard.sh" "$@"
+              exec bash "''${repo_dir}/scripts/secrets-wizard.sh" "$@"
             else
               echo "Unable to locate scripts/secrets-wizard.sh. Run this command from the repo root or move the repo to ~/nix." >&2
               exit 1
@@ -150,8 +150,8 @@
                 return 0
               fi
               if repo="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-                if [ -f "${repo}/scripts/secrets-wizard.sh" ]; then
-                  printf '%s' "$repo"
+                if [ -f "''${repo}/scripts/secrets-wizard.sh" ]; then
+                  printf '%s' "''${repo}"
                   return 0
                 fi
               fi
@@ -163,7 +163,7 @@
             }
 
             if repo_dir="$(find_repo)"; then
-              exec bash "${repo_dir}/scripts/secrets-wizard.sh" "$@"
+              exec bash "''${repo_dir}/scripts/secrets-wizard.sh" "$@"
             else
               echo "Unable to locate scripts/secrets-wizard.sh. Run this command from the repo root or move the repo to ~/nix." >&2
               exit 1
