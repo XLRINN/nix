@@ -40,7 +40,14 @@ in
       timeout = 1;
     };
     # Proxmox guest support
-    initrd.kernelModules = [ "virtio_balloon" "virtio_console" "virtio_rng" ];
+    initrd.kernelModules = [
+      "virtio_balloon"
+      "virtio_blk"
+      "virtio_console"
+      "virtio_pci"
+      "virtio_rng"
+      "virtio_scsi"
+    ];
     initrd.availableKernelModules = [
       "xhci_pci"
       "ahci"
@@ -49,17 +56,17 @@ in
       "usb_storage"
       "sd_mod"
       "virtio_blk"
-      "virtio_pci"
-      "virtio_scsi"
       "virtio_net"
-    ];
-    initrd.kernelModules = [
-      "virtio_blk"
-      "virtio_console"
       "virtio_pci"
       "virtio_scsi"
     ];
-    kernelModules = [ "uinput" "virtio_balloon" "virtio_net" "virtio_rng" ];
+    kernelModules = [
+      "uinput"
+      "virtio_balloon"
+      "virtio_console"
+      "virtio_net"
+      "virtio_rng"
+    ];
     # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
     # Explicitly set root by LABEL to avoid PARTLABEL dependency in stage-1
     kernelParams = [
@@ -67,6 +74,8 @@ in
       "i915.enable_psr=0"
       "root=LABEL=NIXOS_ROOT"
       "rootfstype=ext4"
+      "console=tty0"
+      "console=ttyS0,115200n8"
     ];
   # Enable hibernation: set after install with the actual PARTUUID of the swap partition, e.g.
   # lsblk -no PARTUUID /dev/yourdisk2
@@ -200,6 +209,7 @@ in
       HandleLidSwitchDocked = "ignore";
       HandleLidSwitchExternalPower = "hibernate";
     };
+    getty.extraTTYs = [ "ttyS0" ];
   };
 
   services."spice-vdagentd".enable = lib.mkDefault true;

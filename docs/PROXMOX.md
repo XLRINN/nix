@@ -10,6 +10,7 @@ https://nixos.wiki/wiki/Proxmox_Virtual_Environment
 - Display: Default is fine; SPICE display works best with `spice-vdagent`
 - Network Device: VirtIO (paravirtualized)
 - QEMU Guest Agent: Enable in VM Options (the OS enables the agent service automatically)
+- Serial Console: Add a serial device (e.g. `ttyS0`) if you want to use the Proxmox console; the NixOS config already exposes `console=ttyS0,115200n8` and spawns a `getty` on that TTY.
 
 Boot the NixOS ISO, open a shell, and run the installer directly from GitHub (no local checkout needed):
 
