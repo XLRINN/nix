@@ -13,10 +13,12 @@ _: {
           partitions = {
             # Small BIOS boot partition so images work on BIOS and UEFI
             bios = {
+              name = "disk-main-bios";
               type = "EF02"; # BIOS boot partition for GRUB on GPT
               size = "1M";
             };
             ESP = {
+              name = "disk-main-ESP";
               type = "EF00";
               size = "500M";
               content = {
@@ -33,6 +35,7 @@ _: {
               };
             };
             swap = {
+              name = "disk-main-swap";
               size = "16G"; # Patched dynamically by apply script (accepts number or number+G)
               content = {
                 type = "swap";
@@ -40,6 +43,7 @@ _: {
               };
             };
             root = {
+              name = "disk-main-root";
               size = "100%";
               content = {
                 type = "filesystem";

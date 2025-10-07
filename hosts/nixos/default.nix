@@ -106,7 +106,7 @@ in
 
   hardware = {
     enableAllFirmware = true; # Enable all firmware
-    opengl = {
+    graphics = {
       enable = true;   # Wayland/X11 GL stack
       extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
     };
