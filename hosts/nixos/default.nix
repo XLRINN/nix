@@ -69,7 +69,7 @@ in
     ];
     # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
     # Explicitly set root by LABEL to avoid PARTLABEL dependency in stage-1
-    kernelParams = [
+    kernelParams = lib.mkForce [
       "loglevel=4"
       "i915.enable_psr=0"
       "root=LABEL=NIXOS_ROOT"
