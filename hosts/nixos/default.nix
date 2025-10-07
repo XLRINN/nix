@@ -77,6 +77,13 @@ in
       "console=tty0"
       "console=ttyS0,115200n8"
     ];
+    # Safety net: recreate the legacy disk-main-root symlink if tooling still expects it
+    initrd.postDeviceCommands = lib.mkAfter ''
+      if [ -e /dev/disk/by-label/NIXOS_ROOT ] && [ ! -e /dev/disk/by-partlabel/disk-main-root ]; then
+        mkdir -p /dev/disk/by-partlabel
+        ln -s ../by-label/NIXOS_ROOT /dev/disk/by-partlabel/disk-main-root
+      fi
+    '';
   # Enable hibernation: set after install with the actual PARTUUID of the swap partition, e.g.
   # lsblk -no PARTUUID /dev/yourdisk2
   # boot.resumeDevice = "/dev/disk/by-partuuid/<uuid>";
