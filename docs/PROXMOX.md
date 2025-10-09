@@ -23,3 +23,46 @@ Notes
 - The installer is UEFI-only (systemd-boot). If the VM uses BIOS/SeaBIOS, the installer exits with a friendly hint to switch to UEFI and add an EFI disk. If you prefer BIOS, tell me and I can add a GRUB-on-BIOS fallback.
 - VirtIO/QEMU guest modules and agents are enabled by default in the NixOS host configuration.
 - The Disko layout includes a small BIOS boot partition for cross-compatibility, alongside the EFI system partition.
+
+## Cloud-Init (Optional)
+
+If you want to use Proxmox Cloud-Init to inject users, SSH keys, and network configuration (e.g., for templates), enable the optional Proxmox module:
+
+```
+# In your host imports or a profile module
+imports = [
+  ../../modules/nixos/proxmox.nix
+];
+
+my.proxmox.cloudInit.enable = true;
+```
+
+What it does:
+- Enables `services.cloud-init` and switches networking to `systemd-networkd` for compatibility with Cloud-Init’s network configuration.
+- Ensures `openssh` is enabled and password logins are off by default.
+
+Proxmox template flow:
+- Build a base VM with this repo and `my.proxmox.cloudInit.enable = true`.
+- In Proxmox, convert the VM to a template and provision new VMs with Cloud-Init user-data (SSH keys, hostname, etc.).
+- See: https://nixos.wiki/wiki/Proxmox_Virtual_Environment and https://mtlynch.io/notes/nixos-proxmox/
+
+## VirtIO-FS Shared Folders (Optional)
+
+To mount Proxmox host shares via VirtIO-FS inside the guest, enable support in the module:
+
+```
+imports = [ ../../modules/nixos/proxmox.nix ];
+my.proxmox.virtiofs.enable = true;
+```
+
+Then in your VM hardware, add a `VirtIO FS` device (e.g., tag `hostshare`), and mount it in your NixOS config or at runtime, for example:
+
+```
+fileSystems."/mnt/hostshare" = {
+  device = "hostshare";  # the VirtIO-FS tag set in Proxmox
+  fsType = "virtiofs";
+  options = [ "rw" "nofail" ];
+};
+```
+
+Tip: SPICE works best with the `spice-vdagent` enabled (already on by default here). For headless/server use, you can omit graphics entirely and use only the serial console over `ttyS0`.

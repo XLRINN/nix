@@ -35,4 +35,5 @@ _:
   #"cursor"
   "zed"
   "windsurf"
+  "anki"
 ]
