@@ -91,6 +91,7 @@
         "create-keys" = mkApp "create-keys" system;
         "check-keys" = mkApp "check-keys" system;
         "desktop" = mkApp "desktop" system;
+        "server" = mkApp "server" system;
         # Secrets: run the wizard directly from the user's checkout to avoid
         # depending on repo files being in the flake source when the tree is dirty.
         "secrets" = {
