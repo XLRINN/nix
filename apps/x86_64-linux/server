@@ -1,86 +1,9 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
 
-# Simple wrapper for headless/server installs
-# This mirrors the desktop installer but skips GUI-related steps.
+# Mirror the x86 server installer to reuse the desktop workflow.
+export NIX_REF=${NIX_REF:-server}
+export NIX_BRANCH=${NIX_BRANCH:-server}
+export NIX_PROFILE=${NIX_PROFILE:-server}
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-check_installer() {
-  if [ -e /etc/NIXOS ]; then
-    echo -e "${GREEN}Running in the NixOS installer environment.${NC}"
-  else
-    echo -e "${RED}Not running in the NixOS installer environment.${NC}"
-    exit 1
-  fi
-}
-
-cleanup() {
-  rm -rf nixos-config-main.zip nixos-config-main nix-* nyx-* || true
-}
-
-download_config() {
-  NIX_REF=${NIX_REF:-testing}
-  curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
-  unzip -q nixos-config-main.zip
-  SRC_DIR=$(find . -maxdepth 1 -type d -name "nix-*" | head -n1)
-  if [ -z "${SRC_DIR}" ]; then
-    echo -e "${RED}Error: extracted directory not found.${NC}"; exit 1
-  fi
-  cd "$SRC_DIR"
-  echo -e "${GREEN}✓ Source extracted${NC}"
-}
-
-run_apply() {
-  export NONINTERACTIVE=1
-  export HOST_NAME=${HOST_NAME:-heimdall}
-  export BOOT_DISK=${BOOT_DISK:-sda}
-  ./apps/x86_64-linux/apply
-  export USERNAME="david"
-  echo -e "${GREEN}✓ Apply phase complete${NC}"
-}
-
-run_disko() {
-  nix --experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./modules/nixos/disk-config.nix
-  echo -e "${GREEN}✓ Disk partitioned & mounted${NC}"
-}
-
-setup_files() {
-  mkdir -p /mnt/etc/nixos
-  cp -r * /mnt/etc/nixos
-  cd /mnt/etc/nixos
-  echo -e "${GREEN}✓ Configuration staged to /mnt/etc/nixos${NC}"
-  mkdir -p /mnt/home/david
-  git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix || true
-  chown -R 1000:1000 /mnt/home/david/nix || true
-}
-
-install_nixos() {
-  ARCH=$(uname -m)
-  case "$ARCH" in
-    x86_64) FLAKE_TARGET="server-x86_64-linux";;
-    aarch64) FLAKE_TARGET="server-aarch64-linux";;
-    *) echo -e "${RED}Unsupported arch: $ARCH${NC}"; exit 1;;
-  esac
-  nixos-install --flake .#$FLAKE_TARGET --no-write-lock-file --no-root-passwd
-  echo "root:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
-  echo "david:6!y2c87T" | chroot /mnt /nix/var/nix/profiles/system/sw/bin/chpasswd
-  echo -e "${GREEN}✓ NixOS server installed${NC}"
-}
-
-prompt_reboot() {
-  echo -e "${YELLOW}Rebooting in 5s...${NC}"; sleep 5; reboot
-}
-
-cleanup
-check_installer
-download_config
-run_apply
-run_disko
-setup_files
-install_nixos
-cleanup
-prompt_reboot
+exec "$(dirname "$0")/desktop" "$@"

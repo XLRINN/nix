@@ -22,6 +22,7 @@ check_installer() {
 
 cleanup() {
   rm -rf nixos-config-main.zip nixos-config-main nixos-config nix-* nyx-*
+  rm -f /tmp/bws_access_token /tmp/bws_token_passphrase
 }
 
 download_config() {
@@ -53,27 +54,16 @@ run_disko() {
   echo -e "${GREEN}✓ Disk formatted and mounted${NC}"
 }
 
-prompt_bws() {
-  # Ask once during install so the target can bootstrap secrets on first boot
-  if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
-    echo -e "${CYAN}Optional: Provide Bitwarden Secrets Manager access token to pre-provision secrets (press Enter to skip).${NC}"
-    read -r -p "BWS access token: " BWS_ACCESS_TOKEN || true
-  fi
-  if [ -n "${BWS_ACCESS_TOKEN:-}" ] && [ -z "${BWS_TOKEN_PASSPHRASE:-}" ]; then
-    echo -e "${CYAN}Optional: Set a passphrase to store the token encrypted in the repo (secrets/bws.token.age).${NC}"
-    echo -e "${CYAN}Leave blank to store token in /home/david/.secrets/bws.env instead.${NC}"
-    read -r -s -p "Passphrase (optional): " BWS_TOKEN_PASSPHRASE || true; echo
-    if [ -n "${BWS_TOKEN_PASSPHRASE:-}" ]; then
-      read -r -s -p "Confirm passphrase: " _CONFIRM || true; echo
-      if [ "${BWS_TOKEN_PASSPHRASE}" != "${_CONFIRM}" ]; then
-        echo -e "${YELLOW}Passphrases did not match; skipping encryption (will use ~/.secrets/bws.env).${NC}"
-        unset BWS_TOKEN_PASSPHRASE
-      fi
-    fi
-  fi
-}
-
 setup_files() {
+  if [[ -z "${BWS_ACCESS_TOKEN:-}" && -f /tmp/bws_access_token ]]; then
+    BWS_ACCESS_TOKEN="$(cat /tmp/bws_access_token)"
+    export BWS_ACCESS_TOKEN
+  fi
+  if [[ -z "${BWS_TOKEN_PASSPHRASE:-}" && -f /tmp/bws_token_passphrase ]]; then
+    BWS_TOKEN_PASSPHRASE="$(cat /tmp/bws_token_passphrase)"
+    export BWS_TOKEN_PASSPHRASE
+  fi
+
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
@@ -115,6 +105,8 @@ setup_files() {
       chmod 600 /mnt/home/david/.secrets/bws.env
     fi
   fi
+
+  rm -f /tmp/bws_access_token /tmp/bws_token_passphrase
 }
 
 install_nixos() {
@@ -167,7 +159,6 @@ prompt_reboot() {
 cleanup
 check_installer
 download_config
-prompt_bws
 run_apply
 run_disko
 setup_files
