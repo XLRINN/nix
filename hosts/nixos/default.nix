@@ -35,8 +35,25 @@ in
       # Faster boot
       timeout = 1;
     };
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-    kernelModules = [ "uinput" ];
+    initrd.availableKernelModules = [
+      "xhci_pci"
+      "ahci"
+      "nvme"
+      "usbhid"
+      "usb_storage"
+      "sd_mod"
+      "virtio_blk"
+      "virtio_pci"
+      "virtio_scsi"
+      "virtio_net"
+    ];
+    initrd.kernelModules = [
+      "virtio_blk"
+      "virtio_console"
+      "virtio_pci"
+      "virtio_scsi"
+    ];
+    kernelModules = [ "uinput" "virtio_balloon" "virtio_net" "virtio_rng" ];
   # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
   kernelParams = [ "loglevel=4" "i915.enable_psr=0" ];
   # Enable hibernation: set after install with the actual PARTUUID of the swap partition, e.g.
@@ -164,8 +181,11 @@ in
       settings = {
         PasswordAuthentication = true;
         KbdInteractiveAuthentication = false;
+        PermitRootLogin = "prohibit-password";
       };
     };
+
+    qemuGuest.enable = lib.mkDefault true;
 
     gvfs.enable = true;
     tumbler.enable = true;
@@ -179,6 +199,8 @@ in
       };
     };
   };
+
+  services.spice-vdagentd.enable = lib.mkDefault true;
 
   fonts.packages = with pkgs; [
       noto-fonts
