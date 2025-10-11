@@ -42,6 +42,16 @@ in
 		kernelModules = [ "uinput" "virtio_balloon" "virtio_net" "virtio_rng" ];
 	};
 
+	fileSystems."/" = lib.mkForce {
+		device = "/dev/disk/by-label/NIXOS_ROOT";
+		fsType = "ext4";
+	};
+
+	fileSystems."/boot" = lib.mkForce {
+		device = "/dev/disk/by-label/NIXOS_BOOT";
+		fsType = "vfat";
+	};
+
 	networking = {
 		hostName = "server"; # token replaced by apply script
 		useDHCP = true;

@@ -130,6 +130,21 @@
         bitwarden-cli-legacy = legacyFor system;
       });
 
+      templates = {
+        starter = {
+          path = ./templates/starter;
+          description = "Starter configuration template for workstations";
+        };
+        starter-with-secrets = {
+          path = ./templates/starter-with-secrets;
+          description = "Workstation starter template pre-wired for secrets";
+        };
+        server = {
+          path = ./templates/server;
+          description = "Minimal server configuration template";
+        };
+      };
+
       darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system: let
         user = "david";
       in

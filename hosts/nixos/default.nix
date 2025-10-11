@@ -48,6 +48,16 @@ in
   # Set your time zone.
   time.timeZone = "America/New_York";
 
+  fileSystems."/" = lib.mkForce {
+    device = "/dev/disk/by-label/NIXOS_ROOT";
+    fsType = "ext4";
+  };
+
+  fileSystems."/boot" = lib.mkForce {
+    device = "/dev/disk/by-label/NIXOS_BOOT";
+    fsType = "vfat";
+  };
+
   networking = {
     hostName = "hodr"; # Define your hostname.
     useDHCP = lib.mkDefault true;
