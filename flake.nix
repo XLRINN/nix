@@ -163,29 +163,39 @@
         }
       );
 
-  nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system: let
-        user = "david";
-      in 
-        nixpkgs.lib.nixosSystem {
-          inherit system;
-          specialArgs = { 
-    inherit inputs; 
-    # secrets integration disabled for now; re-enable later
-    # secrets = sopswarden.secrets.${system};
+  nixosConfigurations =
+    let
+      user = "david";
+      mkHost = modules:
+        { system, profile ? null }:
+          nixpkgs.lib.nixosSystem {
+            inherit system;
+            specialArgs = { inherit inputs; };
+            modules =
+              [ disko.nixosModules.disko sopswarden.nixosModules.default ]
+              ++ (modules profile);
           };
-          modules = [
-            disko.nixosModules.disko
-    # sopswarden.nixosModules.default  # disabled for initial build
-            home-manager.nixosModules.home-manager {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.${user} = import ./modules/nixos/home-manager.nix;
-              };
-            }
-            ./hosts/nixos
-          ];
+
+      workstationModules = _: [
+        home-manager.nixosModules.home-manager {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            users.${user} = import ./modules/nixos/home-manager.nix;
+          };
         }
-      );
+        ./hosts/nixos
+      ];
+
+      serverModules = _: [
+        ./hosts/nixos/server
+      ];
+
+    in {
+      x86_64-linux = mkHost workstationModules { system = "x86_64-linux"; };
+      aarch64-linux = mkHost workstationModules { system = "aarch64-linux"; };
+      server-x86_64-linux = mkHost serverModules { system = "x86_64-linux"; profile = "server"; };
+      server-aarch64-linux = mkHost serverModules { system = "aarch64-linux"; profile = "server"; };
+    };
   };
 }
