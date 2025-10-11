@@ -3,6 +3,7 @@
 let
   user = "david";
   keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ];
+  sopsFile = "/var/lib/sopswarden/secrets.yaml";
 
   # Probe for available Framework modules to avoid version-specific errors and deprecations.
   fwMods = inputs.nixos-hardware.nixosModules or {};
@@ -274,17 +275,64 @@ in
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
-  # Sopswarden secrets configuration (recommended secrets management)
-  # Temporarily disabled sopswarden to allow system to build without Bitwarden secrets
-  # Uncomment and configure when ready for secrets integration again.
-  # services.sopswarden = {
-  #   enable = true;
-  #   secrets = {
-  #     tailscale-auth-key = { name = "Tailscale"; field = "auth-key"; };
-  #     openrouter-api-key = { name = "OpenRouter API"; field = "api-key"; };
-  #     github-token = { name = "GitHub Token"; field = "token"; };
-  #   };
-  # };
+  services.sopswarden = {
+    enable = true;
+    secrets = {
+      tailscale-auth-key = {
+        name = "Tailscale";
+        field = "auth-key";
+      };
+      openrouter-api-key = {
+        name = "OpenRouter API";
+        field = "api-key";
+      };
+      github-token = {
+        name = "GitHub Token";
+        field = "token";
+      };
+      github-ssh-key = {
+        name = "GitHub SSH Key";
+        field = "private-key";
+        type = "note";
+      };
+    };
+  };
+
+  sops.secrets = {
+    tailscale-auth-key = {
+      owner = "root";
+      group = "root";
+      mode = "0600";
+      path = "/run/secrets/tailscale-auth-key";
+    };
+    openrouter-api-key = {
+      owner = user;
+      group = "users";
+      mode = "0400";
+      path = "/run/secrets/openrouter-api-key";
+    };
+    github-token = {
+      owner = user;
+      group = "users";
+      mode = "0400";
+      path = "/run/secrets/github-token";
+    };
+    github-ssh-key = {
+      owner = user;
+      group = "users";
+      mode = "0600";
+      path = "/home/${user}/.ssh/id_ed25519";
+    };
+  };
+
+  sops = {
+    defaultSopsFile = lib.mkDefault sopsFile;
+    validateSopsFiles = lib.mkDefault false;
+  };
+
+  systemd.tmpfiles.rules = [
+    "d /home/${user}/.ssh 0700 ${user} users -"
+  ];
 
   system.stateVersion = "21.05"; # Don't change this
 }
