@@ -177,14 +177,6 @@ in
     xserver.videoDrivers = [ "modesetting" ];
   # cosmic desktop disabled
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
-    openssh = {
-      enable = true;
-      settings = {
-        PasswordAuthentication = true;
-        KbdInteractiveAuthentication = false;
-        PermitRootLogin = "prohibit-password";
-      };
-    };
 
     qemuGuest.enable = lib.mkDefault true;
 
@@ -198,6 +190,15 @@ in
       settings.Login = {
         HandleLidSwitchExternalPower = "hibernate";
       };
+    };
+  };
+
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = true;
+      KbdInteractiveAuthentication = false;
+      PermitRootLogin = "prohibit-password";
     };
   };
 
