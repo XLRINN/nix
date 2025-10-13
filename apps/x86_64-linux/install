@@ -193,13 +193,18 @@ install_nixos() {
   
   ARCH=$(uname -m)
   case "$ARCH" in
-    x86_64) FLAKE_TARGET="x86_64-linux" ;;
-    aarch64) FLAKE_TARGET="aarch64-linux" ;;
+    x86_64) BASE_TARGET="x86_64-linux" ;;
+    aarch64) BASE_TARGET="aarch64-linux" ;;
     *)
       echo -e "${RED}Unsupported architecture: $ARCH${NC}"
       exit 1
       ;;
   esac
+  if [[ "${NIX_PROFILE:-}" == "server" ]]; then
+    FLAKE_TARGET="server-${BASE_TARGET}"
+  else
+    FLAKE_TARGET="${BASE_TARGET}"
+  fi
 
   progress "Installing NixOS from /mnt/etc/nixos"
   nixos-install --no-root-passwd --flake "/mnt/etc/nixos#$FLAKE_TARGET" --no-write-lock-file
@@ -237,10 +242,15 @@ run_secrets_preboot() {
   # After syncing secrets (via rbw/sopswarden), attempt an impure rebuild to materialize secret files
   ARCH=$(uname -m)
   case "$ARCH" in
-    x86_64) FLAKE_TARGET="x86_64-linux" ;;
-    aarch64) FLAKE_TARGET="aarch64-linux" ;;
-    *) FLAKE_TARGET="x86_64-linux" ;;
+    x86_64) BASE_TARGET="x86_64-linux" ;;
+    aarch64) BASE_TARGET="aarch64-linux" ;;
+    *) BASE_TARGET="x86_64-linux" ;;
   esac
+  if [[ "${NIX_PROFILE:-}" == "server" ]]; then
+    FLAKE_TARGET="server-${BASE_TARGET}"
+  else
+    FLAKE_TARGET="${BASE_TARGET}"
+  fi
   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
 }
 

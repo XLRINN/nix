@@ -77,7 +77,7 @@ in
   };
 
   networking = {
-    hostName = "hodr"; # Define your hostname.
+    hostName = "%HOST%"; # Replaced by apply script
     useDHCP = lib.mkDefault true;
     networkmanager.enable = true; # Enable NetworkManager
     firewall = {
@@ -160,7 +160,7 @@ in
     }];
   };
 
-  # Enable Hyprland (alongside GNOME; choose session at GDM login)
+  # Enable Hyprland (alongside KDE; choose session at SDDM login)
   programs.hyprland.enable = true;
 
   services = { 
@@ -169,11 +169,8 @@ in
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-    displayManager.gdm = {
-      enable = true;
-      wayland = true; # Enable Wayland so Hyprland session appears
-    };
-    desktopManager.gnome.enable = true;
+    displayManager.sddm.enable = true;
+    desktopManager.plasma6.enable = true;
     xserver.videoDrivers = [ "modesetting" ];
   # cosmic desktop disabled
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable

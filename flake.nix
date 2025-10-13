@@ -204,6 +204,13 @@
       ];
 
       serverModules = _: [
+        home-manager.nixosModules.home-manager {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            users.${user} = import ./modules/nixos/home-manager-server.nix;
+          };
+        }
         ./hosts/nixos/server
       ];
 

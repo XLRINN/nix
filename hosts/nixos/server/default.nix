@@ -53,7 +53,7 @@ in
 	};
 
 	networking = {
-		hostName = "server"; # token replaced by apply script
+	hostName = "%HOST%"; # Replaced by apply script
 		useDHCP = true;
 		firewall = {
 			enable = true;
