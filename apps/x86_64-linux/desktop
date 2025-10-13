@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -eu
 
+# Default branch/ref selectors so this installer matches server/install
+export NIX_REF=${NIX_REF:-testing}
+export NIX_BRANCH=${NIX_BRANCH:-testing}
+
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -26,7 +30,7 @@ cleanup() {
 }
 
 download_config() {
-  # Allow pinning a branch, tag, or commit SHA via NIX_REF; default to 'testing'
+  # Allow pinning a branch, tag, or commit SHA via NIX_REF
   NIX_REF=${NIX_REF:-testing}
   curl -LJ0 "https://github.com/xlrinn/nix/archive/${NIX_REF}.zip" -o nixos-config-main.zip
   unzip -q nixos-config-main.zip
@@ -74,7 +78,11 @@ setup_files() {
   if [ -d "/mnt/home/david/nix" ]; then
     rm -rf /mnt/home/david/nix
   fi
-  git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  # Clone the chosen branch into the user's home for post-install updates
+  git clone --origin nyx --depth 1 --branch "${NIX_BRANCH}" https://github.com/xlrinn/nix.git /mnt/home/david/nix || {
+    echo -e "${YELLOW}Branch ${NIX_BRANCH} not available; falling back to 'master'${NC}"
+    git clone --origin nyx --depth 1 --branch master https://github.com/xlrinn/nix.git /mnt/home/david/nix
+  }
   # Minimal identity passthrough (optional)
   if [ -f /tmp/git_name.txt ]; then git -C /mnt/home/david/nix config user.name "$(cat /tmp/git_name.txt)"; fi
   if [ -f /tmp/git_email.txt ]; then git -C /mnt/home/david/nix config user.email "$(cat /tmp/git_email.txt)"; fi
