@@ -270,6 +270,56 @@ EOF
   chmod 600 "$api_config_dir/keys.env"
 }
 
+# Fetch GitHub SSH private key from Bitwarden Secrets Manager and write to ~/.ssh/id_ed25519
+step_bws_sshkey() {
+  say "${BLUE}BWS:${NC} Installing GitHub SSH key if available"
+  if ! have jq; then
+    say "${RED}jq is required for parsing BWS JSON.${NC}"
+    return 1
+  fi
+  # Get secrets JSON, optionally filtered by project
+  local json proj_id="${BWS_PROJECT_ID:-}"
+  if [ -z "$proj_id" ] && [ -n "${BWS_PROJECT_NAME:-}" ]; then
+    local projects
+    projects=$(bws_cmd project list --output json 2>/dev/null || true)
+    if [ -n "$projects" ]; then
+      proj_id=$(printf '%s' "$projects" | jq -r --arg NAME "${BWS_PROJECT_NAME}" '.[] | select(.name==$NAME) | .id' | head -n1)
+    fi
+  fi
+  if [ -n "$proj_id" ]; then
+    json=$(bws_cmd secret list --output json --project-id "$proj_id" 2>/dev/null || true)
+  else
+    json=$(bws_cmd secret list --output json 2>/dev/null || true)
+  fi
+  if [ -z "$json" ]; then
+    say "${YELLOW}No secrets returned from BWS; skipping SSH key install.${NC}"
+    return 0
+  fi
+  # Try common keys for private key content (normalize key name by stripping non-alphanumerics)
+  local pk
+  pk=$(printf '%s' "$json" | jq -r '
+    [ .[]
+      | . as $s
+      | ($s.key // "") as $k
+      | ($k | ascii_downcase | gsub("[^a-z0-9]"; "")) as $norm
+      | select($norm=="githubsshkey" or $norm=="githubprivatekey" or $norm=="ided25519github" or $norm=="ided25519")
+      | .value
+    ][0]')
+  if [ -z "${pk:-}" ] || [ "$pk" = "null" ]; then
+    say "${YELLOW}GitHub SSH key not found in BWS (expected key names like github-ssh-key).${NC}"
+    return 0
+  fi
+  # Ensure .ssh directory and write the key
+  local sshdir keyfile
+  sshdir="${HOME}/.ssh"
+  keyfile="${sshdir}/id_ed25519"
+  mkdir -p "$sshdir"
+  chmod 700 "$sshdir"
+  printf "%s\n" "$pk" > "$keyfile"
+  chmod 600 "$keyfile"
+  say "${GREEN}✓ Installed SSH key at ${keyfile}${NC}"
+}
+
 verify_envfile() {
   local f="$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env"
   say "${BLUE}Verify:${NC} checking keys at $f"
@@ -326,6 +376,12 @@ main() {
   if [ -n "${BWS_ACCESS_TOKEN:-}" ] && ( have bws || have_docker ); then
     say "${BLUE}Detected BWS access token; using Secrets Manager for fetching keys.${NC}"
     step_bws_envfile || true
+    # Attempt to place GitHub SSH key directly if present in BWS
+    if have jq; then
+      step_bws_sshkey || true
+    else
+      say "${YELLOW}jq not available; skipping SSH key fetch from BWS. Install jq and re-run 'secrets'.${NC}"
+    fi
     verify_envfile
     post_notes_macos
     say "\n${GREEN}All done.${NC}"

@@ -27,6 +27,26 @@ check_installer() {
   fi
 }
 
+prompt_bws_token() {
+  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
+    progress "🔐 Using provided Bitwarden machine token from environment."
+    printf "%s" "$BWS_ACCESS_TOKEN" > /tmp/bws_access_token
+    return
+  fi
+  echo -ne "\e[1;33mEnter Bitwarden Machine Token (BWS_ACCESS_TOKEN), or leave blank to skip: \e[0m"
+  stty -echo
+  read -r token || true
+  stty echo
+  echo
+  if [[ -n "$token" ]]; then
+    export BWS_ACCESS_TOKEN="$token"
+    printf "%s" "$token" > /tmp/bws_access_token
+    progress "🔐 Bitwarden token captured for pre-boot secrets."
+  else
+    progress "ℹ️ Skipping Bitwarden token; you can run 'nix run .#secrets' after first boot."
+  fi
+}
+
 cleanup() {
   progress "🧹 Cleaning up temporary files..."
   rm -rf nixos-config-main.zip nix-* nyx-*
@@ -119,6 +139,9 @@ setup_files() {
   
   progress "Setting up user nix configuration in ~/nix"
   mkdir -p /mnt/home/david
+  # Ensure SSH directory exists for potential secret deployment
+  mkdir -p /mnt/home/david/.ssh
+  chmod 700 /mnt/home/david/.ssh
   
   # Remove any existing nix directory to ensure clean clone
   if [ -d "/mnt/home/david/nix" ]; then
@@ -191,6 +214,36 @@ install_nixos() {
   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -c "nixos-rebuild switch --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file"
 }
 
+run_secrets_preboot() {
+  progress "Attempting to run secrets wizard before reboot..."
+  # If a passphrase was provided, stash it in the target user's secrets dir to avoid quoting issues
+  if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
+    mkdir -p /mnt/home/david/.secrets
+    printf "%s" "${BWS_TOKEN_PASSPHRASE}" > /mnt/home/david/.secrets/bws.pass
+    chmod 600 /mnt/home/david/.secrets/bws.pass
+  fi
+  # Pass BWS token (if provided) and run with jq available
+  CHROOT_ENV_PREFIX=""
+  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
+    CHROOT_ENV_PREFIX="BWS_ACCESS_TOKEN=\"${BWS_ACCESS_TOKEN}\" "
+  elif [[ -f /tmp/bws_access_token ]]; then
+    CHROOT_ENV_PREFIX="BWS_ACCESS_TOKEN=\"$(cat /tmp/bws_access_token)\" "
+  fi
+  # Run as the target user in chroot; use passphrase file if present
+  chroot /mnt /bin/sh -lc "su - david -c '${CHROOT_ENV_PREFIX} if [ -f ~/.secrets/bws.pass ]; then export BWS_TOKEN_PASSPHRASE=\"$(cat ~/.secrets/bws.pass)\"; fi; cd /home/david/nix && nix shell nixpkgs#jq -c bash scripts/secrets-wizard.sh'" || {
+    echo -e "${YELLOW}Secrets wizard pre-boot run failed; you can run \"nix run .#secrets\" after first login.${NC}"
+  }
+
+  # After syncing secrets (via rbw/sopswarden), attempt an impure rebuild to materialize secret files
+  ARCH=$(uname -m)
+  case "$ARCH" in
+    x86_64) FLAKE_TARGET="x86_64-linux" ;;
+    aarch64) FLAKE_TARGET="aarch64-linux" ;;
+    *) FLAKE_TARGET="x86_64-linux" ;;
+  esac
+  chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
+}
+
 auto_reboot() {
   progress "✅ Installation complete! Rebooting in 5 seconds..."
   sleep 5
@@ -201,10 +254,12 @@ auto_reboot() {
 cleanup
 check_installer
 download_config
+prompt_bws_token
 run_apply
 run_disko
 verify_disko
 setup_files
 install_nixos
 cleanup
+run_secrets_preboot
 auto_reboot 
