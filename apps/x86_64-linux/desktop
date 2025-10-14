@@ -30,14 +30,13 @@ prompt_bws_token() {
     printf "%s" "$BWS_ACCESS_TOKEN" > /tmp/bws_access_token
     return
   fi
-  echo -ne "\e[1;33mEnter Bitwarden Machine Token (BWS_ACCESS_TOKEN), or leave blank to skip: \e[0m"
-  stty -echo
+  echo -ne "\e[1;33mEnter Bitwarden Machine Token (BWS_ACCESS_TOKEN) [visible], or leave blank to skip: \e[0m"
   read -r token || true
-  stty echo
   echo
   if [[ -n "$token" ]]; then
     export BWS_ACCESS_TOKEN="$token"
     printf "%s" "$token" > /tmp/bws_access_token
+    chmod 600 /tmp/bws_access_token || true
     echo -e "\e[1;36mBitwarden token captured for pre-boot secrets.\e[0m"
   else
     echo -e "\e[1;36mSkipping Bitwarden token; you can run 'nix run .#secrets' after first boot.\e[0m"
@@ -93,6 +92,17 @@ setup_files() {
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
   echo -e "${GREEN}✓ Files copied to system${NC}"
+  # Verify hostname substitution
+  if [[ -f /tmp/hostname.txt ]]; then
+    HN=$(cat /tmp/hostname.txt)
+    if ! grep -R "hostName = \"$HN\"" -n hosts/nixos >/dev/null 2>&1; then
+      echo -e "${RED}ERROR: hostname '$HN' not found in copied configs. Token replacement failed.${NC}"
+      rg -n "hostName\s*=\s*\"" hosts/nixos || true
+      exit 1
+    else
+      echo -e "${CYAN}Hostname set to '$HN' in target configs.${NC}"
+    fi
+  fi
 
   # Ensure a clean ~/nix git clone for the first boot
   mkdir -p /mnt/home/david

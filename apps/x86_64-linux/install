@@ -33,14 +33,13 @@ prompt_bws_token() {
     printf "%s" "$BWS_ACCESS_TOKEN" > /tmp/bws_access_token
     return
   fi
-  echo -ne "\e[1;33mEnter Bitwarden Machine Token (BWS_ACCESS_TOKEN), or leave blank to skip: \e[0m"
-  stty -echo
+  echo -ne "\e[1;33mEnter Bitwarden Machine Token (BWS_ACCESS_TOKEN) [visible], or leave blank to skip: \e[0m"
   read -r token || true
-  stty echo
   echo
   if [[ -n "$token" ]]; then
     export BWS_ACCESS_TOKEN="$token"
     printf "%s" "$token" > /tmp/bws_access_token
+    chmod 600 /tmp/bws_access_token || true
     progress "🔐 Bitwarden token captured for pre-boot secrets."
   else
     progress "ℹ️ Skipping Bitwarden token; you can run 'nix run .#secrets' after first boot."
@@ -82,7 +81,10 @@ run_apply() {
   chmod +x "${SRC_DIR}/apps/x86_64-linux/apply"
   : "${HOST_NAME:=}"  # allow pre-seeding externally
   : "${BOOT_DISK:=}"
-  "${SRC_DIR}/apps/x86_64-linux/apply"
+  # Run apply inside the downloaded source tree so token substitution affects it
+  pushd "${SRC_DIR}" >/dev/null
+  ./apps/x86_64-linux/apply
+  popd >/dev/null
   if [ ! -f /tmp/username.txt ]; then
     echo -e "${RED}Error: /tmp/username.txt does not exist.${NC}"
     exit 1
@@ -136,6 +138,17 @@ setup_files() {
   progress "Copying configuration to /mnt/etc/nixos"
   mkdir -p /mnt/etc/nixos
   cp -r "${SRC_DIR}"/* /mnt/etc/nixos/
+  # Verify hostname substitution
+  if [[ -f /tmp/hostname.txt ]]; then
+    HN=$(cat /tmp/hostname.txt)
+    if ! grep -R "hostName = \"$HN\"" -n /mnt/etc/nixos/hosts/nixos >/dev/null 2>&1; then
+      progress "${RED}ERROR: hostname '$HN' not found in copied configs. Token replacement failed.${NC}"
+      rg -n "hostName\s*=\s*\"" /mnt/etc/nixos/hosts/nixos || true
+      exit 1
+    else
+      progress "Hostname set to '$HN' in target configs."
+    fi
+  fi
   
   progress "Setting up user nix configuration in ~/nix"
   mkdir -p /mnt/home/david
@@ -252,6 +265,9 @@ run_secrets_preboot() {
     FLAKE_TARGET="${BASE_TARGET}"
   fi
   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
+  # Clean up sensitive temp files
+  rm -f /tmp/bws_access_token || true
+  chroot /mnt /bin/sh -lc "rm -f /home/david/.secrets/bws.pass" || true
 }
 
 auto_reboot() {

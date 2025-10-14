@@ -509,17 +509,18 @@ replace_tokens() {
   fi
 }
 
-# Apply configuration
-_print "${BLUE}${GEAR} Applying configuration...${NC}"
-export -f safe_substitute
-export -f replace_tokens
-find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
+  # Apply configuration
+  _print "${BLUE}${GEAR} Applying configuration...${NC}"
+  export -f safe_substitute
+  export -f replace_tokens
+  find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
 
-echo "$USERNAME" > /tmp/username.txt
-# Persist git identity for installer phase
-echo -n "$GIT_NAME" > /tmp/git_name.txt
-echo -n "$GIT_EMAIL" > /tmp/git_email.txt
-_print "${GREEN}${PARTY} Ready!${NC}"
+  echo "$USERNAME" > /tmp/username.txt
+  echo -n "$HOST_NAME" > /tmp/hostname.txt
+  # Persist git identity for installer phase
+  echo -n "$GIT_NAME" > /tmp/git_name.txt
+  echo -n "$GIT_EMAIL" > /tmp/git_email.txt
+  _print "${GREEN}${PARTY} Ready!${NC}"
 
 ## Bitwarden legacy discovery removed in favor of sopswarden.
 _print "${CYAN}${INFO} Using sopswarden for secrets. After first boot run:${NC}"
