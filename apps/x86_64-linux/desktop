@@ -179,10 +179,23 @@ run_secrets_preboot() {
   elif [[ -f /tmp/bws_access_token ]]; then
     CHROOT_ENV_PREFIX="BWS_ACCESS_TOKEN=\"$(cat /tmp/bws_access_token)\" "
   fi
-  # Run as the target user in chroot with jq available
-  chroot /mnt /bin/sh -lc "su - david -c '${CHROOT_ENV_PREFIX} cd /home/david/nix && nix shell nixpkgs#jq -c bash scripts/secrets-wizard.sh'" || {
-    echo -e "${YELLOW}Secrets wizard pre-boot run failed; you can run \"nix run .#secrets\" after first login.${NC}"
-  }
+  # Pass Git email for declarative rbw config if available
+  if [[ -f /tmp/git_email.txt ]]; then
+    CHROOT_ENV_PREFIX+=" RBW_EMAIL=\"$(cat /tmp/git_email.txt)\""
+  fi
+  # Run as the target user in chroot: configure rbw, login/unlock, sync sops; then optional BWS wizard for env keys
+  chroot /mnt /bin/sh -lc "su - david -c '${CHROOT_ENV_PREFIX} set -e; \
+    EMAIL=\"\${RBW_EMAIL:-}\"; \
+    if [ -z \"$EMAIL\" ]; then EMAIL=\"\$(git config --global user.email 2>/dev/null || true)\"; fi; \
+    if [ -z \"$EMAIL\" ] && [ -f /home/david/nix/.git/config ]; then EMAIL=\"\$(git -C /home/david/nix config user.email 2>/dev/null || true)\"; fi; \
+    if [ -z \"$EMAIL\" ]; then echo 'rbw email not set; set RBW_EMAIL or git user.email before install' >&2; exit 1; fi; \
+    rbw config set email \"$EMAIL\"; \
+    rbw config set pinentry pinentry-curses >/dev/null 2>&1 || true; \
+    rbw login; \
+    rbw unlock; \
+    rbw sync; \
+    if command -v sopswarden-sync >/dev/null 2>&1; then sopswarden-sync; fi; \
+    cd /home/david/nix && nix shell nixpkgs#jq -c bash scripts/secrets-wizard.sh'"
 
   # After syncing secrets (via rbw/sopswarden), attempt an impure rebuild to materialize secret files
   ARCH=$(uname -m)
