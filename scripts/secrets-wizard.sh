@@ -372,7 +372,6 @@ main() {
 
   # Prefer Bitwarden Secrets Manager (bws) if an access token is present
   ensure_bws || true
-  ensure_token_from_age || true
   if [ -n "${BWS_ACCESS_TOKEN:-}" ] && ( have bws || have_docker ); then
     say "${BLUE}Detected BWS access token; using Secrets Manager for fetching keys.${NC}"
     step_bws_envfile || true

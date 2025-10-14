@@ -357,7 +357,7 @@ prompt_ip() {
 }
 
 prompt_bws_token() {
-  local token pass confirm
+  local token
   token="${BWS_ACCESS_TOKEN:-}"
 
   if [[ -z "$token" && "${NONINTERACTIVE:-}" != "1" ]]; then
@@ -367,7 +367,7 @@ prompt_bws_token() {
   fi
 
   if [[ -z "$token" ]]; then
-    rm -f /tmp/bws_access_token /tmp/bws_token_passphrase
+    rm -f /tmp/bws_access_token
     return
   fi
 
@@ -375,26 +375,7 @@ prompt_bws_token() {
   printf "%s" "$token" > /tmp/bws_access_token
   chmod 600 /tmp/bws_access_token 2>/dev/null || true
 
-  pass="${BWS_TOKEN_PASSPHRASE:-}"
-  if [[ -z "$pass" && "${NONINTERACTIVE:-}" != "1" ]]; then
-    _print "${CYAN}${INFO} Optional: encrypt the token into secrets/bws.token.age using a passphrase.${NC}"
-    _print "${CYAN}Leave blank to place the token in ~/.secrets/bws.env instead.${NC}"
-    read -r -s -p "Passphrase (optional): " pass; echo
-    if [[ -n "$pass" ]]; then
-      read -r -s -p "Confirm passphrase: " confirm; echo
-      if [[ "$pass" != "$confirm" ]]; then
-        _print "${YELLOW}Passphrases did not match; skipping encryption (token will be stored in ~/.secrets/bws.env).${NC}"
-        pass=""
-      fi
-    fi
-  fi
-
-  if [[ -n "$pass" ]]; then
-    printf "%s" "$pass" > /tmp/bws_token_passphrase
-    chmod 600 /tmp/bws_token_passphrase 2>/dev/null || true
-  else
-    rm -f /tmp/bws_token_passphrase
-  fi
+  # No encryption passphrase handling; token will be written to ~/.secrets/bws.env during setup
 }
 
 # Set hostname and find primary disk if this is NixOS
@@ -477,6 +458,10 @@ safe_substitute() {
   local placeholder="$2"
   local value="$3"
   local escaped
+  # If the value is empty, skip substitution to avoid erasing tokens
+  if [[ -z "$value" ]]; then
+    return 0
+  fi
   escaped=$(printf '%s' "$value" | sed -e 's/[\\/&|]/\\&/g')
   if [[ "$OS" == "Darwin" ]]; then
     LC_ALL=C LANG=C sed -i '' -e "s|$placeholder|$escaped|g" "$target"
@@ -510,9 +495,11 @@ replace_tokens() {
 }
 
   # Apply configuration
-  _print "${BLUE}${GEAR} Applying configuration...${NC}"
-  export -f safe_substitute
+_print "${BLUE}${GEAR} Applying configuration...${NC}"
+export -f safe_substitute
 export -f replace_tokens
+# Export token values so they are visible to the subshell spawned by find -exec
+export HOST_NAME USERNAME GIT_EMAIL GIT_NAME PRIMARY_IFACE BOOT_DISK IP_ADDR
 # Correctly pass the filename as $1 into the subshell
 find . -type f -exec bash -c 'replace_tokens "$1"' bash {} \;
 

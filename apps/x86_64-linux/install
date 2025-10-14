@@ -234,12 +234,6 @@ install_nixos() {
 
 run_secrets_preboot() {
   progress "Attempting to run secrets wizard before reboot..."
-  # If a passphrase was provided, stash it in the target user's secrets dir to avoid quoting issues
-  if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
-    mkdir -p /mnt/home/david/.secrets
-    printf "%s" "${BWS_TOKEN_PASSPHRASE}" > /mnt/home/david/.secrets/bws.pass
-    chmod 600 /mnt/home/david/.secrets/bws.pass
-  fi
   # Pass BWS token (if provided) and run with jq available
   CHROOT_ENV_PREFIX=""
   if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
@@ -247,8 +241,8 @@ run_secrets_preboot() {
   elif [[ -f /tmp/bws_access_token ]]; then
     CHROOT_ENV_PREFIX="BWS_ACCESS_TOKEN=\"$(cat /tmp/bws_access_token)\" "
   fi
-  # Run as the target user in chroot; use passphrase file if present
-  chroot /mnt /bin/sh -lc "su - david -c '${CHROOT_ENV_PREFIX} if [ -f ~/.secrets/bws.pass ]; then export BWS_TOKEN_PASSPHRASE=\"$(cat ~/.secrets/bws.pass)\"; fi; cd /home/david/nix && nix shell nixpkgs#jq -c bash scripts/secrets-wizard.sh'" || {
+  # Run as the target user in chroot with jq available
+  chroot /mnt /bin/sh -lc "su - david -c '${CHROOT_ENV_PREFIX} cd /home/david/nix && nix shell nixpkgs#jq -c bash scripts/secrets-wizard.sh'" || {
     echo -e "${YELLOW}Secrets wizard pre-boot run failed; you can run \"nix run .#secrets\" after first login.${NC}"
   }
 
@@ -267,7 +261,6 @@ run_secrets_preboot() {
   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
   # Clean up sensitive temp files
   rm -f /tmp/bws_access_token || true
-  chroot /mnt /bin/sh -lc "rm -f /home/david/.secrets/bws.pass" || true
 }
 
 auto_reboot() {
