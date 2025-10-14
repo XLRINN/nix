@@ -97,7 +97,7 @@ setup_files() {
     HN=$(cat /tmp/hostname.txt)
     if ! grep -R "hostName = \"$HN\"" -n hosts/nixos >/dev/null 2>&1; then
       echo -e "${RED}ERROR: hostname '$HN' not found in copied configs. Token replacement failed.${NC}"
-      rg -n "hostName\s*=\s*\"" hosts/nixos || true
+      grep -R -n "hostName\s*=\s*\"" hosts/nixos || true
       exit 1
     else
       echo -e "${CYAN}Hostname set to '$HN' in target configs.${NC}"
