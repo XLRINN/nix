@@ -73,6 +73,9 @@ in
 
 	services.qemuGuest.enable = lib.mkDefault true;
 
+	# Ensure 'nix-command' and 'flakes' are enabled for root and all users
+	# nix settings (nix-command + flakes) are enabled globally via modules/shared
+
 	# Bring in the shared package set for convenience on servers,
 	# but filter out GUI apps. Keep shells, CLI tools, fonts, etc.
 	environment.systemPackages =

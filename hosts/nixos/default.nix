@@ -232,9 +232,7 @@ in
     };
 
     package = pkgs.nix;
-    extraOptions = ''
-      experimental-features = nix-command flakes
-    '';
+    # experimental-features enabled globally via modules/shared/default.nix
 
     gc = {
       automatic = true;

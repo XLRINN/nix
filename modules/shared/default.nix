@@ -5,6 +5,9 @@
     # ./config/tailscale/tailscale.nix  # Disabled - causes networking.firewall errors on Darwin
   ];
 
+  # Enable modern Nix features globally for all hosts importing shared
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
   nixpkgs = {
     config = {
       allowUnfree = true;
