@@ -44,6 +44,27 @@ _prompt() {
   read -r $variable
 }
 
+# Prompt for Bitwarden Secrets Manager access token early
+prompt_bws_token() {
+  local token
+  token="${BWS_ACCESS_TOKEN:-}"
+
+  if [[ -z "$token" && "${NONINTERACTIVE:-}" != "1" ]]; then
+    _print "${CYAN}${INFO} Optional: provide a Bitwarden Secrets Manager access token to bootstrap secrets.${NC}"
+    _print "${CYAN}Press Enter to skip if you prefer to configure secrets later.${NC}"
+    _prompt "BWS access token: " token
+  fi
+
+  if [[ -z "$token" ]]; then
+    rm -f /tmp/bws_access_token
+    return
+  fi
+
+  umask 0077
+  printf "%s" "$token" > /tmp/bws_access_token
+  chmod 600 /tmp/bws_access_token 2>/dev/null || true
+}
+
 # Set default values
 export USERNAME="david"
 export GIT_EMAIL="xlrin.morgan@gmail.com"
@@ -62,6 +83,9 @@ echo "            --XLRINN--"
 echo
 echo "═══════════════════════════════════════════════════════════"
 echo
+
+# Ask for Bitwarden machine token right after branding
+prompt_bws_token
 
 # Enhanced drive selection (supports NONINTERACTIVE mode)
 select_drive() {
@@ -356,27 +380,6 @@ prompt_ip() {
   export IP_ADDR
 }
 
-prompt_bws_token() {
-  local token
-  token="${BWS_ACCESS_TOKEN:-}"
-
-  if [[ -z "$token" && "${NONINTERACTIVE:-}" != "1" ]]; then
-    _print "${CYAN}${INFO} Optional: provide a Bitwarden Secrets Manager access token to bootstrap secrets.${NC}"
-    _print "${CYAN}Press Enter to skip if you prefer to configure secrets later.${NC}"
-    _prompt "BWS access token: " token
-  fi
-
-  if [[ -z "$token" ]]; then
-    rm -f /tmp/bws_access_token
-    return
-  fi
-
-  umask 0077
-  printf "%s" "$token" > /tmp/bws_access_token
-  chmod 600 /tmp/bws_access_token 2>/dev/null || true
-
-  # No encryption passphrase handling; token will be written to ~/.secrets/bws.env during setup
-}
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
