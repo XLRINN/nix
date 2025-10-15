@@ -379,7 +379,7 @@ in
         gc = "nix-collect-garbage -d";
         pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
         pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
-        unlock = "bash ~/nix/scripts/secrets-wizard.sh";
+        unlock = "bash ~/nix/scripts/repair-secrets.sh";
         install-bws = "bash ~/nix/scripts/install-bws.sh";
         bws-setup = "bash ~/nix/scripts/bws-quick-setup.sh";
         set-bws-token = "security add-generic-password -a $USER -s BWS_ACCESS_TOKEN -w";
