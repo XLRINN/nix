@@ -75,8 +75,10 @@ rbw sync || true
 
 # Sync sops and rebuild
 if have sopswarden-sync; then
-  say "${CYAN}Syncing SOPS secrets...${NC}"
-  sopswarden-sync
+  say "${CYAN}Syncing SOPS secrets (root)...${NC}"
+  # Ensure target directory exists; sopswarden-sync expects root privileges
+  sudo mkdir -p /var/lib/sopswarden >/dev/null 2>&1 || true
+  sudo sopswarden-sync
 else
   say "${YELLOW}sopswarden-sync not found in PATH; skipping SOPS sync.${NC}"
 fi
@@ -103,4 +105,3 @@ else
 fi
 
 exit $ok
-

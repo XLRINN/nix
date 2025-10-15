@@ -112,6 +112,7 @@ setup_files() {
     mkdir -p /mnt/home/david/.secrets
     printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
     chmod 600 /mnt/home/david/.secrets/bws.env
+    chown -R 1000:1000 /mnt/home/david/.secrets || true
   fi
 
   rm -f /tmp/bws_access_token

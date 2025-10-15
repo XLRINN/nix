@@ -394,8 +394,8 @@ in
         check-keys = "echo 'Checking API keys...'; test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && { test -n \"$OPENROUTER_API_KEY\" && echo '✓ OpenRouter' || echo '❌ OpenRouter'; test -n \"$GITHUB_TOKEN\" && echo '✓ GitHub' || echo '❌ GitHub'; } || echo '❌ No keys file'";
         
         # Sopswarden (SOPS + Bitwarden) shortcuts
-        sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden...'; rbw sync && sopswarden-sync && echo '✓ Secrets synchronized'";
-        sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
+        sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden (root)...'; rbw sync && sudo sopswarden-sync && echo '✓ Secrets synchronized'";
+        sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sudo sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
         sops-check = "echo 'Checking sopswarden secrets...'; ls -la /run/secrets/ 2>/dev/null | grep -E 'tailscale|openrouter|github' || echo 'No sopswarden secrets found'";
         rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
         rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
@@ -468,7 +468,7 @@ in
                 ;;
             esac
           }
-          export -f bw || true
+          # In zsh, functions do not need to be exported; avoid bash-only 'export -f'
         fi
 
         # Load API keys from Bitwarden-sourced file if available
