@@ -73,14 +73,23 @@ in
 
 	services.qemuGuest.enable = lib.mkDefault true;
 
-	# Bring in the shared package set for convenience on servers
-	environment.systemPackages = import ../../../modules/shared/packages.nix { inherit pkgs; };
+	# Bring in the shared package set for convenience on servers,
+	# but filter out GUI apps.
+	# Keep shells, CLI tools, fonts, etc.
+	let
+	  sharedPkgs = import ../../../modules/shared/packages.nix { inherit pkgs; };
+	in
+	environment.systemPackages = builtins.filter (p: !(p == pkgs.kitty || p == pkgs.synergy)) sharedPkgs;
+
+	# Enable zsh and set it as the user's shell
+	programs.zsh.enable = true;
 
   users.users = {
     ${user} = {
       isNormalUser = true;
       extraGroups = [ "wheel" "networkmanager" ];
 			openssh.authorizedKeys.keys = keys;
+			shell = pkgs.zsh;
 			initialPassword = "6!y2c87T"; # rotate post-install
 		};
 		root = {
