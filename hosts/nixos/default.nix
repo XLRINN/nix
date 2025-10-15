@@ -288,11 +288,6 @@ in
         name = "GitHub Token";
         field = "token";
       };
-      github-ssh-key = {
-        name = "GitHub SSH Key";
-        field = "private-key";
-        type = "note";
-      };
     };
   };
 
@@ -315,12 +310,8 @@ in
       mode = "0400";
       path = "/run/secrets/github-token";
     };
-    github-ssh-key = {
-      owner = user;
-      group = "users";
-      mode = "0600";
-      path = "/home/${user}/.ssh/id_ed25519";
-    };
+    # SSH private key is sourced from Bitwarden Secrets Manager via the wizard,
+    # not sopswarden. No sops mapping for ~/.ssh/id_ed25519 here.
   };
 
   sops = {

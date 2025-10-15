@@ -83,6 +83,20 @@ else
   say "${YELLOW}sopswarden-sync not found in PATH; skipping SOPS sync.${NC}"
 fi
 
+# If a BWS token is available, also install user-level secrets (SSH key, env)
+if [[ -z "${BWS_ACCESS_TOKEN:-}" && -f "$HOME/.secrets/bws.env" ]]; then
+  # shellcheck disable=SC1090
+  source "$HOME/.secrets/bws.env"
+fi
+if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
+  say "${CYAN}Installing BWS-managed user secrets (SSH key, env)...${NC}"
+  if have nix; then
+    nix run "$HOME/nix#secrets" || bash "$HOME/nix/scripts/secrets-wizard.sh" || true
+  else
+    bash "$HOME/nix/scripts/secrets-wizard.sh" || true
+  fi
+fi
+
 say "${CYAN}Rebuilding system (impure) to materialize secrets...${NC}"
 sudo nixos-rebuild switch --impure --flake "${FLAKE}#${TARGET}"
 

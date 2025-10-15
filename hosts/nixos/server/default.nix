@@ -117,11 +117,7 @@ in
         name = "GitHub Token";
         field = "token";
       };
-      "github-ssh-key" = {
-        name = "GitHub SSH Key";
-        field = "private-key";
-        type = "note";
-      };
+      # SSH private key is managed via Bitwarden Secrets Manager wizard, not sopswarden.
     };
   };
 
@@ -144,12 +140,7 @@ in
       mode = "0400";
       path = "/run/secrets/github-token";
     };
-		"github-ssh-key" = {
-			owner = "${user}";
-			group = "users";
-			mode = "0600";
-			path = "/home/${user}/.ssh/id_ed25519";
-		};
+    # No sops mapping for ~/.ssh/id_ed25519; BWS wizard installs it.
 	};
 
 	sops = {
