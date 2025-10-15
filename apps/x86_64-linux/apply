@@ -445,8 +445,7 @@ EOF
   fi
 }
 
-# Collect Bitwarden token information (optional) before continuing
-prompt_bws_token
+# Token was already collected above after the ASCII banner.
 
 # Run hardware configuration before applying token replacements
 configure_hardware_profile
