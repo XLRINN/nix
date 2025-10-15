@@ -27,25 +27,6 @@ check_installer() {
   fi
 }
 
-prompt_bws_token() {
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    progress "🔐 Using provided Bitwarden machine token from environment."
-    printf "%s" "$BWS_ACCESS_TOKEN" > /tmp/bws_access_token
-    return
-  fi
-  echo -ne "\e[1;33mEnter Bitwarden Machine Token (BWS_ACCESS_TOKEN) [visible], or leave blank to skip: \e[0m"
-  read -r token || true
-  echo
-  if [[ -n "$token" ]]; then
-    export BWS_ACCESS_TOKEN="$token"
-    printf "%s" "$token" > /tmp/bws_access_token
-    chmod 600 /tmp/bws_access_token || true
-    progress "🔐 Bitwarden token captured for pre-boot secrets."
-  else
-    progress "ℹ️ Skipping Bitwarden token; you can run 'nix run .#secrets' after first boot."
-  fi
-}
-
 cleanup() {
   progress "🧹 Cleaning up temporary files..."
   rm -rf nixos-config-main.zip nix-* nyx-*
@@ -286,7 +267,6 @@ auto_reboot() {
 cleanup
 check_installer
 download_config
-prompt_bws_token
 run_apply
 run_disko
 verify_disko

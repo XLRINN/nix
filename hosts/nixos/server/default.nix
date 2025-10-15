@@ -73,6 +73,9 @@ in
 
 	services.qemuGuest.enable = lib.mkDefault true;
 
+	# Bring in the shared package set for convenience on servers
+	environment.systemPackages = import ../../../modules/shared/packages.nix { inherit pkgs; };
+
   users.users = {
     ${user} = {
       isNormalUser = true;
