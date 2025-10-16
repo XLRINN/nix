@@ -6,6 +6,10 @@
     home-manager.url = "github:nix-community/home-manager";
     # Add sopswarden for Bitwarden secrets management
     sopswarden.url = "github:pfassina/sopswarden/main";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   # Legacy nixpkgs for an older bitwarden-cli that builds (argon2/node-gyp regression in newer revs)
   # Using the 24.05 stable channel (adjust to a specific commit later if needed):
   legacy-nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -60,7 +64,7 @@
       };
   };
 
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, sopswarden, ... } @inputs:
+  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, sopswarden, sops-nix, ... } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -188,7 +192,7 @@
             inherit system;
             specialArgs = { inherit inputs; };
             modules =
-              [ disko.nixosModules.disko sopswarden.nixosModules.default ]
+              [ disko.nixosModules.disko sops-nix.nixosModules.sops ]
               ++ (modules profile);
           };
 

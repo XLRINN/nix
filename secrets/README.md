@@ -1,16 +1,30 @@
-This directory can hold an age-encrypted Bitwarden Secrets Manager access token for bootstrapping new machines.
+This directory contains SOPS-encrypted secrets used by all machines.
 
-Files
-- bws.token.age: Encrypted with a passphrase via `age -p`. Safe to commit. Do NOT commit the passphrase.
+Quick start (single shared file for all hosts)
 
-Bootstrap
-1) Prepare once (on a trusted machine):
-   - Run: `BWS_ACCESS_TOKEN='<token>' BWS_TOKEN_PASSPHRASE='<pass>' bash scripts/prepare-bws-token.sh`
-   - Commit `secrets/bws.token.age` to the repo.
-2) On fresh machines:
-   - Provide the passphrase once: `export BWS_TOKEN_PASSPHRASE='<pass>'`
-   - Run `unlock` (the wizard decrypts the token and fetches secrets automatically).
+1) Generate an Age key (one time):
+   age-keygen -o ~/.config/sops/age/keys.txt
+   age-keygen -y ~/.config/sops/age/keys.txt  # copy the recipient into .sops.yaml
 
-Notes
-- You can also store the passphrase in a keychain or private env file per machine; never commit it.
-- To rotate: run `prepare-bws-token.sh` again with a new token; commit the new encrypted file.
+2) Update .sops.yaml: replace the placeholder recipient with your Age public key.
+
+3) Create the shared secrets file:
+   sops secrets/common.yaml
+
+   Put entries like:
+   ssh_private_key: |
+     -----BEGIN OPENSSH PRIVATE KEY-----
+     ...
+     -----END OPENSSH PRIVATE KEY-----
+   tailscale-auth-key: "tskey-..."   # optional
+   openrouter-api-key: "..."         # optional
+   github-token: "..."               # optional
+
+4) Commit secrets/common.yaml (encrypted). Do NOT commit any Age private keys.
+
+Installer note
+
+During install, provide the Age private key once (env AGE_PRIVATE_KEY or file path in the Apply prompt).
+The installer writes it to /etc/sops/age/keys.txt so the first switch can decrypt and materialize:
+- ~/.ssh/id_ed25519 (from ssh_private_key)
+- /run/secrets/* (for any system secrets above)

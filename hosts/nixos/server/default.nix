@@ -105,24 +105,7 @@ in
     wheelNeedsPassword = false;
   };
 
-	services.sopswarden = {
-		enable = true;
-		secrets = {
-      "tailscale-auth-key" = {
-        name = "Tailscale";
-        field = "auth-key";
-      };
-      "openrouter-api-key" = {
-        name = "OpenRouter API";
-        field = "api-key";
-      };
-      "github-token" = {
-        name = "GitHub Token";
-        field = "token";
-      };
-      # SSH private key is managed via Bitwarden Secrets Manager wizard, not sopswarden.
-    };
-  };
+	# sopswarden disabled in full-SOPS mode; secrets come from per-host SOPS files.
 
 	sops.secrets = {
 		"tailscale-auth-key" = {
@@ -143,12 +126,19 @@ in
       mode = "0400";
       path = "/run/secrets/github-token";
     };
-    # No sops mapping for ~/.ssh/id_ed25519; BWS wizard installs it.
-	};
+    # SSH private key managed declaratively via SOPS
+    ssh_private_key = {
+      owner = "${user}";
+      group = "users";
+      mode = "0600";
+      path = "/home/${user}/.ssh/id_ed25519";
+    };
+  };
 
 	sops = {
-		defaultSopsFile = lib.mkDefault sopsFile;
-		validateSopsFiles = lib.mkDefault false;
+		defaultSopsFile = ../../../secrets/common.yaml;
+		age.keyFile = "/etc/sops/age/keys.txt";
+		validateSopsFiles = true;
 	};
 
 	systemd.tmpfiles.rules = [

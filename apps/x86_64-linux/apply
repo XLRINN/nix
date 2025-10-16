@@ -44,25 +44,29 @@ _prompt() {
   read -r $variable
 }
 
-# Prompt for Bitwarden Secrets Manager access token early
-prompt_bws_token() {
-  local token
-  token="${BWS_ACCESS_TOKEN:-}"
 
-  if [[ -z "$token" && "${NONINTERACTIVE:-}" != "1" ]]; then
-    _print "${CYAN}${INFO} Optional: provide a Bitwarden Secrets Manager access token to bootstrap secrets.${NC}"
-    _print "${CYAN}Press Enter to skip if you prefer to configure secrets later.${NC}"
-    _prompt "BWS access token: " token
-  fi
-
-  if [[ -z "$token" ]]; then
-    rm -f /tmp/bws_access_token
+# Prompt for Age private key used to decrypt SOPS files at activation.
+# Prefer env AGE_PRIVATE_KEY or a readable file path.
+prompt_age_key() {
+  if [[ -n "${AGE_PRIVATE_KEY:-}" ]]; then
+    umask 0077
+    printf "%s\n" "$AGE_PRIVATE_KEY" > /tmp/age_private_key.txt
+    chmod 600 /tmp/age_private_key.txt 2>/dev/null || true
+    _print "${CYAN}${INFO} Captured Age private key from environment.${NC}"
     return
   fi
-
-  umask 0077
-  printf "%s" "$token" > /tmp/bws_access_token
-  chmod 600 /tmp/bws_access_token 2>/dev/null || true
+  local path
+  _print "${CYAN}${INFO} Optional: provide a path to your Age private key to enable SOPS decryption (e.g., /root/keys.txt).${NC}"
+  _print "${CYAN}Press Enter to skip if you prefer to copy it later to /etc/sops/age/keys.txt.${NC}"
+  _prompt "Age key file path: " path
+  if [[ -n "$path" && -r "$path" ]]; then
+    umask 0077
+    cp "$path" /tmp/age_private_key.txt
+    chmod 600 /tmp/age_private_key.txt 2>/dev/null || true
+    _print "${GREEN}${CHECK} Age key staged for install.${NC}"
+  else
+    _print "${YELLOW}${INFO} Skipping Age key staging.${NC}"
+  fi
 }
 
 # Set default values
@@ -84,8 +88,8 @@ echo
 echo "═══════════════════════════════════════════════════════════"
 echo
 
-# Ask for Bitwarden machine token right after branding
-prompt_bws_token
+# Ask for Age private key (for SOPS)
+prompt_age_key
 
 # Enhanced drive selection (supports NONINTERACTIVE mode)
 select_drive() {

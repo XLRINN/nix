@@ -59,15 +59,20 @@ run_disko() {
 }
 
 setup_files() {
-  if [[ -z "${BWS_ACCESS_TOKEN:-}" && -f /tmp/bws_access_token ]]; then
-    BWS_ACCESS_TOKEN="$(cat /tmp/bws_access_token)"
-    export BWS_ACCESS_TOKEN
-  fi
+  # Full-SOPS mode: no BWS token handoff
 
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
   cd /mnt/etc/nixos
   echo -e "${GREEN}✓ Files copied to system${NC}"
+  # Install Age private key if staged
+  if [[ -f /tmp/age_private_key.txt ]]; then
+    echo -e "${CYAN}Installing Age key to /etc/sops/age/keys.txt${NC}"
+    mkdir -p /mnt/etc/sops/age
+    cp /tmp/age_private_key.txt /mnt/etc/sops/age/keys.txt
+    chown 0:0 /mnt/etc/sops/age/keys.txt
+    chmod 400 /mnt/etc/sops/age/keys.txt
+  fi
   # Verify hostname substitution
   if [[ -f /tmp/hostname.txt ]]; then
     HN=$(cat /tmp/hostname.txt)
@@ -106,14 +111,7 @@ setup_files() {
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
 
-  # Optionally pre-provision Bitwarden Secrets Manager token for first boot (no encryption passphrase)
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    echo -e "${CYAN}Provisioning BWS token for first boot...${NC}"
-    mkdir -p /mnt/home/david/.secrets
-    printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
-    chmod 600 /mnt/home/david/.secrets/bws.env
-    chown -R 1000:1000 /mnt/home/david/.secrets || true
-  fi
+  # No BWS provisioning in full-SOPS mode
 
   rm -f /tmp/bws_access_token
 }
@@ -151,34 +149,7 @@ install_nixos() {
 }
 
 run_secrets_preboot() {
-  # If we provisioned a token, attempt to run the secrets wizard inside the target before reboot
-  echo -e "${CYAN}Attempting to run secrets wizard before reboot...${NC}"
-  # Pass BWS token (if provided) and run with jq available
-  CHROOT_ENV_PREFIX=""
-  if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
-    CHROOT_ENV_PREFIX="BWS_ACCESS_TOKEN=\"${BWS_ACCESS_TOKEN}\" "
-  elif [[ -f /tmp/bws_access_token ]]; then
-    CHROOT_ENV_PREFIX="BWS_ACCESS_TOKEN=\"$(cat /tmp/bws_access_token)\" "
-  fi
-  # Pass Git email for declarative rbw config if available
-  if [[ -f /tmp/git_email.txt ]]; then
-    CHROOT_ENV_PREFIX+=" RBW_EMAIL=\"$(cat /tmp/git_email.txt)\""
-  fi
-  # Run as the target user in chroot: configure rbw, login/unlock, sync sops; then optional BWS wizard for env keys
-  chroot /mnt /bin/sh -lc "su - david -c '${CHROOT_ENV_PREFIX} set -e; \
-    EMAIL=\"\${RBW_EMAIL:-}\"; \
-    if [ -z \"\$EMAIL\" ]; then EMAIL=\"\$(git config --global user.email 2>/dev/null || true)\"; fi; \
-    if [ -z \"\$EMAIL\" ] && [ -f /home/david/nix/.git/config ]; then EMAIL=\"\$(git -C /home/david/nix config user.email 2>/dev/null || true)\"; fi; \
-    if [ -z \"\$EMAIL\" ]; then echo 'rbw email not set; set RBW_EMAIL or git user.email before install' >&2; exit 1; fi; \
-    rbw config set email \"\$EMAIL\"; \
-    rbw config set pinentry pinentry-curses >/dev/null 2>&1 || true; \
-    rbw login; \
-    rbw unlock; \
-    rbw sync; \
-    if command -v sopswarden-sync >/dev/null 2>&1; then sopswarden-sync; fi; \
-    cd /home/david/nix && nix shell nixpkgs#jq -c bash scripts/secrets-wizard.sh'"
-
-  # After syncing secrets (via rbw/sopswarden), attempt an impure rebuild to materialize secret files
+  # Full-SOPS mode: no rbw/BWS preboot steps required. Just ensure first rebuild runs.
   ARCH=$(uname -m)
   case "$ARCH" in
     x86_64)
