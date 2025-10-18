@@ -274,18 +274,7 @@ in
   # sopswarden disabled in full-SOPS mode; secrets come from per-host SOPS files.
 
   sops.secrets = {
-    tailscale-auth-key = {
-      owner = "root";
-      group = "root";
-      mode = "0600";
-      path = "/run/secrets/tailscale-auth-key";
-    };
-    openrouter-api-key = {
-      owner = user;
-      group = "users";
-      mode = "0400";
-      path = "/run/secrets/openrouter-api-key";
-    };
+    # github-token is needed now; others can be added later
     github-token = {
       owner = user;
       group = "users";
