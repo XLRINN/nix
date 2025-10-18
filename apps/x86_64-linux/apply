@@ -56,10 +56,19 @@ prompt_age_key() {
     return
   fi
   local path
-  _print "${CYAN}${INFO} Optional: provide a path to your Age private key to enable SOPS decryption (e.g., /root/keys.txt).${NC}"
-  _print "${CYAN}Press Enter to skip if you prefer to copy it later to /etc/sops/age/keys.txt.${NC}"
-  _prompt "Age key file path: " path
-  if [[ -n "$path" && -r "$path" ]]; then
+  _print "${CYAN}${INFO} Optional: provide your Age private key or a path to it (e.g., /root/keys.txt).${NC}"
+  _print "${CYAN}You can paste the key (starts with AGE-SECRET-KEY-1...) or enter a readable file path. Press Enter to skip.${NC}"
+  _prompt "Age key or file path: " path
+  if [[ -z "$path" ]]; then
+    _print "${YELLOW}${INFO} Skipping Age key staging.${NC}"
+    return
+  fi
+  if [[ "$path" == AGE-SECRET-KEY-* ]]; then
+    umask 0077
+    printf "%s\n" "$path" > /tmp/age_private_key.txt
+    chmod 600 /tmp/age_private_key.txt 2>/dev/null || true
+    _print "${GREEN}${CHECK} Age key captured for install.${NC}"
+  elif [[ -r "$path" ]]; then
     umask 0077
     cp "$path" /tmp/age_private_key.txt
     chmod 600 /tmp/age_private_key.txt 2>/dev/null || true
