@@ -152,36 +152,36 @@ find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
 echo "$USERNAME" > /tmp/username.txt
 _print "${GREEN}User $USERNAME information applied.${NC}"
 
-# Optional Bitwarden interactive login (desktop bootstrap)
-if [ -z "${BW_SKIP_LOGIN:-}" ] && [ -t 0 ] && command -v bw >/dev/null 2>&1; then
-  STATUS=$(bw status 2>/dev/null | sed -n 's/.*"status":"\([^"[:space:]]*\)".*/\1/p')
-  if ! printf '%s' "$STATUS" | grep -q '^unlocked$'; then
-    echo ""
-    _print "${YELLOW}Bitwarden: you can unlock now to prime a session (optional).${NC}"
-    printf "Bitwarden master password for %s (leave blank to skip): " "$GIT_EMAIL"
-    stty -echo 2>/dev/null || true
-    read -r BW_MASTER
-    stty echo 2>/dev/null || true
-    echo ""
-    if [ -n "$BW_MASTER" ]; then
-      if printf '%s' "$STATUS" | grep -q '^unauthenticated$'; then
-        BW_PASSWORD="$BW_MASTER" bw login "$GIT_EMAIL" >/dev/null 2>&1 || true
-      fi
-      SESSION=$(BW_PASSWORD="$BW_MASTER" bw unlock --raw 2>/dev/null || true)
-      if [ -n "$SESSION" ]; then
-        mkdir -p "$HOME/.cache"
-        umask 077
-        printf '%s' "$SESSION" > "$HOME/.cache/bw-session"
-        export BW_SESSION="$SESSION"
-        _print "${GREEN}Bitwarden session cached at ~/.cache/bw-session${NC}"
-      else
-        _print "${RED}Bitwarden unlock failed or was cancelled.${NC}"
-      fi
-    else
-      _print "${YELLOW}Skipped Bitwarden unlock.${NC}"
-    fi
-    unset BW_MASTER BW_PASSWORD SESSION STATUS
-  else
-    _print "${GREEN}Bitwarden already unlocked; skipping.${NC}"
-  fi
-fi
+# # Optional Bitwarden interactive login (desktop bootstrap)
+# if [ -z "${BW_SKIP_LOGIN:-}" ] && [ -t 0 ] && command -v bw >/dev/null 2>&1; then
+#   STATUS=$(bw status 2>/dev/null | sed -n 's/.*"status":"\([^"[:space:]]*\)".*/\1/p')
+#   if ! printf '%s' "$STATUS" | grep -q '^unlocked$'; then
+#     echo ""
+#     _print "${YELLOW}Bitwarden: you can unlock now to prime a session (optional).${NC}"
+#     printf "Bitwarden master password for %s (leave blank to skip): " "$GIT_EMAIL"
+#     stty -echo 2>/dev/null || true
+#     read -r BW_MASTER
+#     stty echo 2>/dev/null || true
+#     echo ""
+#     if [ -n "$BW_MASTER" ]; then
+#       if printf '%s' "$STATUS" | grep -q '^unauthenticated$'; then
+#         BW_PASSWORD="$BW_MASTER" bw login "$GIT_EMAIL" >/dev/null 2>&1 || true
+#       fi
+#       SESSION=$(BW_PASSWORD="$BW_MASTER" bw unlock --raw 2>/dev/null || true)
+#       if [ -n "$SESSION" ]; then
+#         mkdir -p "$HOME/.cache"
+#         umask 077
+#         printf '%s' "$SESSION" > "$HOME/.cache/bw-session"
+#         export BW_SESSION="$SESSION"
+#         _print "${GREEN}Bitwarden session cached at ~/.cache/bw-session${NC}"
+#       else
+#         _print "${RED}Bitwarden unlock failed or was cancelled.${NC}"
+#       fi
+#     else
+#       _print "${YELLOW}Skipped Bitwarden unlock.${NC}"
+#     fi
+#     unset BW_MASTER BW_PASSWORD SESSION STATUS
+#   else
+#     _print "${GREEN}Bitwarden already unlocked; skipping.${NC}"
+#   fi
+# fi

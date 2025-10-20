@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Bitwarden token preparation disabled; original script commented out below.
+: <<'BITWARDEN_DISABLED'
 set -euo pipefail
 
 RED='\033[0;31m'
@@ -40,3 +42,4 @@ printf '%s' "$token" | age -p -o "$out_file"
 chmod 600 "$out_file"
 say "${GREEN}Encrypted token saved to: $out_file${NC}"
 say "${YELLOW}You may commit this encrypted file to the repo. Keep the passphrase private.${NC}"
+BITWARDEN_DISABLED

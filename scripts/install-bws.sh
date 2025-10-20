@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Bitwarden CLI installer disabled; original script commented out below.
+: <<'BITWARDEN_DISABLED'
 set -euo pipefail
 
 RED='\033[0;31m'
@@ -76,3 +78,4 @@ else
 fi
 
 say "${GREEN}Installed bws to ${dest_dir}/bws${NC}"
+BITWARDEN_DISABLED

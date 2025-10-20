@@ -24,7 +24,7 @@ in
   echo "Available keys: OPENAI_API_KEY, GITHUB_TOKEN"
       else
         echo "❌ No API keys file found at ${apiKeysFile}"
-        echo "Run: fetch-secrets.sh to populate keys from Bitwarden"
+        # echo "Run: fetch-secrets.sh to populate keys from Bitwarden"
       fi
     '')
     
@@ -43,12 +43,12 @@ in
       fi
     '')
     
-    (writeScriptBin "refresh-secrets" ''
-      #!/bin/bash
-      # Refresh all secrets from Bitwarden
-      echo "Refreshing secrets from Bitwarden..."
-      "${pkgs.bash}/bin/bash" "/home/${user}/.local/share/src/nixos-config/scripts/fetch-secrets.sh"
-    '')
+    # (writeScriptBin "refresh-secrets" ''
+    #   #!/bin/bash
+    #   # Refresh all secrets from Bitwarden
+    #   echo "Refreshing secrets from Bitwarden..."
+    #   "${pkgs.bash}/bin/bash" "/home/${user}/.local/share/src/nixos-config/scripts/fetch-secrets.sh"
+    # '')
   ];
   
   # Auto-load API keys in shell sessions

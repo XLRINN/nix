@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Bitwarden secret fetcher disabled; original script commented out below.
+: <<'BITWARDEN_DISABLED'
 
 # Bitwarden Secret Fetcher for Declarative Configuration
 # Fetches secrets from Bitwarden and creates Nix-compatible configuration files
@@ -162,3 +164,4 @@ main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
 fi
+BITWARDEN_DISABLED

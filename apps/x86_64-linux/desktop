@@ -59,7 +59,18 @@ run_disko() {
 }
 
 setup_files() {
+<<<<<<< HEAD
   # Full-SOPS mode: no BWS token handoff
+=======
+  # if [[ -z "${BWS_ACCESS_TOKEN:-}" && -f /tmp/bws_access_token ]]; then
+  #   BWS_ACCESS_TOKEN="$(cat /tmp/bws_access_token)"
+  #   export BWS_ACCESS_TOKEN
+  # fi
+  # if [[ -z "${BWS_TOKEN_PASSPHRASE:-}" && -f /tmp/bws_token_passphrase ]]; then
+  #   BWS_TOKEN_PASSPHRASE="$(cat /tmp/bws_token_passphrase)"
+  #   export BWS_TOKEN_PASSPHRASE
+  # fi
+>>>>>>> 0a82324 (removed sops for now)
 
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
@@ -111,9 +122,31 @@ setup_files() {
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
 
+<<<<<<< HEAD
   # No BWS provisioning in full-SOPS mode
 
   rm -f /tmp/bws_access_token
+=======
+  # # Optionally pre-provision Bitwarden Secrets Manager token for first boot
+  # if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
+  #   echo -e "${CYAN}Provisioning BWS token for first boot...${NC}"
+  #   # Prefer encrypted token in repo using age via nix shell; fallback to private env file
+  #   if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
+  #     chroot /mnt /bin/sh -lc "cd /home/david/nix && nix shell nixpkgs#age -c BWS_ACCESS_TOKEN='${BWS_ACCESS_TOKEN}' BWS_TOKEN_PASSPHRASE='${BWS_TOKEN_PASSPHRASE}' bash scripts/prepare-bws-token.sh" || {
+  #       echo -e "${YELLOW}Failed to create encrypted token; falling back to ~/.secrets/bws.env${NC}"
+  #       mkdir -p /mnt/home/david/.secrets
+  #       printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
+  #       chmod 600 /mnt/home/david/.secrets/bws.env
+  #     }
+  #   else
+  #     mkdir -p /mnt/home/david/.secrets
+  #     printf "export BWS_ACCESS_TOKEN='%s'\n" "${BWS_ACCESS_TOKEN}" > /mnt/home/david/.secrets/bws.env
+  #     chmod 600 /mnt/home/david/.secrets/bws.env
+  #   fi
+  # fi
+
+  # rm -f /tmp/bws_access_token /tmp/bws_token_passphrase
+>>>>>>> 0a82324 (removed sops for now)
 }
 
 install_nixos() {
@@ -148,6 +181,7 @@ install_nixos() {
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
 
+<<<<<<< HEAD
 run_secrets_preboot() {
   # Full-SOPS mode: no rbw/BWS preboot steps required. Just ensure first rebuild runs.
   ARCH=$(uname -m)
@@ -169,6 +203,22 @@ run_secrets_preboot() {
   fi
   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
 }
+=======
+# run_secrets_preboot() {
+#   # If we provisioned a token, attempt to run the secrets wizard inside the target before reboot
+#   echo -e "${CYAN}Attempting to run secrets wizard before reboot...${NC}"
+#   # If a passphrase was provided, stash it in the target user's secrets dir to avoid quoting issues
+#   if [[ -n "${BWS_TOKEN_PASSPHRASE:-}" ]]; then
+#     mkdir -p /mnt/home/david/.secrets
+#     printf "%s" "${BWS_TOKEN_PASSPHRASE}" > /mnt/home/david/.secrets/bws.pass
+#     chmod 600 /mnt/home/david/.secrets/bws.pass
+#   fi
+#   # Run as the target user in chroot; use passphrase file if present
+#   chroot /mnt /bin/sh -lc "su - david -c 'cd /home/david/nix && if [ -f ~/.secrets/bws.pass ]; then export BWS_TOKEN_PASSPHRASE=\"$(cat ~/.secrets/bws.pass)\"; fi; nix --experimental-features \"nix-command flakes\" run .#secrets'" || {
+#     echo -e "${YELLOW}Secrets wizard pre-boot run failed; you can run \"nix run .#secrets\" after first login.${NC}"
+#   }
+# }
+>>>>>>> 0a82324 (removed sops for now)
 
 prompt_reboot() {
   echo -e "\e[1;32mRebooting in 5 seconds...\e[0m"
@@ -184,5 +234,5 @@ run_disko
 setup_files
 install_nixos
 cleanup
-run_secrets_preboot
+# run_secrets_preboot
 prompt_reboot 

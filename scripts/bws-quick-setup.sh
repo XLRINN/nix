@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Bitwarden/SOPS helpers disabled; original script commented out below.
+: <<'BITWARDEN_DISABLED'
 set -euo pipefail
 
 RED='\033[0;31m'
@@ -41,4 +43,4 @@ say "${GREEN}✓ Token encrypted.${NC}"
 say "Next steps:" 
 say "  - Commit the encrypted file: git add secrets/bws.token.age && git commit -m 'Add encrypted BWS token'"
 say "  - On new machines: export BWS_TOKEN_PASSPHRASE='<your pass>' && nix run .#secrets"
-
+BITWARDEN_DISABLED

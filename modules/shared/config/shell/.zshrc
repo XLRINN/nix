@@ -17,20 +17,20 @@ setopt correct_all
 # Powerlevel10k theme
 source /Users/david/nix/modules/shared/config/shell/p10k.zsh
 
-# Bitwarden session helper
-bw_session() {
-  local f="$HOME/.cache/bw-session"
-  if command -v bw >/dev/null 2>&1 && [ -f "$f" ]; then
-    export BW_SESSION="$(cat "$f")"
-    # Validate session silently; if invalid, unset
-    if ! bw sync >/dev/null 2>&1; then
-      unset BW_SESSION
-    fi
-  fi
-}
-bw_session
+# # Bitwarden session helper
+# bw_session() {
+#   local f="$HOME/.cache/bw-session"
+#   if command -v bw >/dev/null 2>&1 && [ -f "$f" ]; then
+#     export BW_SESSION="$(cat "$f")"
+#     # Validate session silently; if invalid, unset
+#     if ! bw sync >/dev/null 2>&1; then
+#       unset BW_SESSION
+#     fi
+#   fi
+# }
+# bw_session
 
-alias bw-unlock='unset BW_SESSION; BW_PASSWORD="$(read -s -p "Master password: " pw; echo; printf %s "$pw")" bw unlock --raw | tee "$HOME/.cache/bw-session" >/dev/null'
+# alias bw-unlock='unset BW_SESSION; BW_PASSWORD="$(read -s -p "Master password: " pw; echo; printf %s "$pw")" bw unlock --raw | tee "$HOME/.cache/bw-session" >/dev/null'
 
 
 # Aliases

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Bitwarden/SOPS workflow disabled; original script commented out below.
+: <<'BITWARDEN_DISABLED'
+
 # Non-interactive Secrets Setup for Bitwarden + sopswarden (NixOS) and Home-Manager (macOS/Linux)
 # - Runs rbw login/unlock/sync (may prompt for credentials, but no Y/N prompts here)
 # - NixOS: runs sopswarden sync if available
@@ -414,3 +417,4 @@ main() {
 }
 
 main "$@"
+BITWARDEN_DISABLED

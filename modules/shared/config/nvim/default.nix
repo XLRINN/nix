@@ -249,24 +249,24 @@ pkgs.writeTextFile rec {
       end
     end
 
-    -- Load API keys from sopswarden secrets if available
-    local secret_files = {
-      { env = "OPENROUTER_API_KEY", file = "/run/secrets/openrouter-api-key" },
-      { env = "GITHUB_TOKEN", file = "/run/secrets/github-token" },
-      -- Legacy support for direct API keys if needed
-      { env = "OPENAI_API_KEY", file = "/run/secrets/openai-api-key" },
-    }
-    
-    for _, secret in ipairs(secret_files) do
-      if vim.fn.filereadable(secret.file) == 1 then
-        local handle = io.open(secret.file, "r")
-        if handle then
-          local value = handle:read("*a"):gsub("%s+$", "") -- Read and trim whitespace
-          handle:close()
-          vim.env[secret.env] = value
-        end
-      end
-    end
+    -- -- Load API keys from sopswarden secrets if available
+    -- local secret_files = {
+    --   { env = "OPENROUTER_API_KEY", file = "/run/secrets/openrouter-api-key" },
+    --   { env = "GITHUB_TOKEN", file = "/run/secrets/github-token" },
+    --   -- Legacy support for direct API keys if needed
+    --   { env = "OPENAI_API_KEY", file = "/run/secrets/openai-api-key" },
+    -- }
+    -- 
+    -- for _, secret in ipairs(secret_files) do
+    --   if vim.fn.filereadable(secret.file) == 1 then
+    --     local handle = io.open(secret.file, "r")
+    --     if handle then
+    --       local value = handle:read("*a"):gsub("%s+$", "") -- Read and trim whitespace
+    --       handle:close()
+    --       vim.env[secret.env] = value
+    --     end
+    --   end
+    -- end
 
     -- Set leader key
     vim.g.mapleader = " "

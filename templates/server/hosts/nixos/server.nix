@@ -5,7 +5,7 @@ let
   keys = [
     "%SSH_PUBLIC_KEY%"
   ];
-  sopsFile = "/var/lib/sopswarden/secrets.yaml";
+  # sopsFile = "/var/lib/sopswarden/secrets.yaml";
 in
 {
   imports = [ ];
@@ -89,60 +89,60 @@ in
     wheelNeedsPassword = false;
   };
 
-  services.sopswarden = {
-    enable = true;
-    secrets = {
-      "tailscale-auth-key" = {
-        name = "Tailscale";
-        field = "auth-key";
-      };
-      "openrouter-api-key" = {
-        name = "OpenRouter API";
-        field = "api-key";
-      };
-      "github-token" = {
-        name = "GitHub Token";
-        field = "token";
-      };
-      "github-ssh-key" = {
-        name = "GitHub SSH Key";
-        field = "private-key";
-        type = "note";
-      };
-    };
-  };
+  # services.sopswarden = {
+  #   enable = true;
+  #   secrets = {
+  #     "tailscale-auth-key" = {
+  #       name = "Tailscale";
+  #       field = "auth-key";
+  #     };
+  #     "openrouter-api-key" = {
+  #       name = "OpenRouter API";
+  #       field = "api-key";
+  #     };
+  #     "github-token" = {
+  #       name = "GitHub Token";
+  #       field = "token";
+  #     };
+  #     "github-ssh-key" = {
+  #       name = "GitHub SSH Key";
+  #       field = "private-key";
+  #       type = "note";
+  #     };
+  #   };
+  # };
 
-  sops.secrets = {
-    "tailscale-auth-key" = {
-      owner = "root";
-      group = "root";
-      mode = "0600";
-      path = "/run/secrets/tailscale-auth-key";
-    };
-    "openrouter-api-key" = {
-      owner = user;
-      group = "users";
-      mode = "0400";
-      path = "/run/secrets/openrouter-api-key";
-    };
-    "github-token" = {
-      owner = user;
-      group = "users";
-      mode = "0400";
-      path = "/run/secrets/github-token";
-    };
-    "github-ssh-key" = {
-      owner = user;
-      group = "users";
-      mode = "0600";
-      path = "/home/${user}/.ssh/id_ed25519";
-    };
-  };
+  # sops.secrets = {
+  #   "tailscale-auth-key" = {
+  #     owner = "root";
+  #     group = "root";
+  #     mode = "0600";
+  #     path = "/run/secrets/tailscale-auth-key";
+  #   };
+  #   "openrouter-api-key" = {
+  #     owner = user;
+  #     group = "users";
+  #     mode = "0400";
+  #     path = "/run/secrets/openrouter-api-key";
+  #   };
+  #   "github-token" = {
+  #     owner = user;
+  #     group = "users";
+  #     mode = "0400";
+  #     path = "/run/secrets/github-token";
+  #   };
+  #   "github-ssh-key" = {
+  #     owner = user;
+  #     group = "users";
+  #     mode = "0600";
+  #     path = "/home/${user}/.ssh/id_ed25519";
+  #   };
+  # };
 
-  sops = {
-    defaultSopsFile = lib.mkDefault sopsFile;
-    validateSopsFiles = lib.mkDefault false;
-  };
+  # sops = {
+  #   defaultSopsFile = lib.mkDefault sopsFile;
+  #   validateSopsFiles = lib.mkDefault false;
+  # };
 
   systemd.tmpfiles.rules = [
     "d /home/${user}/.ssh 0700 ${user} users -"

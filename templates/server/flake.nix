@@ -3,10 +3,13 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    sopswarden.url = "github:pfassina/sopswarden/main";
+    # sopswarden.url = "github:pfassina/sopswarden/main";
   };
 
-  outputs = { nixpkgs, sopswarden, ... }:
+  outputs = { nixpkgs
+    # , sopswarden
+    , ...
+  }:
     let
       system = "%SYSTEM%";
     in {
@@ -14,7 +17,7 @@
         "%HOST%" = nixpkgs.lib.nixosSystem {
           inherit system;
           modules = [
-            sopswarden.nixosModules.default
+            # sopswarden.nixosModules.default
             ./hosts/nixos/server.nix
           ];
         };

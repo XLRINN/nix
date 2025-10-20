@@ -393,6 +393,49 @@ prompt_ip() {
   export IP_ADDR
 }
 
+<<<<<<< HEAD
+=======
+# prompt_bws_token() {
+#   local token pass confirm
+#   token="${BWS_ACCESS_TOKEN:-}"
+
+#   if [[ -z "$token" && "${NONINTERACTIVE:-}" != "1" ]]; then
+#     _print "${CYAN}${INFO} Optional: provide a Bitwarden Secrets Manager access token to bootstrap secrets.${NC}"
+#     _print "${CYAN}Press Enter to skip if you prefer to configure secrets later.${NC}"
+#     _prompt "BWS access token: " token
+#   fi
+
+#   if [[ -z "$token" ]]; then
+#     rm -f /tmp/bws_access_token /tmp/bws_token_passphrase
+#     return
+#   fi
+
+#   umask 0077
+#   printf "%s" "$token" > /tmp/bws_access_token
+#   chmod 600 /tmp/bws_access_token 2>/dev/null || true
+
+#   pass="${BWS_TOKEN_PASSPHRASE:-}"
+#   if [[ -z "$pass" && "${NONINTERACTIVE:-}" != "1" ]]; then
+#     _print "${CYAN}${INFO} Optional: encrypt the token into secrets/bws.token.age using a passphrase.${NC}"
+#     _print "${CYAN}Leave blank to place the token in ~/.secrets/bws.env instead.${NC}"
+#     read -r -s -p "Passphrase (optional): " pass; echo
+#     if [[ -n "$pass" ]]; then
+#       read -r -s -p "Confirm passphrase: " confirm; echo
+#       if [[ "$pass" != "$confirm" ]]; then
+#         _print "${YELLOW}Passphrases did not match; skipping encryption (token will be stored in ~/.secrets/bws.env).${NC}"
+#         pass=""
+#       fi
+#     fi
+#   fi
+
+#   if [[ -n "$pass" ]]; then
+#     printf "%s" "$pass" > /tmp/bws_token_passphrase
+#     chmod 600 /tmp/bws_token_passphrase 2>/dev/null || true
+#   else
+#     rm -f /tmp/bws_token_passphrase
+#   fi
+# }
+>>>>>>> 0a82324 (removed sops for now)
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
@@ -458,7 +501,12 @@ EOF
   fi
 }
 
+<<<<<<< HEAD
 # Token was already collected above after the ASCII banner.
+=======
+# # Collect Bitwarden token information (optional) before continuing
+# prompt_bws_token
+>>>>>>> 0a82324 (removed sops for now)
 
 # Run hardware configuration before applying token replacements
 configure_hardware_profile
@@ -526,6 +574,6 @@ find . -type f -exec bash -c 'replace_tokens "$1"' bash {} \;
   _print "${GREEN}${PARTY} Ready!${NC}"
 
 ## Bitwarden legacy discovery removed in favor of sopswarden.
-_print "${CYAN}${INFO} Using sopswarden for secrets. After first boot run:${NC}"
-_print "${YELLOW}  rbw login && rbw unlock${NC}"
-_print "${YELLOW}  sops-sync && sops-deploy${NC}"
+# _print "${CYAN}${INFO} Using sopswarden for secrets. After first boot run:${NC}"
+# _print "${YELLOW}  rbw login && rbw unlock${NC}"
+# _print "${YELLOW}  sops-sync && sops-deploy${NC}"
