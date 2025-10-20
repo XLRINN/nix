@@ -392,9 +392,6 @@ prompt_ip() {
   done
   export IP_ADDR
 }
-
-<<<<<<< HEAD
-=======
 # prompt_bws_token() {
 #   local token pass confirm
 #   token="${BWS_ACCESS_TOKEN:-}"
@@ -435,7 +432,6 @@ prompt_ip() {
 #     rm -f /tmp/bws_token_passphrase
 #   fi
 # }
->>>>>>> 0a82324 (removed sops for now)
 
 # Set hostname and find primary disk if this is NixOS
 if [[ "$OS" != "Darwin" ]]; then
@@ -501,12 +497,9 @@ EOF
   fi
 }
 
-<<<<<<< HEAD
-# Token was already collected above after the ASCII banner.
-=======
 # # Collect Bitwarden token information (optional) before continuing
 # prompt_bws_token
->>>>>>> 0a82324 (removed sops for now)
+
 
 # Run hardware configuration before applying token replacements
 configure_hardware_profile

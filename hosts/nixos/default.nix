@@ -271,33 +271,6 @@ in
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
-<<<<<<< HEAD
-  # sopswarden disabled in full-SOPS mode; secrets come from per-host SOPS files.
-
-  sops.secrets = {
-    # github-token is needed now; others can be added later
-    github-token = {
-      owner = user;
-      group = "users";
-      mode = "0400";
-      path = "/run/secrets/github-token";
-    };
-    # SSH private key managed declaratively via SOPS
-    ssh_private_key = {
-      owner = user;
-      group = "users";
-      mode = "0600";
-      path = "/home/${user}/.ssh/id_ed25519";
-    };
-  };
-
-  # Full SOPS: decrypt a shared secrets file at activation using an Age key placed at /etc/sops/age/keys.txt
-  sops = {
-    defaultSopsFile = ../../secrets/common.yaml;
-    age.keyFile = "/etc/sops/age/keys.txt";
-    validateSopsFiles = true;
-  };
-=======
   # services.sopswarden = {
   #   enable = true;
   #   secrets = {
@@ -352,7 +325,6 @@ in
   #   defaultSopsFile = lib.mkDefault sopsFile;
   #   validateSopsFiles = lib.mkDefault false;
   # };
->>>>>>> 0a82324 (removed sops for now)
 
   systemd.tmpfiles.rules = [
     "d /home/${user}/.ssh 0700 ${user} users -"

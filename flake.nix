@@ -5,15 +5,11 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     # Add sopswarden for Bitwarden secrets management
-<<<<<<< HEAD
-    sopswarden.url = "github:pfassina/sopswarden/main";
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-=======
     # sopswarden.url = "github:pfassina/sopswarden/main";
->>>>>>> 0a82324 (removed sops for now)
+    # sops-nix = {
+    #   url = "github:Mic92/sops-nix";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
   # Legacy nixpkgs for an older bitwarden-cli that builds (argon2/node-gyp regression in newer revs)
   # Using the 24.05 stable channel (adjust to a specific commit later if needed):
   # legacy-nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -68,9 +64,6 @@
       };
   };
 
-<<<<<<< HEAD
-  outputs = { self, darwin, nix-homebrew, homebrew-bundle, homebrew-core, homebrew-cask, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, sopswarden, sops-nix, ... } @inputs:
-=======
   outputs =
     { self
     , darwin
@@ -90,7 +83,6 @@
     # , sopswarden
     , ...
     } @inputs:
->>>>>>> 0a82324 (removed sops for now)
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -218,13 +210,10 @@
             inherit system;
             specialArgs = { inherit inputs; };
             modules =
-<<<<<<< HEAD
-              [ disko.nixosModules.disko sops-nix.nixosModules.sops ]
-=======
               [ disko.nixosModules.disko
+                # sops-nix.nixosModules.sops
                 # sopswarden.nixosModules.default
               ]
->>>>>>> 0a82324 (removed sops for now)
               ++ (modules profile);
           };
 

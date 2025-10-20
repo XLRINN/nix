@@ -379,19 +379,11 @@ in
         gc = "nix-collect-garbage -d";
         pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
         pretty2 = "cp ~/.p10k.zsh nix/modules/shared/config/shell/p10k.zsh";
-<<<<<<< HEAD
-        unlock = "bash ~/nix/scripts/repair-secrets.sh";
-        install-bws = "bash ~/nix/scripts/install-bws.sh";
-        bws-setup = "bash ~/nix/scripts/bws-quick-setup.sh";
-        set-bws-token = "security add-generic-password -a $USER -s BWS_ACCESS_TOKEN -w";
-        set-bws-project = "security add-generic-password -a $USER -s BWS_PROJECT_ID -w";
-=======
         # unlock = "bash ~/nix/scripts/secrets-wizard.sh";
         # install-bws = "bash ~/nix/scripts/install-bws.sh";
         # bws-setup = "bash ~/nix/scripts/bws-quick-setup.sh";
         # set-bws-token = "security add-generic-password -a $USER -s BWS_ACCESS_TOKEN -w";
         # set-bws-project = "security add-generic-password -a $USER -s BWS_PROJECT_ID -w";
->>>>>>> 0a82324 (removed sops for now)
         
         # # Bitwarden shortcuts
         # bw-unlock = "unset BW_SESSION; BW_PASSWORD=\"$(read -s -p 'Master password: ' pw; echo; printf %s \"$pw\")\" bw unlock --raw | tee \"$HOME/.cache/bw-session\" >/dev/null";
@@ -399,24 +391,15 @@ in
         # bw-items = "bw list items --session \"$(cat ~/.cache/bw-session 2>/dev/null || echo '')\" 2>/dev/null | jq -r '.[] | \"\\(.name)\"' | sort";
         load-api-keys = "test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set -a && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && set +a && echo '✓ API keys loaded' || echo '❌ No API keys file found'";
         refresh-secrets = "nix run .#apply --refresh";
-        init-secrets = "bash ~/nix/scripts/bootstrap-sops.sh";
+        # init-secrets = "bash ~/nix/scripts/bootstrap-sops.sh";
         check-keys = "echo 'Checking API keys...'; test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && { test -n \"$OPENROUTER_API_KEY\" && echo '✓ OpenRouter' || echo '❌ OpenRouter'; test -n \"$GITHUB_TOKEN\" && echo '✓ GitHub' || echo '❌ GitHub'; } || echo '❌ No keys file'";
         
-<<<<<<< HEAD
-        # Sopswarden (SOPS + Bitwarden) shortcuts
-        sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden (root)...'; rbw sync && sudo sopswarden-sync && echo '✓ Secrets synchronized'";
-        sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sudo sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
-        sops-check = "echo 'Checking sopswarden secrets...'; ls -la /run/secrets/ 2>/dev/null | grep -E 'tailscale|openrouter|github' || echo 'No sopswarden secrets found'";
-        rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
-        rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
-=======
         # # Sopswarden (SOPS + Bitwarden) shortcuts
         # sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden...'; rbw sync && sopswarden-sync && echo '✓ Secrets synchronized'";
         # sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
         # sops-check = "echo 'Checking sopswarden secrets...'; ls -la /run/secrets/ 2>/dev/null | grep -E 'tailscale|openrouter|github' || echo 'No sopswarden secrets found'";
         # rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
         # rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
->>>>>>> 0a82324 (removed sops for now)
       };
     
       initContent = ''
@@ -440,56 +423,6 @@ in
         # fi
 
         # Provide a lightweight 'bw' shim if bitwarden-cli is not installed but rbw is.
-<<<<<<< HEAD
-        if ! command -v bw >/dev/null 2>&1 && command -v rbw >/dev/null 2>&1; then
-          bw() {
-            # Simple translation layer for common commands
-            case "$1" in
-              login)
-                shift
-                echo "(shim) rbw handles auth separately; run 'rbw login' if needed" >&2
-                ;;
-              unlock)
-                shift
-                rbw unlock "$@" 2>/dev/null || return 1
-                ;;
-              sync)
-                rbw sync "$@" 2>/dev/null || return 1
-                ;;
-              get)
-                shift
-                subcmd="$1"; shift
-                case "$subcmd" in
-                  item)
-                    # rbw get item by name prints secure json; emulate minimal subset
-                    rbw get "$@" 2>/dev/null || return 1
-                    ;;
-                  password)
-                    rbw get "$@" 2>/dev/null || return 1
-                    ;;
-                  *) echo "Unsupported bw get subcommand in shim: $subcmd" >&2; return 2 ;;
-                esac
-                ;;
-              list)
-                shift
-                what="$1"; shift
-                case "$what" in
-                  items)
-                    # Basic list of items (names only); enrich as needed
-                    rbw list | jq -R 'select(length>0) | { name: . }' | jq -s '.'
-                    ;;
-                  *) echo "Unsupported bw list target in shim: $what" >&2; return 2 ;;
-                esac
-                ;;
-              *)
-                echo "bw shim: unsupported command '$1'. Install bitwarden-cli for full functionality." >&2
-                return 2
-                ;;
-            esac
-          }
-          # In zsh, functions do not need to be exported; avoid bash-only 'export -f'
-        fi
-=======
         # if ! command -v bw >/dev/null 2>&1 && command -v rbw >/dev/null 2>&1; then
         #   bw() {
         #     # Simple translation layer for common commands
@@ -538,7 +471,6 @@ in
         #   }
         #   export -f bw || true
         # fi
->>>>>>> 0a82324 (removed sops for now)
 
         # Load API keys from Bitwarden-sourced file if available
         # if [[ -f "$HOME/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env" ]]; then

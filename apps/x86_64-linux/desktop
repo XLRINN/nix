@@ -59,9 +59,7 @@ run_disko() {
 }
 
 setup_files() {
-<<<<<<< HEAD
-  # Full-SOPS mode: no BWS token handoff
-=======
+  # # BWS token handoff disabled
   # if [[ -z "${BWS_ACCESS_TOKEN:-}" && -f /tmp/bws_access_token ]]; then
   #   BWS_ACCESS_TOKEN="$(cat /tmp/bws_access_token)"
   #   export BWS_ACCESS_TOKEN
@@ -70,7 +68,6 @@ setup_files() {
   #   BWS_TOKEN_PASSPHRASE="$(cat /tmp/bws_token_passphrase)"
   #   export BWS_TOKEN_PASSPHRASE
   # fi
->>>>>>> 0a82324 (removed sops for now)
 
   mkdir -p /mnt/etc/nixos
   cp -r * /mnt/etc/nixos
@@ -122,11 +119,6 @@ setup_files() {
   chown -R 1000:1000 /mnt/home/david/nix
   chmod -R 755 /mnt/home/david/nix
 
-<<<<<<< HEAD
-  # No BWS provisioning in full-SOPS mode
-
-  rm -f /tmp/bws_access_token
-=======
   # # Optionally pre-provision Bitwarden Secrets Manager token for first boot
   # if [[ -n "${BWS_ACCESS_TOKEN:-}" ]]; then
   #   echo -e "${CYAN}Provisioning BWS token for first boot...${NC}"
@@ -146,7 +138,6 @@ setup_files() {
   # fi
 
   # rm -f /tmp/bws_access_token /tmp/bws_token_passphrase
->>>>>>> 0a82324 (removed sops for now)
 }
 
 install_nixos() {
@@ -181,29 +172,6 @@ install_nixos() {
   echo -e "${GREEN}✓ NixOS installed successfully${NC}"
 }
 
-<<<<<<< HEAD
-run_secrets_preboot() {
-  # Full-SOPS mode: no rbw/BWS preboot steps required. Just ensure first rebuild runs.
-  ARCH=$(uname -m)
-  case "$ARCH" in
-    x86_64)
-      BASE_TARGET="x86_64-linux"
-      ;;
-    aarch64)
-      BASE_TARGET="aarch64-linux"
-      ;;
-    *)
-      BASE_TARGET="x86_64-linux"
-      ;;
-  esac
-  if [[ "${NIX_PROFILE:-}" == "server" ]]; then
-    FLAKE_TARGET="server-${BASE_TARGET}"
-  else
-    FLAKE_TARGET="${BASE_TARGET}"
-  fi
-  chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
-}
-=======
 # run_secrets_preboot() {
 #   # If we provisioned a token, attempt to run the secrets wizard inside the target before reboot
 #   echo -e "${CYAN}Attempting to run secrets wizard before reboot...${NC}"
@@ -218,7 +186,6 @@ run_secrets_preboot() {
 #     echo -e "${YELLOW}Secrets wizard pre-boot run failed; you can run \"nix run .#secrets\" after first login.${NC}"
 #   }
 # }
->>>>>>> 0a82324 (removed sops for now)
 
 prompt_reboot() {
   echo -e "\e[1;32mRebooting in 5 seconds...\e[0m"
