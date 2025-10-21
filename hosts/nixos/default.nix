@@ -77,7 +77,8 @@ in
   };
 
   networking = {
-    hostName = "%HOST%"; # Replaced by apply script
+    # Use a safe default during evaluation; token gets replaced by apply script.
+    hostName = lib.mkDefault (if "%HOST%" == "%HOST%" then "nixos" else "%HOST%");
     useDHCP = lib.mkDefault true;
     networkmanager.enable = true; # Enable NetworkManager
     firewall = {
@@ -169,16 +170,13 @@ in
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-    displayManager.sddm.enable = true;
+    # Switch to COSMIC Greeter; keep Plasma session available
+    displayManager.sddm.enable = false;
+    displayManager.cosmic-greeter.enable = true;
     desktopManager.plasma6.enable = true;
     xserver.videoDrivers = [ "modesetting" ];
     # Enable COSMIC Desktop (beta) alongside KDE and Hyprland
-    cosmic = {
-      enable = true;
-      settings = {
-        enableReleaseMode = true;
-      };
-    };
+    desktopManager.cosmic.enable = true;
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
 
     qemuGuest.enable = lib.mkDefault true;

@@ -53,7 +53,8 @@ in
 	};
 
 	networking = {
-	hostName = "%HOST%"; # Replaced by apply script
+	# Safe default for evaluation; token replaced by apply script.
+	hostName = lib.mkDefault (if "%HOST%" == "%HOST%" then "nixos" else "%HOST%");
 		useDHCP = true;
 		firewall = {
 			enable = true;
