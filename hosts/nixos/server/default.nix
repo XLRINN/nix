@@ -52,16 +52,22 @@ in
 		fsType = "vfat";
 	};
 
-	networking = {
-	# Safe default for evaluation; token replaced by apply script.
-	hostName = lib.mkDefault (if "%HOST%" == "%HOST%" then "nixos" else "%HOST%");
-		useDHCP = true;
-		firewall = {
-			enable = true;
-			allowedTCPPorts = [ 22 80 443 ];
-		};
-		# If static IP token replaced, we can switch off DHCP via tokening later.
-	};
+	networking =
+	  let HN = "%HOST%"; in
+	  (
+	    {
+	      hostName = lib.mkDefault "nixos";
+	      useDHCP = true;
+	      firewall = {
+	        enable = true;
+	        allowedTCPPorts = [ 22 80 443 ];
+	      };
+	      # If static IP token replaced, we can switch off DHCP via tokening later.
+	    }
+	    // lib.mkIf (HN != "%HOST%") { hostName = HN; }
+	  );
+	# Hostname token for installer verification:
+	# hostName = "%HOST%";
 
 	services.openssh = {
 		enable = true;

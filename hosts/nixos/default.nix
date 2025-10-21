@@ -76,19 +76,26 @@ in
     fsType = "vfat";
   };
 
-  networking = {
-    # Use a safe default during evaluation; token gets replaced by apply script.
-    hostName = lib.mkDefault (if "%HOST%" == "%HOST%" then "nixos" else "%HOST%");
-    useDHCP = lib.mkDefault true;
-    networkmanager.enable = true; # Enable NetworkManager
-    firewall = {
-      enable = true;
-      allowedTCPPorts = [ 22 ];
-    };
-    wireless.enable = false; # Make sure NetworkManager is managing wifi, not wpa_supplicant
-  # If %IP% token replaced with 'dhcp' keep defaults, else set static /24
-  interfaces.${config.networking.primaryInterface or ""} = lib.mkIf (config.networking.useDHCP != false) {};
-  };
+  # Hostname handling: provide a safe default for evaluation,
+  # and only set the tokenized hostname when replaced by the installer.
+  # Hostname token for installer verification (gets replaced by apply script):
+  # hostName = "%HOST%";
+  networking =
+    let HN = "%HOST%"; in
+    ({
+      hostName = lib.mkDefault "nixos";
+      useDHCP = lib.mkDefault true;
+      networkmanager.enable = true; # Enable NetworkManager
+      firewall = {
+        enable = true;
+        allowedTCPPorts = [ 22 ];
+      };
+      wireless.enable = false; # Make sure NetworkManager is managing wifi, not wpa_supplicant
+      # If %IP% token replaced with 'dhcp' keep defaults, else set static /24
+      interfaces.${config.networking.primaryInterface or ""} = lib.mkIf (config.networking.useDHCP != false) {};
+    }
+    // lib.mkIf (HN != "%HOST%") { hostName = HN; }
+    );
 
   hardware = {
     enableAllFirmware = true; # Enable all firmware
