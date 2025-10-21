@@ -176,7 +176,7 @@ in
     cosmic = {
       enable = true;
       settings = {
-        enableReleaseMode = true; # opt into the beta channel packaging
+        enableReleaseMode = true;
       };
     };
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
