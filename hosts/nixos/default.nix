@@ -172,7 +172,13 @@ in
     displayManager.sddm.enable = true;
     desktopManager.plasma6.enable = true;
     xserver.videoDrivers = [ "modesetting" ];
-  # cosmic desktop disabled
+    # Enable COSMIC Desktop (beta) alongside KDE and Hyprland
+    cosmic = {
+      enable = true;
+      settings = {
+        enableReleaseMode = true; # opt into the beta channel packaging
+      };
+    };
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
 
     qemuGuest.enable = lib.mkDefault true;
