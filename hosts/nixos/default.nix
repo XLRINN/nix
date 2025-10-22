@@ -177,13 +177,13 @@ in
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-    # Switch to COSMIC Greeter; keep Plasma session available
-    displayManager.sddm.enable = false;
-    displayManager.cosmic-greeter.enable = true;
+    # Greeter: use SDDM for now (COSMIC greeter disabled)
+    displayManager.sddm.enable = true;
+    # displayManager.cosmic-greeter.enable = true;
     desktopManager.plasma6.enable = true;
     xserver.videoDrivers = [ "modesetting" ];
-    # Enable COSMIC Desktop (beta) alongside KDE and Hyprland
-    desktopManager.cosmic.enable = true;
+    # COSMIC Desktop temporarily disabled
+    # desktopManager.cosmic.enable = true;
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
 
     qemuGuest.enable = lib.mkDefault true;
