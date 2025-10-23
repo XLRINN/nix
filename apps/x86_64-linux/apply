@@ -176,8 +176,8 @@ disable_swap_partition() {
         perl -0pi -e 's/\n(\s*)swap = \{\n(?:.*?\n)\1\};\n/\n/s' "$file"
       fi
     done
-    if [[ -f ./hosts/nixos/default.nix ]]; then
-      perl -0pi -e 's/\n\s*swapDevices = lib\.mkForce \[\{\n(?:.*?\n)*?\s*\}\];\n//s' ./hosts/nixos/default.nix
+    if [[ -f  ./hosts/nixos/desktop/default.nix ]]; then
+      perl -0pi -e 's/\n\s*swapDevices = lib\.mkForce \[\{\n(?:.*?\n)*?\s*\}\];\n//s'  ./hosts/nixos/desktop/default.nix
     fi
   elif command -v python3 >/dev/null 2>&1; then
     python3 <<'PY'
@@ -253,7 +253,7 @@ END {
       fi
     done
 
-    if [[ -f ./hosts/nixos/default.nix ]]; then
+    if [[ -f  ./hosts/nixos/desktop/default.nix ]]; then
       tmp=$(mktemp)
       if awk '
 function flush() {
@@ -285,11 +285,11 @@ function flush() {
 END {
   flush()
 }
-      ' ./hosts/nixos/default.nix > "$tmp"; then
-        mv "$tmp" ./hosts/nixos/default.nix
+      '  ./hosts/nixos/desktop/default.nix > "$tmp"; then
+        mv "$tmp"  ./hosts/nixos/desktop/default.nix
       else
         rm -f "$tmp"
-        echo -e "${RED}Failed to strip swapDevices override from ./hosts/nixos/default.nix.${NC}"
+        echo -e "${RED}Failed to strip swapDevices override from  ./hosts/nixos/desktop/default.nix.${NC}"
         exit 1
       fi
     fi
@@ -551,3 +551,4 @@ find . -type f -exec bash -c 'replace_tokens "$1"' bash {} \;
 # _print "${CYAN}${INFO} Using sopswarden for secrets. After first boot run:${NC}"
 # _print "${YELLOW}  rbw login && rbw unlock${NC}"
 # _print "${YELLOW}  sops-sync && sops-deploy${NC}"
+

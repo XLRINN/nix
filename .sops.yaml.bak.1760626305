@@ -1,9 +1,0 @@
-creation_rules:
-  # Shared secrets for all machines
-  - path_regex: secrets/common\.yaml$
-    # Replace with your team/org Age public key
-    # Generate: age-keygen -y ~/.config/sops/age/keys.txt
-    age: [ "age1replacewithyourrecipientxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" ]
-  # Optional: per-host overrides (not required in your flow, but supported)
-  - path_regex: secrets/hosts/[^/]+\.yaml$
-    age: [ "age1replacewithyourrecipientxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" ]
