@@ -104,6 +104,10 @@ in
     opengl.enable = true;
     opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
     ledger.enable = true;
+    hardware.enableAllFirmware = true; # already present
+    hardware.bluetooth.enable = true;
+    hardware.bluetooth.powerOnBoot = true;
+    hardware.bluetooth.settings = { General = { Experimental = true; }; };
   };
 
   # Optional: nixos-hardware profile for specific machines.
