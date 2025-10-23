@@ -2,8 +2,8 @@
 set -eu
 
 # Default branch/ref selectors so this installer matches server/install
-export NIX_REF=${NIX_REF:-testing}
-export NIX_BRANCH=${NIX_BRANCH:-testing}
+export NIX_REF=${NIX_REF:-master}
+export NIX_BRANCH=${NIX_BRANCH:-master}
 
 # Color codes
 RED='\033[0;31m'

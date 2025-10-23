@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # Mirror the x86 server installer to reuse the desktop workflow.
-# Default to the 'testing' branch/ref to match the desktop/install behavior
+# Default to the 'master' branch/ref to match the desktop/install behavior
 # and avoid stale option paths on older branches. Users can override by
 # exporting NIX_REF/NIX_BRANCH explicitly.
 export NIX_REF=${NIX_REF:-testing}
-export NIX_BRANCH=${NIX_BRANCH:-testing}
+export NIX_BRANCH=${NIX_BRANCH:-master}
 export NIX_PROFILE=${NIX_PROFILE:-server}
 
 exec "$(dirname "$0")/desktop" "$@"
