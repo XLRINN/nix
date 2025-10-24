@@ -21,7 +21,7 @@ in
   
   ".config/htop/htoprc".source = ./config/htop/htoprc;
   
-  ".config/neofetch/config.conf".source = ./config/neofetch/config.conf;
+  #".config/neofetch/config.conf".source = ./config/neofetch/config.conf;
   
   ".config/lua/init.lua".source = ./config/lua/init.lua;
   ".config/lua/plugins.lua".source = ./config/lua/plugins.lua;

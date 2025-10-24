@@ -4,14 +4,24 @@ with pkgs;
 let shared-packages = import ../shared/packages.nix { inherit pkgs; }; in
 shared-packages ++ [
 
+  #Terminal emulators
+  alacritty
+  #termius
+  wezterm
+  remmina
+  kitty
+  ghostty
+  tilix
+
+
   # Security and authentication
   yubikey-agent
   keepassxc
   vscode
   bitwarden
-
+  
   firefox
-  alacritty
+ 
 
   # App and package management
   appimage-run
@@ -52,11 +62,6 @@ shared-packages ++ [
   xorg.xwininfo # Provides a cursor to click and learn about windows
   xorg.xrandr
 
-  # File and system utilities
- # inotify-tools # inotifywait, inotifywatch - For file system events
- # i3lock-fancy-rapid
- # libnotify
- # pcmanfm # File browser
  # sqlite
   xdg-utils
 
@@ -74,4 +79,6 @@ shared-packages ++ [
   # Wireless in GNOME
   #networkmanager
   #networkmanagerapplet
+
+  waynergy
 ]

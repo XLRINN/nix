@@ -8,8 +8,8 @@
 
     xdg.configFile."ghostly/config.toml".text = ''
       [theme]
-      color_scheme = "nordic"
-      opacity = 0.9
+      color_scheme = "Dracula"
+      opacity = 0.3
     '';
 
     home.file.".config/ghostly/config.toml".force = true;

@@ -151,35 +151,10 @@ in
         window = {
           opacity = 0.8;
           padding = { x = 10; y = 10; };
-          dynamic_padding = false;
+          dynamic_padding = true;
           decorations = "none";
         };
-        colors = {
-          primary = {
-            background = "0x1f1f1f";
-            foreground = "0xcccccc";
-          };
-          normal = {
-            black = "0x272727";
-            red = "0xf74949";
-            green = "0x2ea043";
-            yellow = "0x9e6a03";
-            blue = "0x0078d4";
-            magenta = "0xd01273";
-            cyan = "0x1db4d6";
-            white = "0xcccccc";
-          };
-          bright = {
-            black = "0x5d5d5d";
-            red = "0xdc5452";
-            green = "0x23d18b";
-            yellow = "0xf5f543";
-            blue = "0x3b8eea";
-            magenta = "0xd670d6";
-            cyan = "0x29b8db";
-            white = "0xe5e5e5";
-          };
-        };
+
         selection = {
           semantic_escape_chars = " ,│`|:\"'()[]{}<>";
         };
@@ -246,9 +221,10 @@ in
               },
             },
           },
+
           { "nvim-telescope/telescope-fzf-native.nvim", enabled = true },
-          { "williamboman/mason-lspconfig.nvim", enabled = false },
-          { "williamboman/mason.nvim", enabled = false },
+          { "mason-org/mason-lspconfig.nvim", enabled = false },
+          { "mason-org/mason.nvim", enabled = false },
           { "preservim/nerdtree" },
           { "tpope/vim-fugitive" },
           { "craftzdog/solarized-osaka.nvim", priority = 1000, config = true },
@@ -301,7 +277,6 @@ in
                   "monokai",
                   "vscode",
                 },
-                themeConfigFile = vim.fn.stdpath("config") .. "/lua/theme.lua",
                 livePreview = true,
               })
             end,
@@ -326,24 +301,6 @@ in
                 autoinstall = true,
               })
             end,
-          },
-          { "yetone/avante.nvim",
-            event = "VeryLazy",
-            opts = {
-              provider = "openai",
-              openai = {
-                endpoint = "https://openrouter.ai/api/v1",
-                model = "openai/gpt-4o",
-                temperature = 0,
-              },
-              behaviour = { auto_suggestions = true },
-            },
-            dependencies = {
-              "nvim-lua/plenary.nvim",
-              "MunifTanjim/nui.nvim",
-              "stevearc/dressing.nvim",
-              "nvim-tree/nvim-web-devicons",
-            },
           },
         },
       })

@@ -17,7 +17,7 @@ with pkgs; [
   codex
   killall
   pfetch
-  neofetch
+  #neofetch
   yazi
   lf
   nnn
@@ -26,7 +26,7 @@ with pkgs; [
   wget
   curl
   zip
-  kitty
+  #kitty
   oh-my-zsh 
   zsh
   lazygit
@@ -44,6 +44,8 @@ with pkgs; [
   jq
   ripgrep
   tree
+  tree-sitter 
+  gcc
   tmux
   unrar
   unzip

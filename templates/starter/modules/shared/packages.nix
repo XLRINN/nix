@@ -11,7 +11,7 @@ with pkgs; [
   coreutils
   killall
   pfetch
-  neofetch
+  #neofetch
   yazi
   lf
   nnn
