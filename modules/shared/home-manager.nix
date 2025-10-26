@@ -13,6 +13,26 @@ in
       nix-direnv.enable = true;
     };
 
+
+    stylix = {
+      enable = true;
+      settings = {
+        theme = "dracula";
+        font = {
+          family = "MesloLGS NF";
+          size = 12;
+        };
+        cursor = {
+          style = "Block";
+        };
+        opacity = 0.8;
+        padding = { x = 10; y = 10; };
+        dynamic_padding = false;
+        decorations = "none";
+        semantic_escape_chars = " ,│`|:\"'()[]{}<>";
+      };
+    };
+
     git = {
       enable = true;
       ignores = [ "*.swp" ];
@@ -50,20 +70,6 @@ in
         hide_session_name = true;
         rounded_corners = true;
         show_startup_tips = false;
-        themes = {
-          "dark-modern" = {
-            fg = [204 204 204];
-            bg = [31 31 31];
-            black = [39 39 39];
-            red = [247 73 73];
-            green = [46 160 67];
-            yellow = [158 106 3];
-            blue = [0 120 212];
-            magenta = [208 18 115];
-            cyan = [29 180 214];
-            white = [204 204 204];
-            orange = [158 106 3];
-          };
         };
       };
     };
@@ -99,26 +105,7 @@ in
           macro_workers = 10;
           bizarre_retry = 5;
         };
-        theme = {
-          background = "0x1f1f1f";
-          foreground = "0xcccccc";
-          black = "0x272727";
-          red = "0xf74949";
-          green = "0x2ea043";
-          yellow = "0x9e6a03";
-          blue = "0x0078d4";
-          magenta = "0xd01273";
-          cyan = "0x1db4d6";
-          white = "0xcccccc";
-          bright_black = "0x5d5d5d";
-          bright_red = "0xdc5452";
-          bright_green = "0x23d18b";
-          bright_yellow = "0xf5f543";
-          bright_blue = "0x3b8eea";
-          bright_magenta = "0xd670d6";
-          bright_cyan = "0x29b8db";
-          bright_white = "0xe5e5e5";
-        };
+        
       open = {
         rules = [
           { mime = "*/*"; use = "edit"; }
