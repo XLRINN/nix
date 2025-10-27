@@ -13,26 +13,6 @@ in
       nix-direnv.enable = true;
     };
 
-
-    stylix = {
-      enable = true;
-      settings = {
-        theme = "dracula";
-        font = {
-          family = "MesloLGS NF";
-          size = 12;
-        };
-        cursor = {
-          style = "Block";
-        };
-        opacity = 0.8;
-        padding = { x = 10; y = 10; };
-        dynamic_padding = false;
-        decorations = "none";
-        semantic_escape_chars = " ,│`|:\"'()[]{}<>";
-      };
-    };
-
     git = {
       enable = true;
       ignores = [ "*.swp" ];
@@ -70,11 +50,10 @@ in
         hide_session_name = true;
         rounded_corners = true;
         show_startup_tips = false;
-        };
       };
     };
 
-     yazi = {
+    yazi = {
       enable = true;
       settings = {
         editor = "neovim";
@@ -105,13 +84,12 @@ in
           macro_workers = 10;
           bizarre_retry = 5;
         };
-        
-      open = {
-        rules = [
-          { mime = "*/*"; use = "edit"; }
-          { name = "*"; use = "edit"; }
-        ];
-      };
+        open = {
+          rules = [
+            { mime = "*/*"; use = "edit"; }
+            { name = "*"; use = "edit"; }
+          ];
+        };
       };
     };
 
@@ -365,8 +343,7 @@ in
         # rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
         # rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
       };
-    
-      initContent = ''
+      initExtra = ''
         # Set rbw (Bitwarden) email to the same value used for git
         # export RBW_EMAIL="${email}"
 

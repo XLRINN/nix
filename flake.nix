@@ -53,11 +53,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # COSMIC Desktop (beta) for NixOS
-    nixos-cosmic = {
-      url = "github:lilyinstarlight/nixos-cosmic";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     nvf = { 
       url = "github:notashelf/nvf";
@@ -83,7 +78,6 @@
     , oh-my-posh
     , stylix
     , hyprland
-    , nixos-cosmic
     , nvf
     , nixvim
     , nixos-hardware
@@ -218,7 +212,6 @@
             specialArgs = { inherit inputs; };
             modules =
               [ disko.nixosModules.disko
-                nixos-cosmic.nixosModules.default
                 # sops-nix.nixosModules.sops
                 # sopswarden.nixosModules.default
               ]

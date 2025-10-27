@@ -15,7 +15,6 @@ let
   ];
   availableFw = builtins.filter (name: builtins.hasAttr name fwMods) fwCandidates;
   fwModule = if availableFw == [] then null else (builtins.getAttr (builtins.head availableFw) fwMods);
-  # Cosmic temporarily removed.
 in
 {
   imports = [
@@ -180,13 +179,9 @@ in
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-    # Greeter: use SDDM for now (COSMIC greeter disabled)
     displayManager.sddm.enable = true;
-    # displayManager.cosmic-greeter.enable = true;
     desktopManager.plasma6.enable = true;
     xserver.videoDrivers = [ "modesetting" ];
-    # COSMIC Desktop temporarily disabled
-    # desktopManager.cosmic.enable = true;
     libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
 
     qemuGuest.enable = lib.mkDefault true;
