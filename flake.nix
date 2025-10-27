@@ -4,16 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
-    # Add sopswarden for Bitwarden secrets management
-    # sopswarden.url = "github:pfassina/sopswarden/main";
-    # sops-nix = {
-    #   url = "github:Mic92/sops-nix";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-  # Legacy nixpkgs for an older bitwarden-cli that builds (argon2/node-gyp regression in newer revs)
-  # Using the 24.05 stable channel (adjust to a specific commit later if needed):
-  # legacy-nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-  # Hardware-specific modules for NixOS machines (e.g., Framework laptops)
+
   nixos-hardware.url = "github:NixOS/nixos-hardware";
     darwin = {
       url = "github:LnL7/nix-darwin/master";
@@ -53,21 +44,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # COSMIC Desktop (beta) for NixOS
-    nixos-cosmic = {
-      url = "github:lilyinstarlight/nixos-cosmic";
-      inputs.nixpkgs.follows = "nixpkgs";
+
     };
 
-    nvf = { 
-      url = "github:notashelf/nvf";
-      flake = false;
-    };
 
-      nixvim= {
-        url = "github:dc-tec/nixvim";
-        flake = false;
-      };
+
   };
 
   outputs =
@@ -80,12 +61,8 @@
     , home-manager
     , nixpkgs
     , disko
-    , oh-my-posh
     , stylix
     , hyprland
-    , nixos-cosmic
-    , nvf
-    , nixvim
     , nixos-hardware
     # , sopswarden
     , ...
@@ -218,9 +195,6 @@
             specialArgs = { inherit inputs; };
             modules =
               [ disko.nixosModules.disko
-                nixos-cosmic.nixosModules.default
-                # sops-nix.nixosModules.sops
-                # sopswarden.nixosModules.default
               ]
               ++ (modules profile);
           };

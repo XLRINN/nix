@@ -6,7 +6,11 @@ set -euo pipefail
 # and avoid stale option paths on older branches. Users can override by
 # exporting NIX_REF/NIX_BRANCH explicitly.
 export NIX_REF=${NIX_REF:-testing}
+<<<<<<< HEAD
 export NIX_BRANCH=${NIX_BRANCH:-master}
+=======
+export NIX_BRANCH=${NIX_BRANCH:-server}
+>>>>>>> bcbf2c3 (more refractor)
 export NIX_PROFILE=${NIX_PROFILE:-server}
 
 exec "$(dirname "$0")/desktop" "$@"

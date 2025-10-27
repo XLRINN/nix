@@ -15,7 +15,6 @@ let
   ];
   availableFw = builtins.filter (name: builtins.hasAttr name fwMods) fwCandidates;
   fwModule = if availableFw == [] then null else (builtins.getAttr (builtins.head availableFw) fwMods);
-  # Cosmic temporarily removed.
 in
 {
   imports = [
@@ -106,10 +105,6 @@ in
     ledger.enable = true;
   };
 
-  # Optional: nixos-hardware profile for specific machines.
-  # For Framework laptops examples:
-  #  - my.hardware.profilePath = "framework/13-inch/intel";
-  #  - my.hardware.profilePath = "framework/13-inch/amd/7040";
   my.hardware = {
     isLaptop = true;
     profilePath = lib.mkDefault null;
@@ -168,8 +163,16 @@ in
     }];
   };
 
-  # Enable Hyprland (alongside KDE; choose session at SDDM login)
-  programs.hyprland.enable = true;
+  # Desktop environment/Display manager
+
+    displayManager.sddm.enable = true;
+    desktopManager.plasma6.enable = true;
+    programs.hyprland.enable = true;
+    desktopManager.cosmic.enable = true;
+
+    xserver.videoDrivers = [ "modesetting" ];
+    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
+
 
   services = { 
     xserver = {
@@ -177,15 +180,9 @@ in
       xkb.layout = "us"; # Update from layout to xkb.layout
       xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
     };
-    # Greeter: use SDDM for now (COSMIC greeter disabled)
-    displayManager.sddm.enable = true;
-    # displayManager.cosmic-greeter.enable = true;
-    desktopManager.plasma6.enable = true;
-    xserver.videoDrivers = [ "modesetting" ];
-    # COSMIC Desktop temporarily disabled
-    # desktopManager.cosmic.enable = true;
-    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
-
+    
+  
+   
     qemuGuest.enable = lib.mkDefault true;
 
     gvfs.enable = true;
@@ -282,61 +279,7 @@ in
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
-  # services.sopswarden = {
-  #   enable = true;
-  #   secrets = {
-  #     tailscale-auth-key = {
-  #       name = "Tailscale";
-  #       field = "auth-key";
-  #     };
-  #     openrouter-api-key = {
-  #       name = "OpenRouter API";
-  #       field = "api-key";
-  #     };
-  #     github-token = {
-  #       name = "GitHub Token";
-  #       field = "token";
-  #     };
-  #     github-ssh-key = {
-  #       name = "GitHub SSH Key";
-  #       field = "private-key";
-  #       type = "note";
-  #     };
-  #   };
-  # };
-
-  # sops.secrets = {
-  #   tailscale-auth-key = {
-  #     owner = "root";
-  #     group = "root";
-  #     mode = "0600";
-  #     path = "/run/secrets/tailscale-auth-key";
-  #   };
-  #   openrouter-api-key = {
-  #     owner = user;
-  #     group = "users";
-  #     mode = "0400";
-  #     path = "/run/secrets/openrouter-api-key";
-  #   };
-  #   github-token = {
-  #     owner = user;
-  #     group = "users";
-  #     mode = "0400";
-  #     path = "/run/secrets/github-token";
-  #   };
-  #   github-ssh-key = {
-  #     owner = user;
-  #     group = "users";
-  #     mode = "0600";
-  #     path = "/home/${user}/.ssh/id_ed25519";
-  #   };
-  # };
-
-  # sops = {
-  #   defaultSopsFile = lib.mkDefault sopsFile;
-  #   validateSopsFiles = lib.mkDefault false;
-  # };
-
+ 
   systemd.tmpfiles.rules = [
     "d /home/${user}/.ssh 0700 ${user} users -"
   ];
