@@ -6,9 +6,9 @@ shared-packages ++ [
 
   #Terminal emulators
   alacritty
-  #termius
+  termius
   wezterm
-  remmina
+
   kitty
   ghostty
   tilix

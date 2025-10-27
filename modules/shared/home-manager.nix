@@ -155,6 +155,7 @@ in
         stylua
         ripgrep
         curl
+        statix
       ];
       extraConfig = ''
         set number
@@ -165,12 +166,12 @@ in
         set shiftwidth=2
         set smartindent
         set mouse=a
-        set notermguicolors
+        set termguicolors
         set background=dark
         set clipboard=unnamedplus
         colorscheme default
-        " Keybindings to toggle NERDTree
-        nnoremap <leader>n :NERDTreeToggle<CR>
+        " Keybinding for Neo-tree toggle
+        nnoremap <silent> <leader>e :Neotree toggle left reveal<CR>
 
         " Plugin management using lazy.nvim
         lua << EOF
@@ -212,7 +213,26 @@ in
           { "nvim-telescope/telescope-fzf-native.nvim", enabled = true },
           { "mason-org/mason-lspconfig.nvim", enabled = false },
           { "mason-org/mason.nvim", enabled = false },
-          { "preservim/nerdtree" },
+          -- File explorer: neo-tree (modern)
+          {
+            "nvim-neo-tree/neo-tree.nvim",
+            branch = "v3.x",
+            dependencies = {
+              "nvim-lua/plenary.nvim",
+              "nvim-tree/nvim-web-devicons",
+              "MunifTanjim/nui.nvim",
+            },
+            config = function()
+              require("neo-tree").setup({})
+              -- Auto open on startup and reveal current file
+              vim.api.nvim_create_autocmd("VimEnter", {
+                callback = function()
+                  -- Only open if no file explicitly opened? Always show per request.
+                  vim.cmd("Neotree show left reveal")
+                end,
+              })
+            end,
+          },
           { "tpope/vim-fugitive" },
           { "craftzdog/solarized-osaka.nvim", priority = 1000, config = true },
           { "folke/tokyonight.nvim", priority = 1000, config = true },

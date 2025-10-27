@@ -35,7 +35,7 @@
       flake = false;
     };
     disko = {
-      url = "github:nix-community/disko";
+       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     oh-my-posh = {

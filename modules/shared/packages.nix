@@ -8,7 +8,10 @@ with pkgs; [
   aspellDicts.en
   bash-completion
   bat
+  browsh
+  tgpt
   btop
+  screen
   # # bitwarden-cli removed (fails to build on Darwin due to argon2/node-gyp); use rbw instead
   # rbw  # Rust Bitwarden client for sopswarden
   # # Note: bws (Bitwarden Secrets Manager CLI) might not be in nixpkgs yet
