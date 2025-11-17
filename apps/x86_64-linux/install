@@ -36,7 +36,7 @@ cleanup() {
 }
 
 download_config() {
-  NIX_REF=${NIX_REF:-master}
+  NIX_REF=${NIX_REF:-server}
   if [[ "$NIX_REF" == "local" ]]; then
     progress "📦 Using local repository at $REPO_ROOT"
     LOCAL_SRC_DIR=$(mktemp -d /tmp/nix-local-XXXXXX)

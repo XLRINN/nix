@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export NIX_REF=${NIX_REF:-testing}
+export NIX_REF=${NIX_REF:-server}
 export NIX_BRANCH=${NIX_BRANCH:-server}
 export NIX_PROFILE=${NIX_PROFILE:-server}
 
-exec "$(dirname "$0")/desktop" "$@"
+exec "$(dirname "$0")/install" "$@"
