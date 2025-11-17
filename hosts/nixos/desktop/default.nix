@@ -1,40 +1,48 @@
 { config, inputs, pkgs, lib, secrets, ... }:
 
+# Legacy/alternate workstation profile. This mirrors the main `hosts/nixos/default.nix`
+# configuration but is not referenced by `flake.nix` unless you explicitly swap it into the
+# outputs. It remains for experimentation and is documented thoroughly for quick edits.
 let
-  user = "david";
-  keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p" ];
-  # sopsFile = "/var/lib/sopswarden/secrets.yaml";
+  user = "david"; # Primary login user replaced by installer tooling.
+  keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOk8iAnIaa1deoc7jw8YACPNVka1ZFJxhnU4G74TmS+p"
+  ];
+  # sopsFile = "/var/lib/sopswarden/secrets.yaml"; # Example secrets location.
 
-  # Probe for available Framework modules to avoid version-specific errors and deprecations.
+  # Try to select a matching Framework hardware profile if present in nixos-hardware inputs.
   fwMods = inputs.nixos-hardware.nixosModules or {};
-  # For 10th-gen Intel, try 11th-gen as closest match, then fallbacks
   fwCandidates = [
     "framework-11th-gen-intel"
     "framework-13th-gen-intel"
     "framework-12th-gen-intel"
   ];
   availableFw = builtins.filter (name: builtins.hasAttr name fwMods) fwCandidates;
-  fwModule = if availableFw == [] then null else (builtins.getAttr (builtins.head availableFw) fwMods);
+  fwModule =
+    if availableFw == []
+    then null
+    else (builtins.getAttr (builtins.head availableFw) fwMods);
 in
 {
-  imports = [
-  ../../modules/nixos/disk-config.nix
-    ../../modules/nixos/hardware.nix
-    ../../modules/shared
-  ]
-  ++ lib.optionals (fwModule != null) [ fwModule ];
+  imports =
+    [
+      ../../modules/nixos/disk-config.nix
+      ../../modules/nixos/hardware.nix
+      ../../modules/shared
+    ]
+    ++ lib.optionals (fwModule != null) [ fwModule ];
 
-  # Use the systemd-boot EFI boot loader.
+  # Boot configuration identical to the main workstation profile.
   boot = {
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 10;  # Keep fewer boot entries
+        configurationLimit = 10;
       };
       efi.canTouchEfiVariables = true;
-      # Faster boot
       timeout = 1;
     };
+
     initrd.availableKernelModules = [
       "xhci_pci"
       "ahci"
@@ -47,61 +55,49 @@ in
       "virtio_scsi"
       "virtio_net"
     ];
-    initrd.kernelModules = [
-      "virtio_blk"
-      "virtio_console"
-      "virtio_pci"
-      "virtio_scsi"
-    ];
+    initrd.kernelModules = [ "virtio_blk" "virtio_console" "virtio_pci" "virtio_scsi" ];
     kernelModules = [ "uinput" "virtio_balloon" "virtio_net" "virtio_rng" ];
-  # Kernel params: remove 'quiet' for debugging; add i915 quirk to mitigate black screen (Panel Self Refresh off)
-  kernelParams = [ "loglevel=4" "i915.enable_psr=0" ];
-  # Enable hibernation: set after install with the actual PARTUUID of the swap partition, e.g.
-  # lsblk -no PARTUUID /dev/yourdisk2
-  # boot.resumeDevice = "/dev/disk/by-partuuid/<uuid>";
-  # (Temporarily unset due to swap label removal.)
+    kernelParams = [ "loglevel=4" "i915.enable_psr=0" ];
+    # boot.resumeDevice = "/dev/disk/by-partuuid/<uuid>"; # Fill after install if hibernating.
   };
 
-  # Set your time zone.
   time.timeZone = "America/New_York";
 
   fileSystems."/" = lib.mkForce {
     device = "/dev/disk/by-label/NIXOS_ROOT";
     fsType = "ext4";
   };
-
   fileSystems."/boot" = lib.mkForce {
     device = "/dev/disk/by-label/NIXOS_BOOT";
     fsType = "vfat";
   };
 
-  # Hostname handling: provide a safe default for evaluation,
-  # and only set the tokenized hostname when replaced by the installer.
-  # Hostname token for installer verification (gets replaced by apply script):
-  # hostName = "%HOST%";
   networking =
     let HN = "%HOST%"; in
     ({
       hostName = lib.mkDefault "nixos";
       useDHCP = lib.mkDefault true;
-      networkmanager.enable = true; # Enable NetworkManager
+      networkmanager.enable = true;
       firewall = {
         enable = true;
         allowedTCPPorts = [ 22 ];
       };
-      wireless.enable = false; # Make sure NetworkManager is managing wifi, not wpa_supplicant
-      # If %IP% token replaced with 'dhcp' keep defaults, else set static /24
-      interfaces.${config.networking.primaryInterface or ""} = lib.mkIf (config.networking.useDHCP != false) {};
+      wireless.enable = false;
+      interfaces.${config.networking.primaryInterface or ""} =
+        lib.mkIf (config.networking.useDHCP != false) {};
     }
-    // lib.mkIf (HN != "%HOST%") { hostName = HN; }
-    );
+    // lib.mkIf (HN != "%HOST%") { hostName = HN; });
 
   hardware = {
-    enableAllFirmware = true; # Enable all firmware
-    graphics.enable = true;   # Wayland/X11 GL stack
-    # Ensure classic option for wider compatibility (kept alongside graphics.enable)
+    enableAllFirmware = true;
+    graphics.enable = true;
     opengl.enable = true;
-    opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver vaapiVdpau libvdpau-va-gl ];
+    opengl.extraPackages = with pkgs; [
+      intel-media-driver
+      intel-vaapi-driver
+      vaapiVdpau
+      libvdpau-va-gl
+    ];
     ledger.enable = true;
   };
 
@@ -111,90 +107,64 @@ in
   };
 
   virtualisation.docker.enable = true;
-
-  programs.zsh.enable = true; # Enable zsh
+  programs.zsh.enable = true;
+  programs.hyprland.enable = true; # Keep Hyprland enabled alongside GNOME/COSMIC sessions.
 
   users.users = {
     "${user}" = {
       isNormalUser = true;
-      extraGroups = [
-        "wheel" # Enable ‘sudo’ for the user.
-        "docker"
-        "networkmanager"
-      ];
+      extraGroups = [ "wheel" "docker" "networkmanager" ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;
-                # Set initial password (change this after first login)
-          initialPassword = "6!y2c87T";
-      # Create user directories with proper permissions
+      initialPassword = "6!y2c87T";
       createHome = true;
       home = "/home/${user}";
     };
 
-            root = {
-          openssh.authorizedKeys.keys = keys;
-          # Set initial root password (change this after first login)
-          initialPassword = "6!y2c87T";
-        };
+    root = {
+      openssh.authorizedKeys.keys = keys;
+      initialPassword = "6!y2c87T";
+    };
   };
 
   security.sudo = {
     enable = true;
     extraRules = [{
       commands = [
-        {
-          command = "${pkgs.systemd}/bin/reboot";
-          options = [ "NOPASSWD" ];
-        }
-        {
-          command = "${pkgs.nixos-rebuild}/bin/nixos-rebuild";
-          options = [ "NOPASSWD" ];
-        }
-        {
-          command = "${pkgs.nix}/bin/nix-collect-garbage";
-          options = [ "NOPASSWD" ];
-        }
-        {
-          command = "ALL";
-          options = [ "NOPASSWD" ];
-        }
+        { command = "${pkgs.systemd}/bin/reboot"; options = [ "NOPASSWD" ]; }
+        { command = "${pkgs.nixos-rebuild}/bin/nixos-rebuild"; options = [ "NOPASSWD" ]; }
+        { command = "${pkgs.nix}/bin/nix-collect-garbage"; options = [ "NOPASSWD" ]; }
+        { command = "ALL"; options = [ "NOPASSWD" ]; }
       ];
       groups = [ "wheel" ];
     }];
   };
 
-  # Desktop environment/Display manager
-
-    displayManager.sddm.enable = true;
-    desktopManager.plasma6.enable = true;
-    programs.hyprland.enable = true;
-    desktopManager.cosmic.enable = true;
-
-    xserver.videoDrivers = [ "modesetting" ];
-    libinput.enable = true; # Move from xserver.libinput.enable to services.libinput.enable
-
-
-  services = { 
+  services = {
     xserver = {
       enable = true;
-      xkb.layout = "us"; # Update from layout to xkb.layout
-      xkb.options = "ctrl:nocaps"; # Update from xkbOptions to xkb.options
+      xkb.layout = "us";
+      xkb.options = "ctrl:nocaps";
+      videoDrivers = [ "modesetting" ];
     };
-    
-  
-   
-    qemuGuest.enable = lib.mkDefault true;
 
+    displayManager.gdm.enable = true; # GNOME display manager.
+
+    desktopManager = {
+      gnome.enable = true;
+      cosmic.enable = true;
+      plasma6.enable = false;
+    };
+
+    libinput.enable = true;
+    qemuGuest.enable = lib.mkDefault true;
     gvfs.enable = true;
     tumbler.enable = true;
-    # Hibernate instead of suspend on lid close (overrides default from hardware module)
+
     logind = {
       lidSwitch = "hibernate";
-      lidSwitchDocked = "ignore"; # don't hibernate when docked/externals attached
-      # Updated from deprecated extraConfig to settings.Login
-      settings.Login = {
-        HandleLidSwitchExternalPower = "hibernate";
-      };
+      lidSwitchDocked = "ignore";
+      settings.Login = { HandleLidSwitchExternalPower = "hibernate"; };
     };
   };
 
@@ -210,19 +180,18 @@ in
   services.spice-vdagentd.enable = lib.mkDefault true;
 
   fonts.packages = with pkgs; [
-      noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-emoji
-      fira-code
-      inconsolata
-      dejavu_fonts
-      feather-font
-      jetbrains-mono
-      font-awesome
-      nerd-fonts.fira-code
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-emoji
+    fira-code
+    inconsolata
+    dejavu_fonts
+    feather-font
+    jetbrains-mono
+    font-awesome
+    nerd-fonts.fira-code
   ];
 
-  # Turn on flag for proprietary software
   nix = {
     nixPath = [ "nixos-config=/home/${user}/nix:/etc/nixos" ];
     settings = {
@@ -230,17 +199,14 @@ in
       trusted-users = [ "@admin" "${user}" ];
       substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
       trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
-      # Speed optimizations
       max-jobs = "auto";
       cores = 0;
       builders-use-substitutes = true;
-        # Increase download buffer for faster downloads
-      # increased from 128MiB to 256MiB to improve large substitute fetches
       download-buffer-size = 268435456;
     };
 
     package = pkgs.nix;
-    # experimental-features enabled globally via modules/shared/default.nix
+    # experimental-features configured in modules/shared/default.nix
 
     gc = {
       automatic = true;
@@ -249,11 +215,8 @@ in
     };
   };
 
-  # Manages keys and such
   programs = {
     gnupg.agent.enable = true;
-
-    # Needed for anything GTK related
     dconf.enable = true;
   };
 
@@ -262,27 +225,20 @@ in
     inetutils
     neovim
     noto-fonts-emoji
-    pciutils  # Provides lspci for hardware diagnostics
+    pciutils
   ];
 
-
-
-  # Performance optimizations
   powerManagement.cpuFreqGovernor = "performance";
-  
-  # Faster package installation
+
   environment.variables = {
     NIX_BUILD_CORES = "0";
     NIX_OPTIONS = "--cores 0";
   };
 
-  # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
- 
-  systemd.tmpfiles.rules = [
-    "d /home/${user}/.ssh 0700 ${user} users -"
-  ];
+  # systemd.tmpfiles ensures ~/.ssh exists on first boot.
+  systemd.tmpfiles.rules = [ "d /home/${user}/.ssh 0700 ${user} users -" ];
 
-  system.stateVersion = "21.05"; # Don't change this
+  system.stateVersion = "21.05";
 }
