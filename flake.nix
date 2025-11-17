@@ -209,22 +209,9 @@
         ./hosts/nixos
       ];
 
-      serverModules = _: [
-        home-manager.nixosModules.home-manager {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            users.${user} = import ./modules/nixos/home-manager-server.nix;
-          };
-        }
-        ./hosts/nixos/server
-      ];
-
     in {
       x86_64-linux = mkHost workstationModules { system = "x86_64-linux"; };
       aarch64-linux = mkHost workstationModules { system = "aarch64-linux"; };
-      server-x86_64-linux = mkHost serverModules { system = "x86_64-linux"; profile = "server"; };
-      server-aarch64-linux = mkHost serverModules { system = "aarch64-linux"; profile = "server"; };
     };
   };
 }

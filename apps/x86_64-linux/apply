@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Ensure we are running as root (important on the NixOS installer ISO,
+# where the default 'nixos' user has passwordless sudo).
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  exec sudo -E bash "$0" "$@"
+fi
+
 # Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'

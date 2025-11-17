@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -exu
 
+# Ensure we are running as root (important on the NixOS installer ISO,
+# where the default 'nixos' user has passwordless sudo).
+if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+  exec sudo -E bash "$0" "$@"
+fi
+
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd -P)
 LOCAL_SRC_DIR=""
@@ -202,11 +208,7 @@ install_nixos() {
       exit 1
       ;;
   esac
-  if [[ "${NIX_PROFILE:-}" == "server" ]]; then
-    FLAKE_TARGET="server-${BASE_TARGET}"
-  else
-    FLAKE_TARGET="${BASE_TARGET}"
-  fi
+  FLAKE_TARGET="${BASE_TARGET}"
 
   progress "Installing NixOS from /mnt/etc/nixos"
   nixos-install --no-root-passwd --flake "/mnt/etc/nixos#$FLAKE_TARGET" --no-write-lock-file
@@ -229,11 +231,7 @@ run_secrets_preboot() {
     aarch64) BASE_TARGET="aarch64-linux" ;;
     *) BASE_TARGET="x86_64-linux" ;;
   esac
-  if [[ "${NIX_PROFILE:-}" == "server" ]]; then
-    FLAKE_TARGET="server-${BASE_TARGET}"
-  else
-    FLAKE_TARGET="${BASE_TARGET}"
-  fi
+  FLAKE_TARGET="${BASE_TARGET}"
   chroot /mnt /nix/var/nix/profiles/system/sw/bin/bash -lc "nixos-rebuild switch --impure --flake '/etc/nixos#$FLAKE_TARGET' --no-write-lock-file" || true
   # Clean up sensitive temp files
   rm -f /tmp/bws_access_token || true
