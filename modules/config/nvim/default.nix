@@ -234,7 +234,7 @@ pkgs.writeTextFile rec {
     vim.opt.number = true
     vim.opt.relativenumber = true
 
-    -- Load API keys from sopswarden secrets if available
+    -- Load API keys (sopswarden removed)
     local secret_files = {
       { env = "OPENROUTER_API_KEY", file = "/run/secrets/openrouter-api-key" },
       { env = "GITHUB_TOKEN", file = "/run/secrets/github-token" },

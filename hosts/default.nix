@@ -155,60 +155,7 @@ in
     qemuGuest.enable = true;
   };
 
-  services.sopswarden = {
-    enable = true;
-    secrets = {
-      "tailscale-auth-key" = {
-        name = "Tailscale";
-        field = "auth-key";
-      };
-      "openrouter-api-key" = {
-        name = "OpenRouter API";
-        field = "api-key";
-      };
-      "github-token" = {
-        name = "github";
-        field = "token";
-      };
-      "github-ssh-key" = {
-        name = "github";
-        field = "private-key";
-        type = "note";
-      };
-    };
-  };
-
-  sops.secrets = {
-    "tailscale-auth-key" = {
-      owner = "root";
-      group = "root";
-      mode = "0600";
-      path = "/run/secrets/tailscale-auth-key";
-    };
-    "openrouter-api-key" = {
-      owner = "${user}";
-      group = "users";
-      mode = "0400";
-      path = "/run/secrets/openrouter-api-key";
-    };
-    "github-token" = {
-      owner = "${user}";
-      group = "users";
-      mode = "0400";
-      path = "/run/secrets/github-token";
-    };
-    "github-ssh-key" = {
-      owner = "${user}";
-      group = "users";
-      mode = "0600";
-      path = "/home/${user}/.ssh/id_ed25519";
-    };
-  };
-
-  sops = {
-    defaultSopsFile = lib.mkDefault sopswardenSecretsFile;
-    validateSopsFiles = lib.mkDefault false;
-  };
+  # sops/sopswarden secret management removed for now.
 
   systemd.tmpfiles.rules = [
     "d /home/${user}/.ssh 0700 ${user} users -"
