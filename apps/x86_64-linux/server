@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export NIX_REF=${NIX_REF:-testing}
-export NIX_BRANCH=${NIX_BRANCH:-testing}
-export NIX_PROFILE=${NIX_PROFILE:-testing}
-
-exec "$(dirname "$0")/install" "$@"
+# Thin shim: delegate entirely to the server branch
+# flake app so all installer logic and configs come
+# from the server branch, not testing.
+exec nix run --no-write-lock-file \
+  --extra-experimental-features 'nix-command flakes' \
+  github:xlrinn/nix/server#server -- "$@"
