@@ -66,9 +66,10 @@
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
         "build-switch" = mkApp "build-switch" system;
-        # Server installer: delegate to nixos-anywhere so the
-        # system is built locally and streamed to the target.
-        "server" = {
+        # Legacy on-box server installer (run on target, e.g. from ISO)
+        "server" = mkApp "server" system;
+        # Remote server installer using nixos-anywhere (run from a Nix-enabled machine)
+        "server-remote" = {
           type = "app";
           program = "${nixos-anywhere.packages.${system}.default}/bin/nixos-anywhere";
         };
