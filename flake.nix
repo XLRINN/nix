@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
   # Legacy nixpkgs for an older bitwarden-cli that builds (argon2/node-gyp regression in newer revs)
   # Using the 24.05 stable channel (adjust to a specific commit later if needed):
   legacy-nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
@@ -39,7 +40,7 @@
       };
   };
 
-  outputs = { self, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, ... } @inputs:
+  outputs = { self, home-manager, nixpkgs, disko, oh-my-posh, stylix, hyprland, nvf, nixvim, nixos-hardware, nixos-anywhere, ... } @inputs:
     let
       user = "david";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -64,8 +65,13 @@
       # Standard app builder referencing files in repo
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
-        "server" = mkApp "server" system;
         "build-switch" = mkApp "build-switch" system;
+        # Server installer: delegate to nixos-anywhere so the
+        # system is built locally and streamed to the target.
+        "server" = {
+          type = "app";
+          program = "${nixos-anywhere.packages.${system}.default}/bin/nixos-anywhere";
+        };
       };
     in
     {
