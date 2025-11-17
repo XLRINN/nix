@@ -8,9 +8,9 @@ let
 in
 {
 	imports = [
-		../../../modules/nixos/disk-config.nix
-		../../../modules/nixos/hardware.nix
-		../../../modules/shared
+		../../../modules/disko-mbr.nix
+		../../../modules/hardware.nix
+		../../../modules
 	];
 
 	boot = {

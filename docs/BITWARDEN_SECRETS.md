@@ -125,10 +125,10 @@ sops-sync
 
 ```bash
 # Check if key file exists and has content
-cat ~/.local/share/src/nixos-config/modules/shared/config/tailscale/key
+cat ~/.local/share/src/nixos-config/modules/config/tailscale/key
 
 # Manually connect with the key
-sudo tailscale up --authkey $(cat ~/.local/share/src/nixos-config/modules/shared/config/tailscale/key) --ssh
+sudo tailscale up --authkey $(cat ~/.local/share/src/nixos-config/modules/config/tailscale/key) --ssh
 ```
 
 ## Advantages
@@ -142,6 +142,6 @@ sudo tailscale up --authkey $(cat ~/.local/share/src/nixos-config/modules/shared
 ## Adding New Secrets
 
 1. Create/update Bitwarden item (match `name` + optional custom `field`)
-2. Add/modify entry under `services.sopswarden.secrets` in `hosts/nixos/default.nix`
+2. Add/modify entry under `services.sopswarden.secrets` in `hosts/default.nix`
 3. `rbw unlock && sopswarden-sync`
 4. `sudo nixos-rebuild switch --impure`
