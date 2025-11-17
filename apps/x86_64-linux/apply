@@ -58,7 +58,7 @@ echo "    ██╔██╗ ██║ ╚████╔╝  ╚███╔╝
 echo "    ██║╚██╗██║  ╚██╔╝   ██╔██╗ "
 echo "    ██║ ╚████║   ██║   ██╔╝ ██╗"
 echo "    ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝"
-echo "            --XLRINN--"
+echo "           --XLRINN SERVER--"
 echo
 echo "═══════════════════════════════════════════════════════════"
 echo
@@ -335,8 +335,3 @@ echo "$USERNAME" > /tmp/username.txt
 echo -n "$GIT_NAME" > /tmp/git_name.txt
 echo -n "$GIT_EMAIL" > /tmp/git_email.txt
 _print "${GREEN}${PARTY} Ready!${NC}"
-
-## Bitwarden legacy discovery removed in favor of sopswarden.
-_print "${CYAN}${INFO} Using sopswarden for secrets. After first boot run:${NC}"
-_print "${YELLOW}  rbw login && rbw unlock${NC}"
-_print "${YELLOW}  sops-sync && sops-deploy${NC}"
