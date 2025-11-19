@@ -379,9 +379,9 @@ in
         }];
       shellAliases = {
         pf = "pfetch";
-        swap = "sudo nix run .#build-switch";
-        update = "sudo nix run .#build-switch && source ~/.zshrc";
-        upgrade = "clear && sudo nix run .#build-switch && source ~/.zshrc";
+        swap = "sudo nix run .#swap";
+        update = "sudo nix run .#swap && source ~/.zshrc";
+        upgrade = "clear && sudo nix run .#swap && source ~/.zshrc";
         sauce = "source ~/.zshrc"; 
         gc = "nix-collect-garbage -d";
         pretty =  "POWERLEVEL9K_CONFIG_FILE=/tmp/p10k.zsh p10k configure && cp ~/.p10k.zsh nix/modules/config/shell/p10k.zsh";

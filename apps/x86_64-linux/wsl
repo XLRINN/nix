@@ -1,0 +1,24 @@
+#!/bin/sh -e
+
+VERSION=1.0
+
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}Starting WSL Home Manager switch...${NC}"
+
+# Find the flake directory (where flake.nix is located)
+FLAKE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+echo -e "${YELLOW}Flake directory: $FLAKE_DIR${NC}"
+
+if ! command -v home-manager >/dev/null 2>&1; then
+  echo -e "${RED}home-manager command not found.${NC}"
+  echo -e "${RED}Install Home Manager in your WSL environment first, then re-run this script.${NC}"
+  exit 1
+fi
+
+home-manager switch --flake "$FLAKE_DIR#david-wsl" "$@"
+
+echo -e "${GREEN}WSL Home Manager switch complete!${NC}"

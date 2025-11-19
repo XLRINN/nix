@@ -3,7 +3,7 @@
 ## Quick Start
 - Enter dev shell: `nix develop`
 - Inspect outputs: `nix flake show`
-- Build + activate (auto-picks current system): `nix run .#build-switch`
+- Build + activate (auto-picks current system): `nix run .#swap`
 - First-time token apply: `nix run .#apply`
 - Checks: `nix flake check` and (if using secrets) `nix run .#check-keys`
 
@@ -22,7 +22,7 @@
 - Note affected platform(s)/host(s).
 - Evidence of local validation:
   - `nix flake check`
-  - Build: `nix run .#build-switch` (or platform-specific `nix build`)
+  - Build: `nix run .#swap` (or platform-specific `nix build`)
   - Activation tested on target machine or VM
 - No secrets or generated artifacts committed.
 - Docs updated if behavior changes (`AGENTS.md`, module READMEs).

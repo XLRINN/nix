@@ -65,7 +65,8 @@
       # Standard app builder referencing files in repo
       mkLinuxApps = system: {
         "apply" = mkApp "apply" system;
-        "build-switch" = mkApp "build-switch" system;
+        "swap" = mkApp "build-switch" system;
+        "wsl" = mkApp "wsl" system;
         # Legacy on-box server installer (run on target, e.g. from ISO)
         "server" = mkApp "server" system;
         # Remote server installer using nixos-anywhere (run from a Nix-enabled machine)
@@ -113,5 +114,14 @@
       x86_64-linux = mkHost serverModules { system = "x86_64-linux"; profile = "server"; };
       aarch64-linux = mkHost serverModules { system = "aarch64-linux"; profile = "server"; };
     };
+
+      # Home Manager configuration for WSL using the same module as NixOS
+      homeConfigurations = {
+        "david-wsl" = home-manager.lib.homeManagerConfiguration {
+          pkgs = import nixpkgs { system = "x86_64-linux"; };
+          modules = [ ./modules/home-manager.nix ];
+          extraSpecialArgs = { inherit inputs; };
+        };
+      };
   };
 }

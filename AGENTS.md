@@ -2,7 +2,7 @@
 
 ## Project Structure & Modules
 - `flake.nix`: Flake inputs/outputs, devShells, and per‑platform apps.
-- `apps/<system>/`: Run targets like `build-switch`, `apply`, `check-keys`, `create-keys`, `copy-keys` (plus `build`/`rollback` on Darwin).
+- `apps/<system>/`: Run targets like `swap`, `apply`, `check-keys`, `create-keys`, `copy-keys` (plus `build`/`rollback` on Darwin).
 - `hosts/{darwin,nixos}/`: Host entrypoints and install helpers.
 - `modules/{darwin,nixos,shared}/`: System and Home Manager modules (`packages.nix`, `home-manager.nix`, `files.nix`, `config/*`).
 - `overlays/`: Per‑build overrides and temporary fixes.
@@ -11,7 +11,7 @@
 ## Build, Test, and Dev Commands
 - Develop: `nix develop` — enter the repo’s dev shell.
 - Show outputs: `nix flake show` — inspect available apps/targets.
-- Build + switch (auto‑detects current system): `nix run .#build-switch`.
+- Build + switch (auto‑detects current system): `nix run .#swap`.
 - First‑run token apply (username/email/etc.): `nix run .#apply`.
 - Secrets check (if used): `nix run .#check-keys`.
 - Darwin build only: `nix build .#darwinConfigurations.$(uname -m)-darwin.system`.
@@ -20,12 +20,12 @@
 
 ## Coding Style & Naming
 - Nix: 2‑space indent, trailing commas, concise attribute names.
-- File/app names: lower‑case with hyphens (e.g., `build-switch`).
+- File/app names: lower‑case with hyphens (e.g., `swap`).
 - Keep platform‑specific logic under `modules/darwin` or `modules/nixos`; share common pieces in `modules/shared`.
 - Prefer small, composable modules; update module READMEs when adding new ones.
 
 ## Testing Guidelines
-- Always run `nix flake check` and a full build: `nix run .#build-switch` (or the platform‑specific `nix build` examples above).
+- Always run `nix flake check` and a full build: `nix run .#swap` (or the platform‑specific `nix build` examples above).
 - For hosts changes, verify both evaluation and activation on the target platform (VM or machine).
 - When touching secrets, follow `docs/BITWARDEN_SECRETS.md` and validate with `nix run .#check-keys`.
 
