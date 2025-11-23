@@ -69,6 +69,13 @@ in
     };
   };
 
+  # Auto-clean stale backup that blocks activation
+  home.activation.cleanupGtkrcBackup = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
+    if [ -e "$HOME/.gtkrc-2.0.backup" ]; then
+      rm -f "$HOME/.gtkrc-2.0.backup"
+    fi
+  '';
+
   # Screen lock
   services = {
     screen-locker = {

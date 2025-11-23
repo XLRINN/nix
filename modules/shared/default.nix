@@ -2,7 +2,7 @@
 
 {
   imports = [
-    # ./config/tailscale/tailscale.nix  # Disabled - causes networking.firewall errors on Darwin
+    ./config/tailscale/tailscale.nix
   ];
 
   # Enable modern Nix features globally for all hosts importing shared

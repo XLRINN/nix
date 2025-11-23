@@ -1,7 +1,13 @@
 { pkgs }:
 
 with pkgs;
-let shared-packages = import ../shared/packages.nix { inherit pkgs; }; in
+let
+  shared-packages = import ../shared/packages.nix { inherit pkgs; };
+  # Ensure Termius bundles libsqlite3 for NSS (libsoftokn3.so)
+  termiusFixed = pkgs.termius.overrideAttrs (old: {
+    buildInputs = (old.buildInputs or []) ++ [ pkgs.sqlite ];
+  });
+in
 shared-packages ++ [
 
   # Security and authentication
@@ -9,10 +15,10 @@ shared-packages ++ [
   keepassxc
   vscode
   bitwarden
-
+  termiusFixed
   firefox
   alacritty
-
+  
   # App and package management
   appimage-run
   gnumake
