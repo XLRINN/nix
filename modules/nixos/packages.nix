@@ -43,7 +43,6 @@ shared-packages ++ [
   rofi-calc
   postgresql
 
-
   # Screenshot and recording tools
   flameshot
 
@@ -80,4 +79,16 @@ shared-packages ++ [
   # Wireless in GNOME
   #networkmanager
   #networkmanagerapplet
+
+  # Gaming-centric tools
+  steam
+  steam-run
+  lutris
+  heroic-games-launcher
+  protonup-qt
+  gamemode
+  mangohud
+  wine
+  vkd3d-proton
+  vulkan-tools
 ]
