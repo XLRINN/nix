@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Thin shim: delegate entirely to the server branch
-# flake app so all installer logic and configs come
-# from the server branch, not testing.
-exec nix run --no-write-lock-file \
-  --extra-experimental-features 'nix-command flakes' \
-  github:xlrinn/nix/server#server -- "$@"
+# Mirror the x86 server installer to reuse the desktop workflow.
+# Default to the 'master' branch/ref to match the desktop/install behavior
+# and avoid stale option paths on older branches. Users can override by
+# exporting NIX_REF/NIX_BRANCH explicitly.
+export NIX_REF=${NIX_REF:-testing}
+export NIX_BRANCH=${NIX_BRANCH:-master}
+export NIX_PROFILE=${NIX_PROFILE:-server}
+
+exec "$(dirname "$0")/desktop" "$@"

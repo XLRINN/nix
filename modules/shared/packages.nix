@@ -9,10 +9,6 @@ with pkgs; [
   bash-completion
   bat
   btop
-  # # bitwarden-cli removed (fails to build on Darwin due to argon2/node-gyp); use rbw instead
-  # rbw  # Rust Bitwarden client for sopswarden
-  # # Note: bws (Bitwarden Secrets Manager CLI) might not be in nixpkgs yet
-  # # You can install it manually: curl -L https://github.com/bitwarden/sdk/releases/latest/download/bws-x86_64-unknown-linux-gnu.zip
   coreutils
   codex
   killall
@@ -37,6 +33,14 @@ with pkgs; [
   zoxide
   docker
   docker-compose
+  talosctl
+  kubectl
+  kubectx 
+  kubernetes-helm
+  fluxcd
+  terraform
+  packer
+  kustomize
   htop
   hunspell
   iftop

@@ -327,24 +327,6 @@ in
               })
             end,
           },
-          { "yetone/avante.nvim",
-            event = "VeryLazy",
-            opts = {
-              provider = "openai",
-              openai = {
-                endpoint = "https://openrouter.ai/api/v1",
-                model = "openai/gpt-4o",
-                temperature = 0,
-              },
-              behaviour = { auto_suggestions = true },
-            },
-            dependencies = {
-              "nvim-lua/plenary.nvim",
-              "MunifTanjim/nui.nvim",
-              "stevearc/dressing.nvim",
-              "nvim-tree/nvim-web-devicons",
-            },
-          },
         },
       })
       EOF
