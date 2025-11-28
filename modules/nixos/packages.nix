@@ -27,7 +27,7 @@ shared-packages ++ [
   # Productivity tools
   bc # old school calculator
   galculator
-
+  barrier
   # Audio tools
   pavucontrol # Pulse audio controls
 
