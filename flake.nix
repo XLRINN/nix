@@ -169,6 +169,27 @@
         };
       };
 
+      # Standalone Home Manager — works on ANY Linux distro with Nix installed.
+      #
+      # One-liner (no prior install needed):
+      #   nix run nixpkgs#home-manager -- switch --flake .#david
+      #
+      # After installing home-manager:
+      #   home-manager switch --flake .#david          # x86_64
+      #   home-manager switch --flake .#david-aarch64  # ARM / Apple-silicon VMs
+      homeConfigurations = {
+        "david" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages."x86_64-linux";
+          extraSpecialArgs = { inherit inputs; };
+          modules = [ ./modules/home-manager/linux.nix ];
+        };
+        "david-aarch64" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages."aarch64-linux";
+          extraSpecialArgs = { inherit inputs; };
+          modules = [ ./modules/home-manager/linux.nix ];
+        };
+      };
+
       darwinConfigurations = nixpkgs.lib.genAttrs darwinSystems (system: let
         user = "david";
       in
