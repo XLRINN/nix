@@ -17,7 +17,9 @@ in
   home = {
     username      = user;
     homeDirectory = "/home/${user}";
-    packages      = pkgs.callPackage ../shared/packages.nix {};
+    # nixos/packages.nix already includes shared/packages.nix internally,
+    # and adds GUI apps: Firefox, Termius, Alacritty, VSCode, VLC, etc.
+    packages      = pkgs.callPackage ../nixos/packages.nix {};
     file          = import ../shared/files.nix { inherit config pkgs; };
     stateVersion  = "24.05";
     enableNixpkgsReleaseCheck = false;
