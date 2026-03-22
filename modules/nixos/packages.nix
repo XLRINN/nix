@@ -41,6 +41,9 @@ shared-packages ++ [
   # Audio tools
   pavucontrol # Pulse audio controls
 
+  # Binary compatibility for third-party / pre-compiled executables
+  patchelf   # manually patch ELF binaries to use Nix store libs/linker
+
   # Testing and development tools
   direnv
   rofi
