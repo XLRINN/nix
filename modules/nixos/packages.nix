@@ -45,6 +45,7 @@ shared-packages ++ [
   patchelf   # manually patch ELF binaries to use Nix store libs/linker
 
   # Testing and development tools
+  claude-code # Claude CLI
   direnv
   rofi
   rofi-calc
