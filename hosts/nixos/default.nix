@@ -280,60 +280,32 @@ in
   # Home Manager configuration
   home-manager.backupFileExtension = "backup";
 
-  # services.sopswarden = {
-  #   enable = true;
-  #   secrets = {
-  #     tailscale-auth-key = {
-  #       name = "Tailscale";
-  #       field = "auth-key";
-  #     };
-  #     openrouter-api-key = {
-  #       name = "OpenRouter API";
-  #       field = "api-key";
-  #     };
-  #     github-token = {
-  #       name = "GitHub Token";
-  #       field = "token";
-  #     };
-  #     github-ssh-key = {
-  #       name = "GitHub SSH Key";
-  #       field = "private-key";
-  #       type = "note";
-  #     };
-  #   };
-  # };
+  # Secrets pulled from Bitwarden via sopswarden (rbw + SOPS/age under the hood).
+  # First-time setup: `nix run .#secrets` (or `rbw login && rbw unlock && sopswarden-sync`),
+  # then `sudo nixos-rebuild switch --impure`.
+  services.sopswarden = {
+    enable = true;
+    secrets = {
+      tailscale-auth-key = {
+        name = "Tailscale";
+        field = "auth-key";
+      };
+      github-token = {
+        name = "GitHub Token";
+        field = "token";
+      };
+      # RSA/SSH keys: add entries here when ready, e.g.
+      # github-ssh-key = {
+      #   name = "GitHub SSH Key";
+      #   field = "private-key";
+      #   type = "note";
+      # };
+    };
+  };
 
-  # sops.secrets = {
-  #   tailscale-auth-key = {
-  #     owner = "root";
-  #     group = "root";
-  #     mode = "0600";
-  #     path = "/run/secrets/tailscale-auth-key";
-  #   };
-  #   openrouter-api-key = {
-  #     owner = user;
-  #     group = "users";
-  #     mode = "0400";
-  #     path = "/run/secrets/openrouter-api-key";
-  #   };
-  #   github-token = {
-  #     owner = user;
-  #     group = "users";
-  #     mode = "0400";
-  #     path = "/run/secrets/github-token";
-  #   };
-  #   github-ssh-key = {
-  #     owner = user;
-  #     group = "users";
-  #     mode = "0600";
-  #     path = "/home/${user}/.ssh/id_ed25519";
-  #   };
-  # };
-
-  # sops = {
-  #   defaultSopsFile = lib.mkDefault sopsFile;
-  #   validateSopsFiles = lib.mkDefault false;
-  # };
+  # NOTE: sopswarden manages its own SOPS/age wiring internally; the raw
+  # `sops.secrets`/`sops.defaultSopsFile` options (sops-nix) are intentionally
+  # not used here to avoid a redundant/conflicting secrets backend.
 
   systemd.tmpfiles.rules = [
     "d /home/${user}/.ssh 0700 ${user} users -"

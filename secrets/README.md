@@ -1,5 +1,12 @@
 This directory contains SOPS-encrypted secrets used by all machines.
 
+> **Note:** the active secrets flow for NixOS hosts is **sopswarden** (see
+> `docs/BITWARDEN_SECRETS.md`) — it manages its own SOPS/age files under
+> `/var/lib/sopswarden/` and does not read `secrets/common.yaml`. The raw
+> `sops`/`age` flow documented below (`scripts/bootstrap-sops.sh`) is not
+> currently wired into any NixOS module (no `sops.secrets`/`sops-nix` import),
+> so encrypting a file here alone will not deploy it anywhere.
+
 Quick start (single shared file for all hosts)
 
 1) Generate an Age key (one time):

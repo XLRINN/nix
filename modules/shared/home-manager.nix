@@ -336,12 +336,12 @@ in
         # init-secrets = "bash ~/nix/scripts/bootstrap-sops.sh";
         check-keys = "echo 'Checking API keys...'; test -f ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && source ~/.local/share/src/nixos-config/modules/shared/config/api-keys/keys.env && { test -n \"$OPENROUTER_API_KEY\" && echo '✓ OpenRouter' || echo '❌ OpenRouter'; test -n \"$GITHUB_TOKEN\" && echo '✓ GitHub' || echo '❌ GitHub'; } || echo '❌ No keys file'";
         
-        # # Sopswarden (SOPS + Bitwarden) shortcuts
-        # sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden...'; rbw sync && sopswarden-sync && echo '✓ Secrets synchronized'";
-        # sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
-        # sops-check = "echo 'Checking sopswarden secrets...'; ls -la /run/secrets/ 2>/dev/null | grep -E 'tailscale|openrouter|github' || echo 'No sopswarden secrets found'";
-        # rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
-        # rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
+        # Sopswarden (SOPS + Bitwarden) shortcuts
+        sops-sync = "echo 'Syncing secrets from Bitwarden via sopswarden...'; rbw sync && sopswarden-sync && echo '✓ Secrets synchronized'";
+        sops-deploy = "echo 'Building system with sopswarden secrets...'; rbw sync && sopswarden-sync && sudo nixos-rebuild switch --impure && echo '✓ System deployed with secrets'";
+        sops-check = "echo 'Checking sopswarden secrets...'; ls -la /run/secrets/ 2>/dev/null | grep -E 'tailscale|github' || echo 'No sopswarden secrets found'";
+        rbw-login = "echo 'Logging into Bitwarden via rbw...'; rbw login";
+        rbw-unlock = "echo 'Unlocking Bitwarden vault...'; rbw unlock";
       };
       initExtra = ''
         # Set rbw (Bitwarden) email to the same value used for git

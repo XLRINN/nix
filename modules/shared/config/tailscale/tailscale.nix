@@ -4,19 +4,19 @@ let
   user = config.users.users.${config.users.defaultUser or "nixos"}.name or "nixos";
   # Use sopswarden secret if available, fallback to local key file
   keyFile = "/home/${user}/.local/share/src/nixos-config/modules/shared/config/tailscale/key";
-  # secretKeyFile = "/run/secrets/tailscale-auth-key";
-  # useSecret = builtins.pathExists secretKeyFile;
+  secretKeyFile = "/run/secrets/tailscale-auth-key";
+  useSecret = builtins.pathExists secretKeyFile;
 in
 {
   services.tailscale = {
     enable = true;
     useRoutingFeatures = "client"; # or "both" for subnet routing
     extraUpFlags = [ "--ssh" ];
-    # # Prefer sopswarden secret, fallback to local key file
-    # authKeyFile = 
-    #   if useSecret then secretKeyFile
-    #   else if (builtins.pathExists keyFile) then keyFile
-    #   else null;
+    # Prefer sopswarden secret, fallback to local key file
+    authKeyFile =
+      if useSecret then secretKeyFile
+      else if (builtins.pathExists keyFile) then keyFile
+      else null;
   };
 
   # Allow Tailscale through firewall

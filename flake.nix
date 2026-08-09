@@ -4,8 +4,8 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
-    # Add sopswarden for Bitwarden secrets management
-    # sopswarden.url = "github:pfassina/sopswarden/main";
+    # Sopswarden for Bitwarden secrets management (NixOS only; Darwin left disabled below)
+    sopswarden.url = "github:pfassina/sopswarden/main";
     # sops-nix = {
     #   url = "github:Mic92/sops-nix";
     #   inputs.nixpkgs.follows = "nixpkgs";
@@ -81,7 +81,7 @@
     , nvf
     , nixvim
     , nixos-hardware
-    # , sopswarden
+    , sopswarden
     , ...
     } @inputs:
     let
@@ -212,8 +212,8 @@
             specialArgs = { inherit inputs; };
             modules =
               [ disko.nixosModules.disko
-                # sops-nix.nixosModules.sops
-                # sopswarden.nixosModules.default
+                # sops-nix is not used directly; sopswarden bundles its own sops/age handling
+                sopswarden.nixosModules.default
               ]
               ++ (modules profile);
           };

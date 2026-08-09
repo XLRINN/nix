@@ -4,6 +4,9 @@ This configuration integrates Bitwarden secrets using a single recommended appro
 
 1. **sopsWarden (impure branch)**: Bitwarden → SOPS sync with direct secret values available in Nix (current configured flow)
 
+**Scope:** wired into the NixOS hosts (`hosts/nixos/default.nix`, `hosts/nixos/server`) only.
+Darwin intentionally does not use sopswarden — its existing setup is left as-is.
+
 ## Sopswarden (SOPS + Bitwarden)
 
 **Sopswarden** is a mature tool that combines SOPS (Secrets OPerationS) with Bitwarden for secure, declarative secret management. This is the recommended approach for production use.
@@ -22,10 +25,11 @@ Create (or update) the following Bitwarden items (names must match; custom field
 | Purpose | Item Name | Custom Field | Notes |
 |---------|-----------|--------------|-------|
 | Tailscale Auth | `Tailscale` | `auth-key` | Use a reusable AUTH key with --ssh if desired |
-| OpenRouter API | `OpenRouter API` | `api-key` | Single key covers multiple model providers via OpenRouter |
 | GitHub Token | `GitHub Token` | `token` | PAT with minimal required scopes |
 
-OpenAI direct keys are optional when using OpenRouter.
+RSA/SSH keys (e.g. a GitHub deploy key) are planned to be added later — see the
+commented `github-ssh-key` example under `services.sopswarden.secrets` in
+`hosts/nixos/default.nix` / `hosts/nixos/server/default.nix`.
 
 ### Usage
 
@@ -85,10 +89,6 @@ sudo tailscale status
 # If needed, manually connect
 sudo tailscale up --ssh
 ```
-
-### Avante.nvim
-
-With OpenRouter you typically only need `openrouter-api-key`. After sync and rebuild, reference secret value directly via `${secrets.openrouter-api-key}` where needed in impure modules, or `cat /run/secrets/openrouter-api-key` in scripts.
 
 ## File Structure (Active Parts)
 
